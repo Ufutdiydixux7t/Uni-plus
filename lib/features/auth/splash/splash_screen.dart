@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/providers/user_provider.dart';
 import '../../../core/storage/secure_storage_service.dart';
 import '../../../shared/widgets/typewriter_text.dart';
+
 import '../role_selection/role_selection_screen.dart';
 import '../../daily_feed/daily_feed_screen.dart';
 import '../../admin_dashboard/admin_dashboard_screen.dart';
@@ -99,6 +100,7 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
                   style: TextStyle(
                     fontSize: 26,
                     fontWeight: FontWeight.bold,
+                    color: Colors.black,
                   ),
                 ),
               ],

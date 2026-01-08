@@ -1,6 +1,8 @@
 import 'dart:math';
 import 'package:flutter/material.dart';
+
 import '../../../core/storage/secure_storage_service.dart';
+import '../../../core/auth/user_role.dart';
 import '../../admin_dashboard/admin_dashboard_screen.dart';
 
 class DelegateSetupScreen extends StatefulWidget {
@@ -16,6 +18,7 @@ class _DelegateSetupScreenState extends State<DelegateSetupScreen> {
   final _facultyController = TextEditingController();
   final _levelController = TextEditingController();
 
+  // توليد كود فصل عشوائي (بدون حروف مربكة)
   String _generateClassCode() {
     const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
     final rand = Random();
@@ -32,6 +35,7 @@ class _DelegateSetupScreenState extends State<DelegateSetupScreen> {
   }
 
   Future<void> _createClass() async {
+    // تحقق من تعبئة الحقول
     if (_nameController.text.isEmpty ||
         _universityController.text.isEmpty ||
         _facultyController.text.isEmpty ||
@@ -44,13 +48,16 @@ class _DelegateSetupScreenState extends State<DelegateSetupScreen> {
 
     final classCode = _generateClassCode();
 
+    // حفظ المستخدم كـ Delegate (مندوب)
     await SecureStorageService.saveUser(
-      role: 'delegate',
+      role: UserRole.delegate,
       name: _nameController.text.trim(),
       classCode: classCode,
     );
 
-    // ✅ لا نمرر أي بيانات
+    if (!mounted) return;
+
+    // الانتقال مباشرة إلى لوحة تحكم المندوب
     Navigator.pushReplacement(
       context,
       MaterialPageRoute(

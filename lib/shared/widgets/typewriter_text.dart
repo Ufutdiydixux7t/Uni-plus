@@ -5,14 +5,12 @@ class TypewriterText extends StatefulWidget {
   final String text;
   final TextStyle? style;
   final Duration speed;
-  final TextAlign textAlign;
 
   const TypewriterText({
     super.key,
     required this.text,
     this.style,
-    this.speed = const Duration(milliseconds: 80),
-    this.textAlign = TextAlign.start,
+    this.speed = const Duration(milliseconds: 120),
   });
 
   @override
@@ -21,8 +19,8 @@ class TypewriterText extends StatefulWidget {
 
 class _TypewriterTextState extends State<TypewriterText> {
   String _displayedText = '';
-  int _index = 0;
   Timer? _timer;
+  int _index = 0;
 
   @override
   void initState() {
@@ -54,7 +52,6 @@ class _TypewriterTextState extends State<TypewriterText> {
     return Text(
       _displayedText,
       style: widget.style,
-      textAlign: widget.textAlign,
     );
   }
 }

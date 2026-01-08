@@ -1,4 +1,6 @@
+/*
 import 'package:flutter/material.dart';
+
 import '../../shared/widgets/typewriter_text.dart';
 
 enum UserRole { student, delegate }
@@ -191,3 +193,5 @@ class _LoginScreenState extends State<LoginScreen> {
     // - التنقل حسب role
   }
 }
+
+ */

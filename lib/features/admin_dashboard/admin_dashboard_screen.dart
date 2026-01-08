@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../core/storage/secure_storage_service.dart';
+import '../../shared/widgets/app_drawer.dart';
 
 class AdminDashboardScreen extends StatefulWidget {
   const AdminDashboardScreen({super.key});
@@ -9,6 +10,8 @@ class AdminDashboardScreen extends StatefulWidget {
 }
 
 class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
+  final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
+
   String delegateName = '';
   String classCode = '';
 
@@ -22,8 +25,10 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
     final name = await SecureStorageService.getName();
     final code = await SecureStorageService.getClassCode();
 
+    if (!mounted) return;
+
     setState(() {
-      delegateName = name ?? '';
+      delegateName = name ?? 'Delegate';
       classCode = code ?? '';
     });
   }
@@ -31,7 +36,10 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      key: _scaffoldKey,
+      drawer: const AppDrawer(), // ⭐⭐⭐ هذا هو الأساس
       backgroundColor: const Color(0xFFF6F7FB),
+
       appBar: AppBar(
         backgroundColor: Colors.white,
         elevation: 0,
@@ -42,15 +50,8 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
             fontWeight: FontWeight.bold,
           ),
         ),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.settings, color: Colors.black),
-            onPressed: () {
-              // لاحقًا: Settings Drawer
-            },
-          ),
-        ],
       ),
+
       body: Padding(
         padding: const EdgeInsets.all(20),
         child: Column(
@@ -75,7 +76,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
         gradient: const LinearGradient(
           colors: [Color(0xFF3F51B5), Color(0xFF6A5AE0)],
         ),
-        borderRadius: BorderRadius.circular(20),
+        borderRadius: BorderRadius.circular(22),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -88,7 +89,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
               fontWeight: FontWeight.w600,
             ),
           ),
-          const SizedBox(height: 12),
+          const SizedBox(height: 14),
           Row(
             children: [
               const Text(
@@ -106,9 +107,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
               ),
               const Spacer(),
               IconButton(
-                onPressed: () {
-                  // Copy code (لاحقًا)
-                },
+                onPressed: () {},
                 icon: const Icon(Icons.copy, color: Colors.white),
               )
             ],
@@ -127,22 +126,10 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
       mainAxisSpacing: 16,
       childAspectRatio: 1.1,
       children: const [
-        _DashboardCard(
-          icon: Icons.menu_book,
-          title: 'Add Lecture',
-        ),
-        _DashboardCard(
-          icon: Icons.assignment,
-          title: 'Add Assignment',
-        ),
-        _DashboardCard(
-          icon: Icons.picture_as_pdf,
-          title: 'Upload Material',
-        ),
-        _DashboardCard(
-          icon: Icons.campaign,
-          title: 'Announcement',
-        ),
+        _DashboardCard(icon: Icons.menu_book, title: 'Add Lecture'),
+        _DashboardCard(icon: Icons.assignment, title: 'Add Assignment'),
+        _DashboardCard(icon: Icons.picture_as_pdf, title: 'Upload Material'),
+        _DashboardCard(icon: Icons.campaign, title: 'Announcement'),
       ],
     );
   }
@@ -163,9 +150,7 @@ class _DashboardCard extends StatelessWidget {
   Widget build(BuildContext context) {
     return InkWell(
       borderRadius: BorderRadius.circular(20),
-      onTap: () {
-        // Navigation لاحقًا
-      },
+      onTap: () {},
       child: Container(
         decoration: BoxDecoration(
           color: Colors.white,

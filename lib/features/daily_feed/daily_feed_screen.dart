@@ -3,7 +3,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../shared/widgets/app_drawer.dart';
 import '../../core/storage/secure_storage_service.dart';
-import '../../core/pressure/pressure_engine.dart';
 import '../../../shared/widgets/typewriter_text.dart';
 
 import 'daily_feed_controller.dart';
@@ -19,6 +18,7 @@ class DailyFeedScreen extends ConsumerStatefulWidget {
 }
 
 class _DailyFeedScreenState extends ConsumerState<DailyFeedScreen> {
+  final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
   String studentName = '';
 
   @override
@@ -29,9 +29,8 @@ class _DailyFeedScreenState extends ConsumerState<DailyFeedScreen> {
 
   Future<void> _loadName() async {
     final name = await SecureStorageService.getName();
-    setState(() {
-      studentName = name ?? '';
-    });
+    if (!mounted) return;
+    setState(() => studentName = name ?? 'Student');
   }
 
   @override
@@ -44,63 +43,43 @@ class _DailyFeedScreenState extends ConsumerState<DailyFeedScreen> {
       );
     }
 
-    // ================= FILTERING =================
-
-    final high = <DailyFeedItem>[];
-    final medium = <DailyFeedItem>[];
-    final low = <DailyFeedItem>[];
-
-    for (final item in state.items) {
-      final level = PressureEngine.calculate(item);
-
-      switch (level) {
-        case PressureLevel.high:
-          high.add(item);
-          break;
-        case PressureLevel.medium:
-          medium.add(item);
-          break;
-        case PressureLevel.low:
-          low.add(item);
-          break;
-      }
-    }
-
-    final tomorrowLectures = state.items.where(
-          (item) => item.isLecture && item.isTomorrow,
-    ).toList();
-
     return Scaffold(
+      key: _scaffoldKey,
       backgroundColor: const Color(0xFFF6F7FB),
       drawer: const AppDrawer(),
       body: SafeArea(
         child: CustomScrollView(
+          physics: const BouncingScrollPhysics(),
           slivers: [
             SliverToBoxAdapter(child: _header()),
+
             SliverToBoxAdapter(
-              child: _tomorrowSection(tomorrowLectures),
+              child: _tomorrowSection(state.tomorrowLectures),
             ),
+
             SliverPadding(
-              padding: const EdgeInsets.all(20),
+              padding: const EdgeInsets.fromLTRB(20, 24, 20, 32),
               sliver: SliverList(
                 delegate: SliverChildListDelegate(
                   [
-                    if (high.isNotEmpty) ...[
+                    if (state.high.isNotEmpty) ...[
                       const SectionTitle(title: 'ON YOUR PLATE'),
-                      const SizedBox(height: 8),
-                      ...high.map(PressureCard.high),
-                      const SizedBox(height: 24),
+                      const SizedBox(height: 12),
+                      ...state.high.map(PressureCard.high),
+                      const SizedBox(height: 28),
                     ],
-                    if (medium.isNotEmpty) ...[
+
+                    if (state.medium.isNotEmpty) ...[
                       const SectionTitle(title: 'COMING UP'),
-                      const SizedBox(height: 8),
-                      ...medium.map(PressureCard.medium),
-                      const SizedBox(height: 24),
+                      const SizedBox(height: 12),
+                      ...state.medium.map(PressureCard.medium),
+                      const SizedBox(height: 28),
                     ],
-                    if (low.isNotEmpty) ...[
+
+                    if (state.low.isNotEmpty) ...[
                       const SectionTitle(title: 'LATER'),
-                      const SizedBox(height: 8),
-                      ...low.map(PressureCard.low),
+                      const SizedBox(height: 12),
+                      ...state.low.map(PressureCard.low),
                     ],
                   ],
                 ),
@@ -116,10 +95,12 @@ class _DailyFeedScreenState extends ConsumerState<DailyFeedScreen> {
 
   Widget _header() {
     return Container(
-      padding: const EdgeInsets.all(24),
+      padding: const EdgeInsets.fromLTRB(16, 18, 20, 28),
       decoration: const BoxDecoration(
         gradient: LinearGradient(
           colors: [Color(0xFF3F51B5), Color(0xFF6A5AE0)],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
         ),
         borderRadius: BorderRadius.only(
           bottomLeft: Radius.circular(28),
@@ -129,21 +110,62 @@ class _DailyFeedScreenState extends ConsumerState<DailyFeedScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          // Top bar
+          Row(
+            children: [
+              _menuButton(),
+              const Spacer(),
+              const Icon(
+                Icons.school_outlined,
+                color: Colors.white70,
+                size: 22,
+              ),
+            ],
+          ),
+
+          const SizedBox(height: 16),
+
+          // Greeting
           TypewriterText(
             text: 'Good Morning, $studentName',
-            speed: const Duration(milliseconds: 60),
+            speed: const Duration(milliseconds: 50),
             style: const TextStyle(
               color: Colors.white,
               fontSize: 22,
               fontWeight: FontWeight.w600,
+              height: 1.3,
             ),
           ),
-          const SizedBox(height: 8),
+
+          const SizedBox(height: 6),
+
           const Text(
             'Here’s your academic pressure today',
-            style: TextStyle(color: Colors.white70),
+            style: TextStyle(
+              color: Colors.white70,
+              fontSize: 13,
+            ),
           ),
         ],
+      ),
+    );
+  }
+
+  Widget _menuButton() {
+    return InkWell(
+      borderRadius: BorderRadius.circular(12),
+      onTap: () => _scaffoldKey.currentState?.openDrawer(),
+      child: Container(
+        padding: const EdgeInsets.all(10),
+        decoration: BoxDecoration(
+          color: Colors.white.withOpacity(0.15),
+          borderRadius: BorderRadius.circular(12),
+        ),
+        child: const Icon(
+          Icons.menu,
+          color: Colors.white,
+          size: 22,
+        ),
       ),
     );
   }
@@ -154,7 +176,7 @@ class _DailyFeedScreenState extends ConsumerState<DailyFeedScreen> {
     if (items.isEmpty) return const SizedBox();
 
     return Padding(
-      padding: const EdgeInsets.only(top: 20, left: 20),
+      padding: const EdgeInsets.only(top: 24, left: 20),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -162,20 +184,22 @@ class _DailyFeedScreenState extends ConsumerState<DailyFeedScreen> {
             'Tomorrow Lectures',
             style: TextStyle(
               fontSize: 18,
-              fontWeight: FontWeight.bold,
+              fontWeight: FontWeight.w600,
             ),
           ),
-          const SizedBox(height: 12),
+          const SizedBox(height: 14),
           SizedBox(
-            height: 120,
+            height: 125,
             child: ListView.separated(
+              physics: const BouncingScrollPhysics(),
               scrollDirection: Axis.horizontal,
               itemCount: items.length,
-              separatorBuilder: (_, __) => const SizedBox(width: 12),
+              separatorBuilder: (_, __) => const SizedBox(width: 14),
               itemBuilder: (context, index) {
                 final item = items[index];
+
                 return Container(
-                  width: 240,
+                  width: 250,
                   padding: const EdgeInsets.all(16),
                   decoration: BoxDecoration(
                     color: const Color(0xFFEEF1FF),
@@ -184,11 +208,14 @@ class _DailyFeedScreenState extends ConsumerState<DailyFeedScreen> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      const Row(
-                        children: [
-                          Icon(Icons.menu_book,
-                              color: Color(0xFF3F51B5)),
-                          SizedBox(width: 8),
+                      Row(
+                        children: const [
+                          Icon(
+                            Icons.menu_book_outlined,
+                            color: Color(0xFF3F51B5),
+                            size: 18,
+                          ),
+                          SizedBox(width: 6),
                           Text(
                             'Lecture',
                             style: TextStyle(
@@ -199,9 +226,11 @@ class _DailyFeedScreenState extends ConsumerState<DailyFeedScreen> {
                           ),
                         ],
                       ),
-                      const SizedBox(height: 12),
+                      const SizedBox(height: 10),
                       Text(
                         item.subject,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
                         style: const TextStyle(
                           fontSize: 15,
                           fontWeight: FontWeight.bold,
@@ -222,7 +251,7 @@ class _DailyFeedScreenState extends ConsumerState<DailyFeedScreen> {
                         'Tomorrow',
                         style: TextStyle(
                           fontSize: 11,
-                          color: Colors.black54,
+                          color: Colors.black45,
                         ),
                       ),
                     ],

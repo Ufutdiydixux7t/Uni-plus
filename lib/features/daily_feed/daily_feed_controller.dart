@@ -2,6 +2,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'daily_feed_state.dart';
 import 'daily_feed_item.dart';
+import '../../core/pressure/pressure_engine.dart';
 
 final dailyFeedControllerProvider =
 StateNotifierProvider<DailyFeedController, DailyFeedState>(
@@ -9,11 +10,9 @@ StateNotifierProvider<DailyFeedController, DailyFeedState>(
 );
 
 class DailyFeedController extends StateNotifier<DailyFeedState> {
-  DailyFeedController() : super(const DailyFeedState());
+  DailyFeedController() : super(DailyFeedState.loading());
 
   Future<void> loadDailyFeed() async {
-    state = DailyFeedState.loading();
-
     await Future.delayed(const Duration(seconds: 1));
 
     final items = <DailyFeedItem>[
@@ -32,6 +31,7 @@ class DailyFeedController extends StateNotifier<DailyFeedState> {
         description: 'Lecture at 10:00 AM',
         dueDate: DateTime.now().add(const Duration(hours: 3)),
         type: FeedItemType.lecture,
+        hasSubmission: false,
         openedCount: 2,
       ),
       DailyFeedItem(
@@ -45,9 +45,34 @@ class DailyFeedController extends StateNotifier<DailyFeedState> {
       ),
     ];
 
-    state = state.copyWith(
-      items: items,
-      isLoading: false,
+    final high = <DailyFeedItem>[];
+    final medium = <DailyFeedItem>[];
+    final low = <DailyFeedItem>[];
+    final tomorrow = <DailyFeedItem>[];
+
+    for (final item in items) {
+      if (item.isLecture && item.isTomorrow) {
+        tomorrow.add(item);
+      }
+
+      switch (PressureEngine.calculate(item)) {
+        case PressureLevel.high:
+          high.add(item);
+          break;
+        case PressureLevel.medium:
+          medium.add(item);
+          break;
+        case PressureLevel.low:
+          low.add(item);
+          break;
+      }
+    }
+
+    state = DailyFeedState.data(
+      high: high,
+      medium: medium,
+      low: low,
+      tomorrowLectures: tomorrow,
     );
   }
 }
