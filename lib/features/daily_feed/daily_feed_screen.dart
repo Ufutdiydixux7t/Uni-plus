@@ -1,14 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-
-import '../../shared/widgets/app_drawer.dart';
 import '../../core/storage/secure_storage_service.dart';
+import '../../shared/widgets/app_drawer.dart';
 import '../../../shared/widgets/typewriter_text.dart';
-
-import 'daily_feed_controller.dart';
-import 'daily_feed_item.dart';
-import 'widgets/pressure_card.dart';
-import 'widgets/section_title.dart';
 
 class DailyFeedScreen extends ConsumerStatefulWidget {
   const DailyFeedScreen({super.key});
@@ -35,14 +29,6 @@ class _DailyFeedScreenState extends ConsumerState<DailyFeedScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final state = ref.watch(dailyFeedControllerProvider);
-
-    if (state.isLoading) {
-      return const Scaffold(
-        body: Center(child: CircularProgressIndicator()),
-      );
-    }
-
     return Scaffold(
       key: _scaffoldKey,
       backgroundColor: const Color(0xFFF6F7FB),
@@ -52,37 +38,25 @@ class _DailyFeedScreenState extends ConsumerState<DailyFeedScreen> {
           physics: const BouncingScrollPhysics(),
           slivers: [
             SliverToBoxAdapter(child: _header()),
-
-            SliverToBoxAdapter(
-              child: _tomorrowSection(state.tomorrowLectures),
-            ),
-
             SliverPadding(
-              padding: const EdgeInsets.fromLTRB(20, 24, 20, 32),
-              sliver: SliverList(
-                delegate: SliverChildListDelegate(
-                  [
-                    if (state.high.isNotEmpty) ...[
-                      const SectionTitle(title: 'ON YOUR PLATE'),
-                      const SizedBox(height: 12),
-                      ...state.high.map(PressureCard.high),
-                      const SizedBox(height: 28),
-                    ],
-
-                    if (state.medium.isNotEmpty) ...[
-                      const SectionTitle(title: 'COMING UP'),
-                      const SizedBox(height: 12),
-                      ...state.medium.map(PressureCard.medium),
-                      const SizedBox(height: 28),
-                    ],
-
-                    if (state.low.isNotEmpty) ...[
-                      const SectionTitle(title: 'LATER'),
-                      const SizedBox(height: 12),
-                      ...state.low.map(PressureCard.low),
-                    ],
-                  ],
+              padding: const EdgeInsets.all(20),
+              sliver: SliverGrid(
+                gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                  crossAxisCount: 2,
+                  crossAxisSpacing: 16,
+                  mainAxisSpacing: 16,
+                  childAspectRatio: 1.1,
                 ),
+                delegate: SliverChildListDelegate([
+                  _actionCard(Icons.menu_book, 'Lectures', () {}),
+                  _actionCard(Icons.task_alt, 'Tasks', () {}),
+                  _actionCard(Icons.picture_as_pdf, 'Materials', () {}),
+                  _actionCard(Icons.table_chart, 'Grades', () {}),
+                  _actionCard(Icons.description, 'Forms', () {}),
+                  _actionCard(Icons.assignment, 'Assignments', () {}),
+                  _actionCard(Icons.summarize, 'Summaries', () {}),
+                  _actionCard(Icons.send, 'Send Summary', () {}, isSpecial: true),
+                ]),
               ),
             ),
           ],
@@ -90,8 +64,6 @@ class _DailyFeedScreenState extends ConsumerState<DailyFeedScreen> {
       ),
     );
   }
-
-  // ================= HEADER =================
 
   Widget _header() {
     return Container(
@@ -110,24 +82,16 @@ class _DailyFeedScreenState extends ConsumerState<DailyFeedScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Top bar
           Row(
             children: [
               _menuButton(),
               const Spacer(),
-              const Icon(
-                Icons.school_outlined,
-                color: Colors.white70,
-                size: 22,
-              ),
+              const Icon(Icons.school_outlined, color: Colors.white70, size: 22),
             ],
           ),
-
           const SizedBox(height: 16),
-
-          // Greeting
           TypewriterText(
-            text: 'Good Morning, $studentName',
+            text: 'Welcome, $studentName',
             speed: const Duration(milliseconds: 50),
             style: const TextStyle(
               color: Colors.white,
@@ -136,15 +100,10 @@ class _DailyFeedScreenState extends ConsumerState<DailyFeedScreen> {
               height: 1.3,
             ),
           ),
-
           const SizedBox(height: 6),
-
           const Text(
-            'Here’s your academic pressure today',
-            style: TextStyle(
-              color: Colors.white70,
-              fontSize: 13,
-            ),
+            'Access your academic content easily',
+            style: TextStyle(color: Colors.white70, fontSize: 13),
           ),
         ],
       ),
@@ -161,106 +120,42 @@ class _DailyFeedScreenState extends ConsumerState<DailyFeedScreen> {
           color: Colors.white.withOpacity(0.15),
           borderRadius: BorderRadius.circular(12),
         ),
-        child: const Icon(
-          Icons.menu,
-          color: Colors.white,
-          size: 22,
-        ),
+        child: const Icon(Icons.menu, color: Colors.white, size: 22),
       ),
     );
   }
 
-  // ================= TOMORROW =================
-
-  Widget _tomorrowSection(List<DailyFeedItem> items) {
-    if (items.isEmpty) return const SizedBox();
-
-    return Padding(
-      padding: const EdgeInsets.only(top: 24, left: 20),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          const Text(
-            'Tomorrow Lectures',
-            style: TextStyle(
-              fontSize: 18,
-              fontWeight: FontWeight.w600,
+  Widget _actionCard(IconData icon, String title, VoidCallback onTap, {bool isSpecial = false}) {
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(20),
+      child: Container(
+        decoration: BoxDecoration(
+          color: isSpecial ? const Color(0xFF3F51B5) : Colors.white,
+          borderRadius: BorderRadius.circular(20),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.05),
+              blurRadius: 10,
+              offset: const Offset(0, 4),
             ),
-          ),
-          const SizedBox(height: 14),
-          SizedBox(
-            height: 125,
-            child: ListView.separated(
-              physics: const BouncingScrollPhysics(),
-              scrollDirection: Axis.horizontal,
-              itemCount: items.length,
-              separatorBuilder: (_, __) => const SizedBox(width: 14),
-              itemBuilder: (context, index) {
-                final item = items[index];
-
-                return Container(
-                  width: 250,
-                  padding: const EdgeInsets.all(16),
-                  decoration: BoxDecoration(
-                    color: const Color(0xFFEEF1FF),
-                    borderRadius: BorderRadius.circular(20),
-                  ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
-                        children: const [
-                          Icon(
-                            Icons.menu_book_outlined,
-                            color: Color(0xFF3F51B5),
-                            size: 18,
-                          ),
-                          SizedBox(width: 6),
-                          Text(
-                            'Lecture',
-                            style: TextStyle(
-                              fontSize: 12,
-                              fontWeight: FontWeight.w600,
-                              color: Color(0xFF3F51B5),
-                            ),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 10),
-                      Text(
-                        item.subject,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: const TextStyle(
-                          fontSize: 15,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                      const SizedBox(height: 6),
-                      Text(
-                        item.description,
-                        maxLines: 2,
-                        overflow: TextOverflow.ellipsis,
-                        style: const TextStyle(
-                          color: Colors.black54,
-                          fontSize: 13,
-                        ),
-                      ),
-                      const Spacer(),
-                      const Text(
-                        'Tomorrow',
-                        style: TextStyle(
-                          fontSize: 11,
-                          color: Colors.black45,
-                        ),
-                      ),
-                    ],
-                  ),
-                );
-              },
+          ],
+        ),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(icon, size: 32, color: isSpecial ? Colors.white : const Color(0xFF3F51B5)),
+            const SizedBox(height: 12),
+            Text(
+              title,
+              style: TextStyle(
+                fontSize: 14,
+                fontWeight: FontWeight.w600,
+                color: isSpecial ? Colors.white : Colors.black87,
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
