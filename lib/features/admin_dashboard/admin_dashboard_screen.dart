@@ -2,6 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import '../../core/storage/secure_storage_service.dart';
 import '../../shared/widgets/app_drawer.dart';
+import '../lectures/lectures_screen.dart';
+import '../materials/materials_screen.dart';
+import '../shared/generic_feature_screen.dart';
+import '../summaries/received_summaries_screen.dart';
 
 class AdminDashboardScreen extends StatefulWidget {
   const AdminDashboardScreen({super.key});
@@ -29,6 +33,10 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
       delegateName = name ?? 'Delegate';
       classCode = code ?? '';
     });
+  }
+
+  void _navigateTo(Widget screen) {
+    Navigator.push(context, MaterialPageRoute(builder: (_) => screen));
   }
 
   @override
@@ -127,20 +135,20 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
       mainAxisSpacing: 16,
       childAspectRatio: 1.3,
       children: [
-        _DashboardCard(icon: Icons.menu_book, title: 'Lectures', onTap: () {}),
-        _DashboardCard(icon: Icons.task_alt, title: 'Tasks', onTap: () {}),
-        _DashboardCard(icon: Icons.picture_as_pdf, title: 'Materials', onTap: () {}),
-        _DashboardCard(icon: Icons.table_chart, title: 'Grades (Excel)', onTap: () {}),
-        _DashboardCard(icon: Icons.description, title: 'Forms', onTap: () {}),
-        _DashboardCard(icon: Icons.assignment, title: 'Assignments', onTap: () {}),
-        _DashboardCard(icon: Icons.summarize, title: 'Summaries', onTap: () {}),
+        _DashboardCard(icon: Icons.menu_book, title: 'Lectures', onTap: () => _navigateTo(const LecturesScreen())),
+        _DashboardCard(icon: Icons.task_alt, title: 'Tasks', onTap: () => _navigateTo(const GenericFeatureScreen(title: 'Tasks', icon: Icons.task_alt))),
+        _DashboardCard(icon: Icons.picture_as_pdf, title: 'Materials', onTap: () => _navigateTo(const MaterialsScreen())),
+        _DashboardCard(icon: Icons.table_chart, title: 'Grades (Excel)', onTap: () => _navigateTo(const GenericFeatureScreen(title: 'Grades', icon: Icons.table_chart, isGrades: true))),
+        _DashboardCard(icon: Icons.description, title: 'Forms', onTap: () => _navigateTo(const GenericFeatureScreen(title: 'Forms', icon: Icons.description))),
+        _DashboardCard(icon: Icons.assignment, title: 'Assignments', onTap: () => _navigateTo(const GenericFeatureScreen(title: 'Assignments', icon: Icons.assignment))),
+        _DashboardCard(icon: Icons.summarize, title: 'Summaries', onTap: () => _navigateTo(const GenericFeatureScreen(title: 'Summaries', icon: Icons.summarize))),
       ],
     );
   }
 
   Widget _submissionsCard() {
     return InkWell(
-      onTap: () {},
+      onTap: () => _navigateTo(const ReceivedSummariesScreen()),
       borderRadius: BorderRadius.circular(20),
       child: Container(
         padding: const EdgeInsets.all(20),

@@ -3,6 +3,10 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/storage/secure_storage_service.dart';
 import '../../shared/widgets/app_drawer.dart';
 import '../../../shared/widgets/typewriter_text.dart';
+import '../lectures/lectures_screen.dart';
+import '../materials/materials_screen.dart';
+import '../shared/generic_feature_screen.dart';
+import '../summaries/send_summary_screen.dart';
 
 class DailyFeedScreen extends ConsumerStatefulWidget {
   const DailyFeedScreen({super.key});
@@ -27,6 +31,10 @@ class _DailyFeedScreenState extends ConsumerState<DailyFeedScreen> {
     setState(() => studentName = name ?? 'Student');
   }
 
+  void _navigateTo(Widget screen) {
+    Navigator.push(context, MaterialPageRoute(builder: (_) => screen));
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -48,14 +56,14 @@ class _DailyFeedScreenState extends ConsumerState<DailyFeedScreen> {
                   childAspectRatio: 1.1,
                 ),
                 delegate: SliverChildListDelegate([
-                  _actionCard(Icons.menu_book, 'Lectures', () {}),
-                  _actionCard(Icons.task_alt, 'Tasks', () {}),
-                  _actionCard(Icons.picture_as_pdf, 'Materials', () {}),
-                  _actionCard(Icons.table_chart, 'Grades', () {}),
-                  _actionCard(Icons.description, 'Forms', () {}),
-                  _actionCard(Icons.assignment, 'Assignments', () {}),
-                  _actionCard(Icons.summarize, 'Summaries', () {}),
-                  _actionCard(Icons.send, 'Send Summary', () {}, isSpecial: true),
+                  _actionCard(Icons.menu_book, 'Lectures', () => _navigateTo(const LecturesScreen())),
+                  _actionCard(Icons.task_alt, 'Tasks', () => _navigateTo(const GenericFeatureScreen(title: 'Tasks', icon: Icons.task_alt))),
+                  _actionCard(Icons.picture_as_pdf, 'Materials', () => _navigateTo(const MaterialsScreen())),
+                  _actionCard(Icons.table_chart, 'Grades', () => _navigateTo(const GenericFeatureScreen(title: 'Grades', icon: Icons.table_chart, isGrades: true))),
+                  _actionCard(Icons.description, 'Forms', () => _navigateTo(const GenericFeatureScreen(title: 'Forms', icon: Icons.description))),
+                  _actionCard(Icons.assignment, 'Assignments', () => _navigateTo(const GenericFeatureScreen(title: 'Assignments', icon: Icons.assignment))),
+                  _actionCard(Icons.summarize, 'Summaries', () => _navigateTo(const GenericFeatureScreen(title: 'Summaries', icon: Icons.summarize))),
+                  _actionCard(Icons.send, 'Send Summary', () => _navigateTo(const SendSummaryScreen()), isSpecial: true),
                 ]),
               ),
             ),
