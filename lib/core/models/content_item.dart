@@ -2,11 +2,11 @@ class ContentItem {
   final String id;
   final String title;
   final String description;
-  final String category; // lectures, materials, summaries, etc.
+  final String category;
   final String fileName;
-  final String filePath;
-  final DateTime date;
+  final String? filePath; // Nullable as per requirements
   final String uploaderName;
+  final DateTime date;
 
   ContentItem({
     required this.id,
@@ -14,30 +14,34 @@ class ContentItem {
     required this.description,
     required this.category,
     required this.fileName,
-    required this.filePath,
-    required this.date,
+    this.filePath,
     required this.uploaderName,
+    required this.date,
   });
 
-  Map<String, dynamic> toJson() => {
-    'id': id,
-    'title': title,
-    'description': description,
-    'category': category,
-    'fileName': fileName,
-    'filePath': filePath,
-    'date': date.toIso8601String(),
-    'uploaderName': uploaderName,
-  };
+  Map<String, dynamic> toJson() {
+    return {
+      'id': id,
+      'title': title,
+      'description': description,
+      'category': category,
+      'fileName': fileName,
+      'filePath': filePath,
+      'uploaderName': uploaderName,
+      'date': date.toIso8601String(),
+    };
+  }
 
-  factory ContentItem.fromJson(Map<String, dynamic> json) => ContentItem(
-    id: json['id'],
-    title: json['title'],
-    description: json['description'],
-    category: json['category'],
-    fileName: json['fileName'],
-    filePath: json['filePath'],
-    date: DateTime.parse(json['date']),
-    uploaderName: json['uploaderName'],
-  );
+  factory ContentItem.fromJson(Map<String, dynamic> json) {
+    return ContentItem(
+      id: json['id'],
+      title: json['title'],
+      description: json['description'],
+      category: json['category'],
+      fileName: json['fileName'],
+      filePath: json['filePath'],
+      uploaderName: json['uploaderName'],
+      date: DateTime.parse(json['date']),
+    );
+  }
 }

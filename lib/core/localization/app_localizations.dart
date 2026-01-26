@@ -8,6 +8,8 @@ class AppLocalizations {
     return Localizations.of<AppLocalizations>(context, AppLocalizations)!;
   }
 
+  static const LocalizationsDelegate<AppLocalizations> delegate = _AppLocalizationsDelegate();
+
   static const _localizedValues = {
     'en': {
       'appTitle': 'UniPlus',
@@ -87,8 +89,6 @@ class AppLocalizations {
   String get logout => _localizedValues[locale.languageCode]!['logout']!;
   String get welcome => _localizedValues[locale.languageCode]!['welcome']!;
   String get noContent => _localizedValues[locale.languageCode]!['noContent']!;
-
-  static const LocalizationsDelegate<AppLocalizations> delegate = _AppLocalizationsDelegate();
 }
 
 class _AppLocalizationsDelegate extends LocalizationsDelegate<AppLocalizations> {

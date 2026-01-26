@@ -10,13 +10,18 @@ class SecureStorageService {
   static const String _keyClassCode = 'class_code';
   static const String _welcomeKey = 'has_seen_welcome';
 
+  /// Explicitly maps UserRole enum to String for storage
+  static String _roleToString(UserRole role) => role.name;
+
+  /// Explicitly maps String from storage back to UserRole enum
+  static UserRole _stringToRole(String? roleString) => UserRoleX.fromString(roleString);
+
   static Future<void> saveUser({
     required UserRole role,
     required String name,
     String? classCode,
   }) async {
-    // Correctly use role.name (String) instead of the UserRole object itself
-    await _storage.write(key: _keyRole, value: role.name);
+    await _storage.write(key: _keyRole, value: _roleToString(role));
     await _storage.write(key: _keyName, value: name);
     if (classCode != null && classCode.isNotEmpty) {
       await _storage.write(key: _keyClassCode, value: classCode);
@@ -25,10 +30,9 @@ class SecureStorageService {
 
   static Future<UserRole> getUserRole() async {
     final value = await _storage.read(key: _keyRole);
-    return UserRoleX.fromString(value);
+    return _stringToRole(value);
   }
 
-  // Defined for compatibility with different calls in the project
   static Future<UserRole> getRole() async => getUserRole();
 
   static Future<String?> getName() async {
@@ -39,7 +43,6 @@ class SecureStorageService {
     return _storage.read(key: _keyClassCode);
   }
 
-  // Implement clear() as requested in the mandatory fixes
   static Future<void> clear() async {
     await _storage.deleteAll();
   }

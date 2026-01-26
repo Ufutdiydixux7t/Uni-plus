@@ -27,6 +27,7 @@ class ContentNotifier extends StateNotifier<List<ContentItem>> {
     required String description,
     required String category,
     required String fileName,
+    String? filePath, // Added filePath as nullable
     required String uploaderName,
   }) async {
     final newItem = ContentItem(
@@ -35,6 +36,7 @@ class ContentNotifier extends StateNotifier<List<ContentItem>> {
       description: description,
       category: category,
       fileName: fileName,
+      filePath: filePath,
       uploaderName: uploaderName,
       date: DateTime.now(),
     );
