@@ -6,6 +6,7 @@ import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'core/auth/user_role.dart';
 import 'core/storage/secure_storage_service.dart';
 import 'core/providers/locale_provider.dart';
+import 'core/navigation/app_routes.dart';
 import 'features/auth/role_selection/role_selection_screen.dart';
 import 'features/daily_feed/daily_feed_screen.dart';
 import 'features/admin_dashboard/admin_dashboard_screen.dart';
@@ -48,6 +49,11 @@ class UniPlusApp extends ConsumerWidget {
         Locale('en'),
         Locale('ar'),
       ],
+      routes: {
+        AppRoutes.roleSelection: (context) => const RoleSelectionScreen(),
+        AppRoutes.homeStudent: (context) => const DailyFeedScreen(),
+        AppRoutes.homeDelegate: (context) => const AdminDashboardScreen(),
+      },
       home: const SplashScreen(),
     );
   }
