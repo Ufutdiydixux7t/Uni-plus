@@ -16,18 +16,19 @@ class SecureStorageService {
     String? classCode,
   }) async {
     await _storage.write(key: _keyRole, value: role.name);
-    await _storage.write(key: _nameKey, value: name);
+    await _storage.write(key: _keyName, value: name);
     if (classCode != null && classCode.isNotEmpty) {
       await _storage.write(key: _keyClassCode, value: classCode);
     }
   }
 
-  static const String _nameKey = 'user_name';
-
   static Future<UserRole> getUserRole() async {
     final value = await _storage.read(key: _keyRole);
     return UserRoleX.fromString(value);
   }
+
+  // Adding alias getRole to fix "The method 'getRole' isn't defined" error
+  static Future<UserRole> getRole() async => getUserRole();
 
   static Future<String?> getName() async {
     return _storage.read(key: _keyName);
