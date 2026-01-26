@@ -37,6 +37,10 @@ class _DailyFeedScreenState extends ConsumerState<DailyFeedScreen> {
 
   @override
   Widget build(BuildContext context) {
+    // Calculate crossAxisCount based on screen width
+    final screenWidth = MediaQuery.of(context).size.width;
+    final crossAxisCount = screenWidth > 600 ? 3 : 2;
+
     return Scaffold(
       key: _scaffoldKey,
       backgroundColor: const Color(0xFFF6F7FB),
@@ -49,8 +53,8 @@ class _DailyFeedScreenState extends ConsumerState<DailyFeedScreen> {
             SliverPadding(
               padding: const EdgeInsets.all(20),
               sliver: SliverGrid(
-                gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                  crossAxisCount: 2,
+                gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                  crossAxisCount: crossAxisCount,
                   crossAxisSpacing: 16,
                   mainAxisSpacing: 16,
                   childAspectRatio: 1.1,
@@ -67,6 +71,8 @@ class _DailyFeedScreenState extends ConsumerState<DailyFeedScreen> {
                 ]),
               ),
             ),
+            // Add some bottom padding for better scrolling experience
+            const SliverToBoxAdapter(child: SizedBox(height: 40)),
           ],
         ),
       ),
@@ -154,12 +160,18 @@ class _DailyFeedScreenState extends ConsumerState<DailyFeedScreen> {
           children: [
             Icon(icon, size: 32, color: isSpecial ? Colors.white : const Color(0xFF3F51B5)),
             const SizedBox(height: 12),
-            Text(
-              title,
-              style: TextStyle(
-                fontSize: 14,
-                fontWeight: FontWeight.w600,
-                color: isSpecial ? Colors.white : Colors.black87,
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 8.0),
+              child: Text(
+                title,
+                textAlign: TextAlign.center,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: TextStyle(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w600,
+                  color: isSpecial ? Colors.white : Colors.black87,
+                ),
               ),
             ),
           ],

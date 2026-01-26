@@ -30,7 +30,9 @@ class _AddContentDialogState extends State<AddContentDialog> {
         _selectedFile = result;
         _errorMessage = null;
       } else {
-        _errorMessage = 'Wrong file type selected or cancelled';
+        // Only show error if they actually picked a wrong file, 
+        // but file_picker handles extension filtering on most platforms.
+        // If result is null, it usually means user cancelled.
       }
     });
   }
@@ -44,40 +46,50 @@ class _AddContentDialogState extends State<AddContentDialog> {
 
   @override
   Widget build(BuildContext context) {
-    // Use MediaQuery to handle keyboard and screen size
-    final bottomInset = MediaQuery.of(context).viewInsets.bottom;
-
     return Dialog(
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-      child: SingleChildScrollView(
-        padding: EdgeInsets.only(bottom: bottomInset),
-        child: Padding(
-          padding: const EdgeInsets.all(24.0),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
+      insetPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
+      child: Container(
+        constraints: BoxConstraints(
+          maxHeight: MediaQuery.of(context).size.height * 0.8,
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Padding(
+              padding: const EdgeInsets.fromLTRB(24, 24, 24, 8),
+              child: Text(
                 'Add New ${widget.title}',
                 style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
               ),
-              const SizedBox(height: 20),
-              _buildTextField(_subjectController, 'Subject', Icons.subject),
-              const SizedBox(height: 16),
-              _buildTextField(_descriptionController, 'Description', Icons.description, maxLines: 3),
-              const SizedBox(height: 20),
-              const Text('Attachment', style: TextStyle(fontWeight: FontWeight.w600)),
-              const SizedBox(height: 8),
-              _buildFilePickerSection(),
-              if (_errorMessage != null)
-                Padding(
-                  padding: const EdgeInsets.only(top: 8.0),
-                  child: Text(_errorMessage!, style: const TextStyle(color: Colors.red, fontSize: 12)),
+            ),
+            Flexible(
+              child: SingleChildScrollView(
+                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    _buildTextField(_subjectController, 'Subject', Icons.subject),
+                    const SizedBox(height: 16),
+                    _buildTextField(_descriptionController, 'Description', Icons.description, maxLines: 3),
+                    const SizedBox(height: 20),
+                    const Text('Attachment', style: TextStyle(fontWeight: FontWeight.w600)),
+                    const SizedBox(height: 8),
+                    _buildFilePickerSection(),
+                    if (_errorMessage != null)
+                      Padding(
+                        padding: const EdgeInsets.only(top: 8.0),
+                        child: Text(_errorMessage!, style: const TextStyle(color: Colors.red, fontSize: 12)),
+                      ),
+                  ],
                 ),
-              const SizedBox(height: 24),
-              _buildActionButtons(context),
-            ],
-          ),
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.all(24.0),
+              child: _buildActionButtons(context),
+            ),
+          ],
         ),
       ),
     );
@@ -87,6 +99,7 @@ class _AddContentDialogState extends State<AddContentDialog> {
     return TextField(
       controller: controller,
       maxLines: maxLines,
+      onChanged: (_) => setState(() {}), // Trigger rebuild to update submit button state
       decoration: InputDecoration(
         labelText: label,
         prefixIcon: Icon(icon, size: 20),
@@ -97,6 +110,8 @@ class _AddContentDialogState extends State<AddContentDialog> {
   }
 
   Widget _buildFilePickerSection() {
+    final extensions = FilePickerService.getExtensionsFor(widget.category);
+    
     return InkWell(
       onTap: _pickFile,
       borderRadius: BorderRadius.circular(12),
@@ -104,9 +119,9 @@ class _AddContentDialogState extends State<AddContentDialog> {
         width: double.infinity,
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
-          border: Border.all(color: Colors.grey[300]!),
+          border: Border.all(color: _selectedFile != null ? Colors.green : Colors.grey[300]!),
           borderRadius: BorderRadius.circular(12),
-          color: Colors.grey[50],
+          color: _selectedFile != null ? Colors.green.withOpacity(0.05) : Colors.grey[50],
         ),
         child: _selectedFile == null
             ? Row(
@@ -115,7 +130,7 @@ class _AddContentDialogState extends State<AddContentDialog> {
                   const Icon(Icons.attach_file, size: 20, color: Color(0xFF3F51B5)),
                   const SizedBox(width: 8),
                   Text(
-                    'Attach ${FilePickerService.getExtensionsFor(widget.category).join("/")}',
+                    'Attach ${extensions.join("/")}',
                     style: const TextStyle(color: Color(0xFF3F51B5), fontWeight: FontWeight.w500),
                   ),
                 ],
@@ -157,12 +172,22 @@ class _AddContentDialogState extends State<AddContentDialog> {
         const SizedBox(width: 12),
         Expanded(
           child: ElevatedButton(
-            onPressed: isReady ? () => Navigator.pop(context) : null,
+            onPressed: isReady ? () {
+              // Return the data to the caller
+              Navigator.pop(context, {
+                'subject': _subjectController.text,
+                'description': _descriptionController.text,
+                'file': _selectedFile,
+              });
+            } : null,
             style: ElevatedButton.styleFrom(
               backgroundColor: const Color(0xFF3F51B5),
               foregroundColor: Colors.white,
+              disabledBackgroundColor: Colors.grey[300],
+              disabledForegroundColor: Colors.grey[500],
               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
               padding: const EdgeInsets.symmetric(vertical: 12),
+              elevation: 0,
             ),
             child: const Text('Submit'),
           ),

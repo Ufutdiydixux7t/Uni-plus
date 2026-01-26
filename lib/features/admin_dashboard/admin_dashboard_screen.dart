@@ -41,6 +41,9 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final screenWidth = MediaQuery.of(context).size.width;
+    final crossAxisCount = screenWidth > 600 ? 3 : 2;
+
     return Scaffold(
       key: _scaffoldKey,
       drawer: const AppDrawer(),
@@ -65,20 +68,21 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               _header(),
-              const SizedBox(height: 24),
+              const SizedBox(height: 32),
               const Text(
                 'Manage Content',
                 style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
               ),
               const SizedBox(height: 16),
-              _dashboardGrid(),
-              const SizedBox(height: 24),
+              _dashboardGrid(crossAxisCount),
+              const SizedBox(height: 32),
               const Text(
                 'Student Submissions',
                 style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
               ),
               const SizedBox(height: 16),
               _submissionsCard(),
+              const SizedBox(height: 40),
             ],
           ),
         ),
@@ -89,47 +93,80 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
   Widget _header() {
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.all(20),
+      padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
         gradient: const LinearGradient(
           colors: [Color(0xFF3F51B5), Color(0xFF6A5AE0)],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
         ),
-        borderRadius: BorderRadius.circular(22),
+        borderRadius: BorderRadius.circular(24),
+        boxShadow: [
+          BoxShadow(
+            color: const Color(0xFF3F51B5).withOpacity(0.3),
+            blurRadius: 15,
+            offset: const Offset(0, 8),
+          ),
+        ],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
             'Welcome, $delegateName',
-            style: const TextStyle(color: Colors.white, fontSize: 20, fontWeight: FontWeight.w600),
+            style: const TextStyle(color: Colors.white, fontSize: 22, fontWeight: FontWeight.bold),
           ),
-          const SizedBox(height: 14),
-          Row(
-            children: [
-              const Text('Class Code:', style: TextStyle(color: Colors.white70)),
-              const SizedBox(width: 8),
-              Text(
-                classCode,
-                style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, letterSpacing: 1.5),
-              ),
-              const Spacer(),
-              IconButton(
-                onPressed: () {
-                  Clipboard.setData(ClipboardData(text: classCode));
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('Code copied to clipboard')),
-                  );
-                },
-                icon: const Icon(Icons.copy, color: Colors.white, size: 20),
-              )
-            ],
+          const SizedBox(height: 8),
+          const Text(
+            'Share the code below with your students to join this class.',
+            style: TextStyle(color: Colors.white70, fontSize: 13),
+          ),
+          const SizedBox(height: 20),
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+            decoration: BoxDecoration(
+              color: Colors.white.withOpacity(0.15),
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: Row(
+              children: [
+                const Icon(Icons.key, color: Colors.white70, size: 18),
+                const SizedBox(width: 12),
+                Text(
+                  classCode,
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontWeight: FontWeight.bold,
+                    fontSize: 18,
+                    letterSpacing: 2,
+                  ),
+                ),
+                const Spacer(),
+                InkWell(
+                  onTap: () {
+                    Clipboard.setData(ClipboardData(text: classCode));
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(content: Text('Code copied to clipboard')),
+                    );
+                  },
+                  child: Container(
+                    padding: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: const Icon(Icons.copy, color: Color(0xFF3F51B5), size: 18),
+                  ),
+                )
+              ],
+            ),
           ),
         ],
       ),
     );
   }
 
-  Widget _dashboardGrid() {
+  Widget _dashboardGrid(int crossAxisCount) {
     final List<Map<String, dynamic>> items = [
       {'icon': Icons.menu_book, 'title': 'Lectures', 'cat': 'lectures'},
       {'icon': Icons.task_alt, 'title': 'Tasks', 'cat': 'tasks'},
@@ -143,11 +180,11 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
     return GridView.builder(
       shrinkWrap: true,
       physics: const NeverScrollableScrollPhysics(),
-      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-        crossAxisCount: 2,
+      gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+        crossAxisCount: crossAxisCount,
         crossAxisSpacing: 16,
         mainAxisSpacing: 16,
-        childAspectRatio: 1.3,
+        childAspectRatio: 1.2,
       ),
       itemCount: items.length,
       itemBuilder: (context, index) {
@@ -225,11 +262,16 @@ class _DashboardCard extends StatelessWidget {
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Icon(icon, size: 32, color: const Color(0xFF3F51B5)),
-            const SizedBox(height: 8),
-            Text(
-              title,
-              style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600),
-              textAlign: TextAlign.center,
+            const SizedBox(height: 12),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 8.0),
+              child: Text(
+                title,
+                style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600),
+                textAlign: TextAlign.center,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+              ),
             ),
           ],
         ),

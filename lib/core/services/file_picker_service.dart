@@ -17,12 +17,11 @@ class PickedFileModel {
 
 class FilePickerService {
   static Future<PickedFileModel?> pickFile({
-    List<String>? allowedExtensions,
-    FileType type = FileType.custom,
+    required List<String> allowedExtensions,
   }) async {
     try {
       FilePickerResult? result = await FilePicker.platform.pickFiles(
-        type: type,
+        type: FileType.custom,
         allowedExtensions: allowedExtensions,
       );
 
