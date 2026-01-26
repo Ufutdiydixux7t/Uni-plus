@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import '../../core/storage/secure_storage_service.dart';
+import '../../core/localization/app_localizations.dart';
 import '../../shared/widgets/app_drawer.dart';
 import '../shared/content_list_screen.dart';
 
@@ -32,14 +32,14 @@ class _DailyFeedScreenState extends ConsumerState<DailyFeedScreen> {
     Navigator.push(
       context,
       MaterialPageRoute(
-        builder: (context) => ContentListScreen(title: title, category: category),
+        builder: (context) => ContentListScreen(category: title),
       ),
     );
   }
 
   @override
   Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context)!;
+    final l10n = AppLocalizations.of(context);
     final screenWidth = MediaQuery.of(context).size.width;
     final crossAxisCount = screenWidth > 600 ? 3 : 2;
 
@@ -63,11 +63,11 @@ class _DailyFeedScreenState extends ConsumerState<DailyFeedScreen> {
                 ),
                 delegate: SliverChildListDelegate([
                   _actionCard(Icons.menu_book, l10n.lectures, () => _navigateToContent(l10n.lectures, 'lectures')),
-                  _actionCard(Icons.picture_as_pdf, l10n.materials, () => _navigateToContent(l10n.materials, 'materials')),
-                  _actionCard(Icons.summarize, l10n.summaries, () => _navigateToContent(l10n.summaries, 'summaries')),
-                  _actionCard(Icons.assignment, l10n.assignments, () => _navigateToContent(l10n.assignments, 'assignments')),
-                  _actionCard(Icons.description, l10n.forms, () => _navigateToContent(l10n.forms, 'forms')),
-                  _actionCard(Icons.table_chart, l10n.grades, () => _navigateToContent(l10n.grades, 'grades')),
+                  _actionCard(Icons.folder_open, l10n.materials, () => _navigateToContent(l10n.materials, 'materials')),
+                  _actionCard(Icons.description, l10n.summaries, () => _navigateToContent(l10n.summaries, 'summaries')),
+                  _actionCard(Icons.task_alt, l10n.tasks, () => _navigateToContent(l10n.tasks, 'tasks')),
+                  _actionCard(Icons.assignment, l10n.forms, () => _navigateToContent(l10n.forms, 'forms')),
+                  _actionCard(Icons.grade, l10n.grades, () => _navigateToContent(l10n.grades, 'grades')),
                 ]),
               ),
             ),

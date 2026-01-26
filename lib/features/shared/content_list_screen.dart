@@ -1,25 +1,23 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import '../../core/providers/content_provider.dart';
 import '../../core/storage/secure_storage_service.dart';
 import '../../core/auth/user_role.dart';
+import '../../core/localization/app_localizations.dart';
 import '../../shared/widgets/add_content_dialog.dart';
 import 'package:intl/intl.dart';
 
 class ContentListScreen extends ConsumerWidget {
   final String category;
-  final String title;
 
   const ContentListScreen({
     super.key,
     required this.category,
-    required this.title,
   });
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final l10n = AppLocalizations.of(context)!;
+    final l10n = AppLocalizations.of(context);
     final contentItems = ref.watch(contentProvider.notifier).getByCategory(category);
     
     return FutureBuilder<UserRole>(
@@ -29,7 +27,7 @@ class ContentListScreen extends ConsumerWidget {
         
         return Scaffold(
           appBar: AppBar(
-            title: Text(title),
+            title: Text(category),
             backgroundColor: Colors.white,
             foregroundColor: Colors.black,
             elevation: 0,
@@ -41,7 +39,7 @@ class ContentListScreen extends ConsumerWidget {
                     children: [
                       const Icon(Icons.folder_open, size: 64, color: Colors.grey),
                       const SizedBox(height: 16),
-                      Text(l10n.noFiles, style: const TextStyle(color: Colors.grey)),
+                      Text(l10n.noContent, style: const TextStyle(color: Colors.grey)),
                     ],
                   ),
                 )
@@ -94,7 +92,7 @@ class ContentListScreen extends ConsumerWidget {
               ? FloatingActionButton(
                   onPressed: () => showDialog(
                     context: context,
-                    builder: (context) => AddContentDialog(title: title, category: category),
+                    builder: (context) => AddContentDialog(category: category),
                   ),
                   backgroundColor: Colors.indigo,
                   child: const Icon(Icons.add),

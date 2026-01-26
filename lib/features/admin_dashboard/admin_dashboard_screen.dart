@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:flutter_gen/gen_l10n/app_localizations.dart';
+import '../../core/localization/app_localizations.dart';
 import '../../core/storage/secure_storage_service.dart';
 import '../../shared/widgets/app_drawer.dart';
 import '../shared/content_list_screen.dart';
@@ -38,14 +38,14 @@ class _AdminDashboardScreenState extends ConsumerState<AdminDashboardScreen> {
     Navigator.push(
       context,
       MaterialPageRoute(
-        builder: (context) => ContentListScreen(title: title, category: category),
+        builder: (context) => ContentListScreen(category: title),
       ),
     );
   }
 
   @override
   Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context)!;
+    final l10n = AppLocalizations.of(context);
     final screenWidth = MediaQuery.of(context).size.width;
     final crossAxisCount = screenWidth > 600 ? 3 : 2;
 
@@ -75,18 +75,11 @@ class _AdminDashboardScreenState extends ConsumerState<AdminDashboardScreen> {
               _header(l10n),
               const SizedBox(height: 32),
               Text(
-                l10n.manageContent,
+                l10n.addContent,
                 style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
               ),
               const SizedBox(height: 16),
               _dashboardGrid(crossAxisCount, l10n),
-              const SizedBox(height: 32),
-              Text(
-                l10n.studentSubmissions,
-                style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-              ),
-              const SizedBox(height: 16),
-              _submissionsCard(l10n),
               const SizedBox(height: 40),
             ],
           ),
@@ -106,13 +99,6 @@ class _AdminDashboardScreenState extends ConsumerState<AdminDashboardScreen> {
           end: Alignment.bottomRight,
         ),
         borderRadius: BorderRadius.circular(24),
-        boxShadow: [
-          BoxShadow(
-            color: const Color(0xFF3F51B5).withOpacity(0.3),
-            blurRadius: 15,
-            offset: const Offset(0, 8),
-          ),
-        ],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -147,21 +133,14 @@ class _AdminDashboardScreenState extends ConsumerState<AdminDashboardScreen> {
                   ),
                 ),
                 const Spacer(),
-                InkWell(
-                  onTap: () {
+                IconButton(
+                  icon: const Icon(Icons.copy, color: Colors.white),
+                  onPressed: () {
                     Clipboard.setData(ClipboardData(text: classCode));
                     ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(content: Text(l10n.codeCopied)),
+                      const SnackBar(content: Text('Code Copied!')),
                     );
                   },
-                  child: Container(
-                    padding: const EdgeInsets.all(8),
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    child: const Icon(Icons.copy, color: Color(0xFF3F51B5), size: 18),
-                  ),
                 )
               ],
             ),
@@ -173,12 +152,12 @@ class _AdminDashboardScreenState extends ConsumerState<AdminDashboardScreen> {
 
   Widget _dashboardGrid(int crossAxisCount, AppLocalizations l10n) {
     final List<Map<String, dynamic>> items = [
-      {'icon': Icons.menu_book, 'title': l10n.lectures, 'cat': 'lectures'},
-      {'icon': Icons.picture_as_pdf, 'title': l10n.materials, 'cat': 'materials'},
-      {'icon': Icons.summarize, 'title': l10n.summaries, 'cat': 'summaries'},
-      {'icon': Icons.assignment, 'title': l10n.assignments, 'cat': 'assignments'},
-      {'icon': Icons.description, 'title': l10n.forms, 'cat': 'forms'},
-      {'icon': Icons.table_chart, 'title': l10n.grades, 'cat': 'grades'},
+      {'icon': Icons.menu_book, 'title': l10n.lectures},
+      {'icon': Icons.folder_open, 'title': l10n.materials},
+      {'icon': Icons.description, 'title': l10n.summaries},
+      {'icon': Icons.task_alt, 'title': l10n.tasks},
+      {'icon': Icons.grade, 'title': l10n.grades},
+      {'icon': Icons.assignment, 'title': l10n.forms},
     ];
 
     return GridView.builder(
@@ -195,49 +174,9 @@ class _AdminDashboardScreenState extends ConsumerState<AdminDashboardScreen> {
         return _DashboardCard(
           icon: items[index]['icon'],
           title: items[index]['title'],
-          onTap: () => _navigateToContent(items[index]['title'], items[index]['cat']),
+          onTap: () => _navigateToContent(items[index]['title'], items[index]['title']),
         );
       },
-    );
-  }
-
-  Widget _submissionsCard(AppLocalizations l10n) {
-    return InkWell(
-      onTap: () => _navigateToContent(l10n.receivedSummaries, 'received_summaries'),
-      borderRadius: BorderRadius.circular(20),
-      child: Container(
-        padding: const EdgeInsets.all(20),
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(20),
-          boxShadow: [
-            BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 10, offset: const Offset(0, 4)),
-          ],
-        ),
-        child: Row(
-          children: [
-            Container(
-              padding: const EdgeInsets.all(12),
-              decoration: BoxDecoration(
-                color: const Color(0xFFEEF1FF),
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: const Icon(Icons.inbox, color: Color(0xFF3F51B5)),
-            ),
-            const SizedBox(width: 16),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(l10n.receivedSummaries, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
-                  Text(l10n.viewSummaries, style: const TextStyle(color: Colors.black54, fontSize: 13)),
-                ],
-              ),
-            ),
-            const Icon(Icons.arrow_forward_ios, size: 16, color: Colors.black26),
-          ],
-        ),
-      ),
     );
   }
 }
@@ -267,15 +206,10 @@ class _DashboardCard extends StatelessWidget {
           children: [
             Icon(icon, size: 32, color: const Color(0xFF3F51B5)),
             const SizedBox(height: 12),
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 8.0),
-              child: Text(
-                title,
-                style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600),
-                textAlign: TextAlign.center,
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-              ),
+            Text(
+              title,
+              style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600),
+              textAlign: TextAlign.center,
             ),
           ],
         ),

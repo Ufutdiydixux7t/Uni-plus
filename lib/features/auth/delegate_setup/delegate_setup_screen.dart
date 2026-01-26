@@ -1,10 +1,10 @@
 import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import '../../../core/auth/user_role.dart';
 import '../../../core/storage/secure_storage_service.dart';
 import '../../../core/providers/locale_provider.dart';
+import '../../../core/localization/app_localizations.dart';
 import '../../admin_dashboard/admin_dashboard_screen.dart';
 
 class DelegateSetupScreen extends ConsumerStatefulWidget {
@@ -53,7 +53,7 @@ class _DelegateSetupScreenState extends ConsumerState<DelegateSetupScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context)!;
+    final l10n = AppLocalizations.of(context);
 
     return Scaffold(
       backgroundColor: Colors.white,
@@ -99,7 +99,7 @@ class _DelegateSetupScreenState extends ConsumerState<DelegateSetupScreen> {
                     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
                     elevation: 0,
                   ),
-                  child: Text(l10n.submit, style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+                  child: Text(l10n.submit, style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.white)),
                 ),
               ),
               const SizedBox(height: 20),

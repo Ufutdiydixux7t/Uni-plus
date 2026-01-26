@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import '../../../core/providers/locale_provider.dart';
+import '../../../core/localization/app_localizations.dart';
 import '../student_register/student_register_screen.dart';
 import '../delegate_setup/delegate_setup_screen.dart';
 
@@ -10,7 +10,7 @@ class RoleSelectionScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final l10n = AppLocalizations.of(context)!;
+    final l10n = AppLocalizations.of(context);
 
     return Scaffold(
       backgroundColor: Colors.white,

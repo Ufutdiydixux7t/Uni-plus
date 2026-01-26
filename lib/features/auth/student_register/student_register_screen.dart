@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import '../../../core/auth/user_role.dart';
 import '../../../core/storage/secure_storage_service.dart';
 import '../../../core/providers/locale_provider.dart';
+import '../../../core/localization/app_localizations.dart';
 import '../../daily_feed/daily_feed_screen.dart';
 
 class StudentRegisterScreen extends ConsumerStatefulWidget {
@@ -49,7 +49,7 @@ class _StudentRegisterScreenState extends ConsumerState<StudentRegisterScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context)!;
+    final l10n = AppLocalizations.of(context);
 
     return Scaffold(
       backgroundColor: Colors.white,

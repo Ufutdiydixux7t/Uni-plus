@@ -1,12 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
-import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 
 import 'core/auth/user_role.dart';
 import 'core/storage/secure_storage_service.dart';
 import 'core/providers/locale_provider.dart';
 import 'core/navigation/app_routes.dart';
+import 'core/localization/app_localizations.dart';
 import 'features/auth/role_selection/role_selection_screen.dart';
 import 'features/daily_feed/daily_feed_screen.dart';
 import 'features/admin_dashboard/admin_dashboard_screen.dart';
@@ -40,7 +40,7 @@ class UniPlusApp extends ConsumerWidget {
       ),
       locale: locale,
       localizationsDelegates: const [
-        AppLocalizations.delegate,
+        AppLocalizations.delegate_instance,
         GlobalMaterialLocalizations.delegate,
         GlobalWidgetsLocalizations.delegate,
         GlobalCupertinoLocalizations.delegate,
