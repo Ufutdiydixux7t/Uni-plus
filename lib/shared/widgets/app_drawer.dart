@@ -51,7 +51,7 @@ class AppDrawer extends ConsumerWidget {
               style: const TextStyle(color: Colors.red, fontSize: 14, fontWeight: FontWeight.w500),
             ),
             onTap: () async {
-              await SecureStorageService.clearUser();
+              await SecureStorageService.clear();
               if (context.mounted) {
                 Navigator.of(context).pushAndRemoveUntil(
                   MaterialPageRoute(builder: (_) => const RoleSelectionScreen()),

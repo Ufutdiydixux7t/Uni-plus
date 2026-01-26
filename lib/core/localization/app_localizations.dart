@@ -88,7 +88,7 @@ class AppLocalizations {
   String get welcome => _localizedValues[locale.languageCode]!['welcome']!;
   String get noContent => _localizedValues[locale.languageCode]!['noContent']!;
 
-  static const delegate_instance = _AppLocalizationsDelegate();
+  static const LocalizationsDelegate<AppLocalizations> delegate = _AppLocalizationsDelegate();
 }
 
 class _AppLocalizationsDelegate extends LocalizationsDelegate<AppLocalizations> {

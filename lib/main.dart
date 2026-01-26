@@ -10,7 +10,7 @@ import 'core/localization/app_localizations.dart';
 import 'features/auth/role_selection/role_selection_screen.dart';
 import 'features/daily_feed/daily_feed_screen.dart';
 import 'features/admin_dashboard/admin_dashboard_screen.dart';
-import 'features/splash/splash_screen.dart';
+import 'features/auth/splash/splash_screen.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -37,14 +37,14 @@ class UniPlusApp extends ConsumerWidget {
         primarySwatch: Colors.indigo,
         scaffoldBackgroundColor: const Color(0xFFF6F7FB),
         fontFamily: 'Roboto',
-        cardTheme: CardTheme(
+        cardTheme: CardThemeData(
           elevation: 2,
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
         ),
       ),
       locale: locale,
       localizationsDelegates: const [
-        AppLocalizations.delegate_instance,
+        AppLocalizations.delegate,
         GlobalMaterialLocalizations.delegate,
         GlobalWidgetsLocalizations.delegate,
         GlobalCupertinoLocalizations.delegate,

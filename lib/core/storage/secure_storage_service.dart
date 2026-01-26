@@ -15,6 +15,7 @@ class SecureStorageService {
     required String name,
     String? classCode,
   }) async {
+    // Correctly use role.name (String) instead of the UserRole object itself
     await _storage.write(key: _keyRole, value: role.name);
     await _storage.write(key: _keyName, value: name);
     if (classCode != null && classCode.isNotEmpty) {
@@ -27,7 +28,7 @@ class SecureStorageService {
     return UserRoleX.fromString(value);
   }
 
-  // Adding alias getRole to fix "The method 'getRole' isn't defined" error
+  // Defined for compatibility with different calls in the project
   static Future<UserRole> getRole() async => getUserRole();
 
   static Future<String?> getName() async {
@@ -36,6 +37,11 @@ class SecureStorageService {
 
   static Future<String?> getClassCode() async {
     return _storage.read(key: _keyClassCode);
+  }
+
+  // Implement clear() as requested in the mandatory fixes
+  static Future<void> clear() async {
+    await _storage.deleteAll();
   }
 
   static Future<void> clearUser() async {

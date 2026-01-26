@@ -22,8 +22,23 @@ class ContentNotifier extends StateNotifier<List<ContentItem>> {
     }
   }
 
-  Future<void> addContent(ContentItem item) async {
-    state = [...state, item];
+  Future<void> addContent({
+    required String title,
+    required String description,
+    required String category,
+    required String fileName,
+    required String uploaderName,
+  }) async {
+    final newItem = ContentItem(
+      id: DateTime.now().millisecondsSinceEpoch.toString(),
+      title: title,
+      description: description,
+      category: category,
+      fileName: fileName,
+      uploaderName: uploaderName,
+      date: DateTime.now(),
+    );
+    state = [...state, newItem];
     await _saveToStorage();
   }
 

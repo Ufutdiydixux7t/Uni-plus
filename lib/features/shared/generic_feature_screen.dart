@@ -135,7 +135,7 @@ class _GenericFeatureScreenState extends State<GenericFeatureScreen> {
         final file = item['file'];
         
         return Card(
-          margin: const EdgeInsets.bottom(16),
+          margin: const EdgeInsets.only(bottom: 16),
           elevation: 2,
           shadowColor: Colors.black12,
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),

@@ -49,7 +49,7 @@ class ContentListScreen extends ConsumerWidget {
                   itemBuilder: (context, index) {
                     final item = contentItems[index];
                     return Card(
-                      margin: const EdgeInsets.bottom(12),
+                      margin: const EdgeInsets.only(bottom: 12),
                       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                       child: ListTile(
                         leading: CircleAvatar(
