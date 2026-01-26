@@ -1,12 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import '../../core/storage/secure_storage_service.dart';
 import '../../shared/widgets/app_drawer.dart';
-import '../../../shared/widgets/typewriter_text.dart';
-import '../lectures/lectures_screen.dart';
-import '../materials/materials_screen.dart';
-import '../shared/generic_feature_screen.dart';
-import '../summaries/send_summary_screen.dart';
+import '../shared/content_list_screen.dart';
 
 class DailyFeedScreen extends ConsumerStatefulWidget {
   const DailyFeedScreen({super.key});
@@ -31,13 +28,18 @@ class _DailyFeedScreenState extends ConsumerState<DailyFeedScreen> {
     setState(() => studentName = name ?? 'Student');
   }
 
-  void _navigateTo(Widget screen) {
-    Navigator.push(context, MaterialPageRoute(builder: (_) => screen));
+  void _navigateToContent(String title, String category) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => ContentListScreen(title: title, category: category),
+      ),
+    );
   }
 
   @override
   Widget build(BuildContext context) {
-    // Calculate crossAxisCount based on screen width
+    final l10n = AppLocalizations.of(context)!;
     final screenWidth = MediaQuery.of(context).size.width;
     final crossAxisCount = screenWidth > 600 ? 3 : 2;
 
@@ -49,7 +51,7 @@ class _DailyFeedScreenState extends ConsumerState<DailyFeedScreen> {
         child: CustomScrollView(
           physics: const BouncingScrollPhysics(),
           slivers: [
-            SliverToBoxAdapter(child: _header()),
+            SliverToBoxAdapter(child: _header(l10n)),
             SliverPadding(
               padding: const EdgeInsets.all(20),
               sliver: SliverGrid(
@@ -60,18 +62,15 @@ class _DailyFeedScreenState extends ConsumerState<DailyFeedScreen> {
                   childAspectRatio: 1.1,
                 ),
                 delegate: SliverChildListDelegate([
-                  _actionCard(Icons.menu_book, 'Lectures', () => _navigateTo(const LecturesScreen())),
-                  _actionCard(Icons.task_alt, 'Tasks', () => _navigateTo(const GenericFeatureScreen(title: 'Tasks', icon: Icons.task_alt))),
-                  _actionCard(Icons.picture_as_pdf, 'Materials', () => _navigateTo(const MaterialsScreen())),
-                  _actionCard(Icons.table_chart, 'Grades', () => _navigateTo(const GenericFeatureScreen(title: 'Grades', icon: Icons.table_chart, isGrades: true))),
-                  _actionCard(Icons.description, 'Forms', () => _navigateTo(const GenericFeatureScreen(title: 'Forms', icon: Icons.description))),
-                  _actionCard(Icons.assignment, 'Assignments', () => _navigateTo(const GenericFeatureScreen(title: 'Assignments', icon: Icons.assignment))),
-                  _actionCard(Icons.summarize, 'Summaries', () => _navigateTo(const GenericFeatureScreen(title: 'Summaries', icon: Icons.summarize))),
-                  _actionCard(Icons.send, 'Send Summary', () => _navigateTo(const SendSummaryScreen()), isSpecial: true),
+                  _actionCard(Icons.menu_book, l10n.lectures, () => _navigateToContent(l10n.lectures, 'lectures')),
+                  _actionCard(Icons.picture_as_pdf, l10n.materials, () => _navigateToContent(l10n.materials, 'materials')),
+                  _actionCard(Icons.summarize, l10n.summaries, () => _navigateToContent(l10n.summaries, 'summaries')),
+                  _actionCard(Icons.assignment, l10n.assignments, () => _navigateToContent(l10n.assignments, 'assignments')),
+                  _actionCard(Icons.description, l10n.forms, () => _navigateToContent(l10n.forms, 'forms')),
+                  _actionCard(Icons.table_chart, l10n.grades, () => _navigateToContent(l10n.grades, 'grades')),
                 ]),
               ),
             ),
-            // Add some bottom padding for better scrolling experience
             const SliverToBoxAdapter(child: SizedBox(height: 40)),
           ],
         ),
@@ -79,7 +78,7 @@ class _DailyFeedScreenState extends ConsumerState<DailyFeedScreen> {
     );
   }
 
-  Widget _header() {
+  Widget _header(AppLocalizations l10n) {
     return Container(
       padding: const EdgeInsets.fromLTRB(16, 18, 20, 28),
       decoration: const BoxDecoration(
@@ -104,9 +103,8 @@ class _DailyFeedScreenState extends ConsumerState<DailyFeedScreen> {
             ],
           ),
           const SizedBox(height: 16),
-          TypewriterText(
-            text: 'Welcome, $studentName',
-            speed: const Duration(milliseconds: 50),
+          Text(
+            '${l10n.welcome}, $studentName',
             style: const TextStyle(
               color: Colors.white,
               fontSize: 22,
@@ -139,13 +137,13 @@ class _DailyFeedScreenState extends ConsumerState<DailyFeedScreen> {
     );
   }
 
-  Widget _actionCard(IconData icon, String title, VoidCallback onTap, {bool isSpecial = false}) {
+  Widget _actionCard(IconData icon, String title, VoidCallback onTap) {
     return InkWell(
       onTap: onTap,
       borderRadius: BorderRadius.circular(20),
       child: Container(
         decoration: BoxDecoration(
-          color: isSpecial ? const Color(0xFF3F51B5) : Colors.white,
+          color: Colors.white,
           borderRadius: BorderRadius.circular(20),
           boxShadow: [
             BoxShadow(
@@ -158,7 +156,7 @@ class _DailyFeedScreenState extends ConsumerState<DailyFeedScreen> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(icon, size: 32, color: isSpecial ? Colors.white : const Color(0xFF3F51B5)),
+            Icon(icon, size: 32, color: const Color(0xFF3F51B5)),
             const SizedBox(height: 12),
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 8.0),
@@ -167,10 +165,10 @@ class _DailyFeedScreenState extends ConsumerState<DailyFeedScreen> {
                 textAlign: TextAlign.center,
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
-                style: TextStyle(
+                style: const TextStyle(
                   fontSize: 14,
                   fontWeight: FontWeight.w600,
-                  color: isSpecial ? Colors.white : Colors.black87,
+                  color: Colors.black87,
                 ),
               ),
             ),

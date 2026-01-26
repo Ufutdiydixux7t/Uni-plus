@@ -1,101 +1,70 @@
 import 'package:flutter/material.dart';
-
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_gen/gen_l10n/app_localizations.dart';
+import '../../core/providers/locale_provider.dart';
 import '../../core/storage/secure_storage_service.dart';
 import '../../core/auth/user_role.dart';
 import '../../features/auth/role_selection/role_selection_screen.dart';
 
-class AppDrawer extends StatelessWidget {
+class AppDrawer extends ConsumerWidget {
   const AppDrawer({super.key});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = AppLocalizations.of(context)!;
+    final currentLocale = ref.watch(localeProvider);
+
     return Drawer(
       width: 290,
       backgroundColor: const Color(0xFFF6F7FB),
-      child: FutureBuilder<UserRole>(
-        future: SecureStorageService.getUserRole(),
-        builder: (context, snapshot) {
-          final role = snapshot.data ?? UserRole.student;
-
-          return Column(
-            children: [
-              const _UserHeader(),
-              Expanded(
-                child: SingleChildScrollView(
-                  physics: const BouncingScrollPhysics(),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      const SizedBox(height: 12),
-                      _section('GENERAL'),
-                      _item(context,
-                        icon: Icons.home_outlined,
-                        title: 'Home',
-                      ),
-
-                      if (role == UserRole.student) ...[
-                        _section('STUDENT'),
-                        _item(context,
-                          icon: Icons.school_outlined,
-                          title: 'My Courses',
-                        ),
-                      ],
-
-                      if (role == UserRole.delegate) ...[
-                        _section('DELEGATE'),
-                        _item(context,
-                          icon: Icons.menu_book_outlined,
-                          title: 'Add Lecture',
-                        ),
-                        _item(context,
-                          icon: Icons.assignment_outlined,
-                          title: 'Add Assignment',
-                        ),
-                      ],
-
-                      if (role == UserRole.admin) ...[
-                        _section('ADMIN'),
-                        _item(context,
-                          icon: Icons.supervisor_account_outlined,
-                          title: 'Manage Users',
-                        ),
-                        _item(context,
-                          icon: Icons.settings_outlined,
-                          title: 'System Settings',
-                        ),
-                      ],
-                      const SizedBox(height: 20),
-                    ],
-                  ),
-                ),
-              ),
-              const Divider(height: 1),
-              _item(
-                context,
-                icon: Icons.logout,
-                title: 'Logout',
-                color: Colors.red,
-                onTap: () async {
-                  await SecureStorageService.clearUser();
-                  if (!context.mounted) return;
-
-                  Navigator.of(context).pushAndRemoveUntil(
-                    MaterialPageRoute(
-                      builder: (_) => const RoleSelectionScreen(),
+      child: Column(
+        children: [
+          const _UserHeader(),
+          Expanded(
+            child: SingleChildScrollView(
+              physics: const BouncingScrollPhysics(),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const SizedBox(height: 12),
+                  _section(l10n.language.toUpperCase()),
+                  ListTile(
+                    dense: true,
+                    leading: const Icon(Icons.language, color: Colors.indigo, size: 22),
+                    title: Text(
+                      currentLocale.languageCode == 'en' ? 'English' : 'العربية',
+                      style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w500),
                     ),
-                        (_) => false,
-                  );
-                },
+                    trailing: const Icon(Icons.swap_horiz, size: 18, color: Colors.grey),
+                    onTap: () => ref.read(localeProvider.notifier).toggleLocale(),
+                  ),
+                ],
               ),
-              SizedBox(height: MediaQuery.of(context).padding.bottom + 12),
-            ],
-          );
-        },
+            ),
+          ),
+          const Divider(height: 1),
+          ListTile(
+            dense: true,
+            leading: const Icon(Icons.logout, color: Colors.red, size: 22),
+            title: Text(
+              l10n.logout,
+              style: const TextStyle(color: Colors.red, fontSize: 14, fontWeight: FontWeight.w500),
+            ),
+            onTap: () async {
+              await SecureStorageService.clearUser();
+              if (context.mounted) {
+                Navigator.of(context).pushAndRemoveUntil(
+                  MaterialPageRoute(builder: (_) => const RoleSelectionScreen()),
+                  (route) => false,
+                );
+              }
+            },
+          ),
+          SizedBox(height: MediaQuery.of(context).padding.bottom + 12),
+        ],
       ),
     );
   }
-
-  // ================= SECTIONS =================
 
   Widget _section(String title) {
     return Padding(
@@ -111,35 +80,6 @@ class AppDrawer extends StatelessWidget {
       ),
     );
   }
-
-  Widget _item(
-      BuildContext context, {
-        required IconData icon,
-        required String title,
-        Color color = Colors.black,
-        VoidCallback? onTap,
-      }) {
-    return ListTile(
-      dense: true,
-      leading: Icon(icon, color: color, size: 22),
-      title: Text(
-        title,
-        style: TextStyle(
-          color: color,
-          fontSize: 14,
-          fontWeight: FontWeight.w500,
-        ),
-      ),
-      horizontalTitleGap: 10,
-      onTap: () {
-        if (onTap != null) {
-          onTap();
-        } else {
-          Navigator.pop(context);
-        }
-      },
-    );
-  }
 }
 
 class _UserHeader extends StatelessWidget {
@@ -147,10 +87,22 @@ class _UserHeader extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return FutureBuilder<String?>(
-      future: SecureStorageService.getName(),
+    final l10n = AppLocalizations.of(context)!;
+    return FutureBuilder<Map<String, dynamic>>(
+      future: Future.wait([
+        SecureStorageService.getName(),
+        SecureStorageService.getUserRole(),
+      ]).then((results) => {
+        'name': results[0],
+        'role': results[1],
+      }),
       builder: (context, snapshot) {
-        final name = snapshot.data ?? 'User';
+        final name = snapshot.data?['name'] as String? ?? 'User';
+        final role = snapshot.data?['role'] as UserRole? ?? UserRole.student;
+        
+        String roleText = l10n.student;
+        if (role == UserRole.delegate) roleText = l10n.delegate;
+        if (role == UserRole.admin) roleText = l10n.admin;
 
         return Container(
           padding: EdgeInsets.fromLTRB(20, MediaQuery.of(context).padding.top + 24, 20, 28),
@@ -177,9 +129,9 @@ class _UserHeader extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Text(
-                      'Welcome',
-                      style: TextStyle(
+                    Text(
+                      roleText,
+                      style: const TextStyle(
                         color: Colors.white70,
                         fontSize: 12,
                       ),

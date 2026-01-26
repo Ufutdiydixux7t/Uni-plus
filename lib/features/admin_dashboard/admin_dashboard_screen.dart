@@ -1,17 +1,19 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import '../../core/storage/secure_storage_service.dart';
 import '../../shared/widgets/app_drawer.dart';
-import '../../shared/widgets/add_content_dialog.dart';
+import '../shared/content_list_screen.dart';
 
-class AdminDashboardScreen extends StatefulWidget {
+class AdminDashboardScreen extends ConsumerStatefulWidget {
   const AdminDashboardScreen({super.key});
 
   @override
-  State<AdminDashboardScreen> createState() => _AdminDashboardScreenState();
+  ConsumerState<AdminDashboardScreen> createState() => _AdminDashboardScreenState();
 }
 
-class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
+class _AdminDashboardScreenState extends ConsumerState<AdminDashboardScreen> {
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
   String delegateName = '';
   String classCode = '';
@@ -32,15 +34,18 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
     });
   }
 
-  void _showAddDialog(String title, String category) {
-    showDialog(
-      context: context,
-      builder: (context) => AddContentDialog(title: title, category: category),
+  void _navigateToContent(String title, String category) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => ContentListScreen(title: title, category: category),
+      ),
     );
   }
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     final screenWidth = MediaQuery.of(context).size.width;
     final crossAxisCount = screenWidth > 600 ? 3 : 2;
 
@@ -51,9 +56,9 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
       appBar: AppBar(
         backgroundColor: Colors.white,
         elevation: 0,
-        title: const Text(
-          'Delegate Dashboard',
-          style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold),
+        title: Text(
+          l10n.delegate,
+          style: const TextStyle(color: Colors.black, fontWeight: FontWeight.bold),
         ),
         leading: IconButton(
           icon: const Icon(Icons.menu, color: Colors.black),
@@ -67,21 +72,21 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              _header(),
+              _header(l10n),
               const SizedBox(height: 32),
-              const Text(
-                'Manage Content',
-                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+              Text(
+                l10n.manageContent,
+                style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
               ),
               const SizedBox(height: 16),
-              _dashboardGrid(crossAxisCount),
+              _dashboardGrid(crossAxisCount, l10n),
               const SizedBox(height: 32),
-              const Text(
-                'Student Submissions',
-                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+              Text(
+                l10n.studentSubmissions,
+                style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
               ),
               const SizedBox(height: 16),
-              _submissionsCard(),
+              _submissionsCard(l10n),
               const SizedBox(height: 40),
             ],
           ),
@@ -90,7 +95,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
     );
   }
 
-  Widget _header() {
+  Widget _header(AppLocalizations l10n) {
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(24),
@@ -113,7 +118,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            'Welcome, $delegateName',
+            '${l10n.welcome}, $delegateName',
             style: const TextStyle(color: Colors.white, fontSize: 22, fontWeight: FontWeight.bold),
           ),
           const SizedBox(height: 8),
@@ -146,7 +151,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
                   onTap: () {
                     Clipboard.setData(ClipboardData(text: classCode));
                     ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text('Code copied to clipboard')),
+                      SnackBar(content: Text(l10n.codeCopied)),
                     );
                   },
                   child: Container(
@@ -166,15 +171,14 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
     );
   }
 
-  Widget _dashboardGrid(int crossAxisCount) {
+  Widget _dashboardGrid(int crossAxisCount, AppLocalizations l10n) {
     final List<Map<String, dynamic>> items = [
-      {'icon': Icons.menu_book, 'title': 'Lectures', 'cat': 'lectures'},
-      {'icon': Icons.task_alt, 'title': 'Tasks', 'cat': 'tasks'},
-      {'icon': Icons.picture_as_pdf, 'title': 'Materials', 'cat': 'materials'},
-      {'icon': Icons.table_chart, 'title': 'Grades (Excel)', 'cat': 'grades'},
-      {'icon': Icons.description, 'title': 'Forms', 'cat': 'forms'},
-      {'icon': Icons.assignment, 'title': 'Assignments', 'cat': 'assignments'},
-      {'icon': Icons.summarize, 'title': 'Summaries', 'cat': 'summaries'},
+      {'icon': Icons.menu_book, 'title': l10n.lectures, 'cat': 'lectures'},
+      {'icon': Icons.picture_as_pdf, 'title': l10n.materials, 'cat': 'materials'},
+      {'icon': Icons.summarize, 'title': l10n.summaries, 'cat': 'summaries'},
+      {'icon': Icons.assignment, 'title': l10n.assignments, 'cat': 'assignments'},
+      {'icon': Icons.description, 'title': l10n.forms, 'cat': 'forms'},
+      {'icon': Icons.table_chart, 'title': l10n.grades, 'cat': 'grades'},
     ];
 
     return GridView.builder(
@@ -191,15 +195,15 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
         return _DashboardCard(
           icon: items[index]['icon'],
           title: items[index]['title'],
-          onTap: () => _showAddDialog(items[index]['title'], items[index]['cat']),
+          onTap: () => _navigateToContent(items[index]['title'], items[index]['cat']),
         );
       },
     );
   }
 
-  Widget _submissionsCard() {
+  Widget _submissionsCard(AppLocalizations l10n) {
     return InkWell(
-      onTap: () {},
+      onTap: () => _navigateToContent(l10n.receivedSummaries, 'received_summaries'),
       borderRadius: BorderRadius.circular(20),
       child: Container(
         padding: const EdgeInsets.all(20),
@@ -221,12 +225,12 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
               child: const Icon(Icons.inbox, color: Color(0xFF3F51B5)),
             ),
             const SizedBox(width: 16),
-            const Expanded(
+            Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text('Received Summaries', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
-                  Text('View summaries sent by students', style: TextStyle(color: Colors.black54, fontSize: 13)),
+                  Text(l10n.receivedSummaries, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+                  Text(l10n.viewSummaries, style: const TextStyle(color: Colors.black54, fontSize: 13)),
                 ],
               ),
             ),

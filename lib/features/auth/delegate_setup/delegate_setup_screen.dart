@@ -1,54 +1,41 @@
 import 'dart:math';
 import 'package:flutter/material.dart';
-
-import '../../../core/storage/secure_storage_service.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import '../../../core/auth/user_role.dart';
+import '../../../core/storage/secure_storage_service.dart';
+import '../../../core/providers/locale_provider.dart';
 import '../../admin_dashboard/admin_dashboard_screen.dart';
 
-class DelegateSetupScreen extends StatefulWidget {
+class DelegateSetupScreen extends ConsumerStatefulWidget {
   const DelegateSetupScreen({super.key});
 
   @override
-  State<DelegateSetupScreen> createState() => _DelegateSetupScreenState();
+  ConsumerState<DelegateSetupScreen> createState() => _DelegateSetupScreenState();
 }
 
-class _DelegateSetupScreenState extends State<DelegateSetupScreen> {
+class _DelegateSetupScreenState extends ConsumerState<DelegateSetupScreen> {
   final _nameController = TextEditingController();
   final _universityController = TextEditingController();
   final _facultyController = TextEditingController();
   final _levelController = TextEditingController();
 
-  // توليد كود فصل عشوائي (بدون حروف مربكة)
   String _generateClassCode() {
     const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
     final rand = Random();
     return List.generate(6, (_) => chars[rand.nextInt(chars.length)]).join();
   }
 
-  @override
-  void dispose() {
-    _nameController.dispose();
-    _universityController.dispose();
-    _facultyController.dispose();
-    _levelController.dispose();
-    super.dispose();
-  }
-
   Future<void> _createClass() async {
-    // تحقق من تعبئة الحقول
     if (_nameController.text.isEmpty ||
         _universityController.text.isEmpty ||
         _facultyController.text.isEmpty ||
         _levelController.text.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('يرجى تعبئة جميع الحقول')),
-      );
       return;
     }
 
     final classCode = _generateClassCode();
 
-    // حفظ المستخدم كـ Delegate (مندوب)
     await SecureStorageService.saveUser(
       role: UserRole.delegate,
       name: _nameController.text.trim(),
@@ -57,79 +44,65 @@ class _DelegateSetupScreenState extends State<DelegateSetupScreen> {
 
     if (!mounted) return;
 
-    // الانتقال مباشرة إلى لوحة تحكم المندوب
-    Navigator.pushReplacement(
+    Navigator.pushAndRemoveUntil(
       context,
-      MaterialPageRoute(
-        builder: (_) => const AdminDashboardScreen(),
-      ),
+      MaterialPageRoute(builder: (_) => const AdminDashboardScreen()),
+      (route) => false,
     );
   }
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+
     return Scaffold(
-      backgroundColor: const Color(0xFFF6F7FB),
+      backgroundColor: Colors.white,
       appBar: AppBar(
-        title: const Text('إعداد المندوب'),
-        backgroundColor: Colors.white,
-        foregroundColor: Colors.black,
+        backgroundColor: Colors.transparent,
         elevation: 0,
+        foregroundColor: const Color(0xFF3F51B5),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.language),
+            onPressed: () => ref.read(localeProvider.notifier).toggleLocale(),
+          ),
+        ],
       ),
       body: SafeArea(
         child: SingleChildScrollView(
-          physics: const BouncingScrollPhysics(),
-          padding: const EdgeInsets.all(24),
+          padding: const EdgeInsets.symmetric(horizontal: 30),
           child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const Text(
-                'أنشئ فصلك الدراسي',
-                style: TextStyle(
-                  fontSize: 22,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-              const SizedBox(height: 8),
-              const Text(
-                'أدخل بياناتك وبيانات الفصل للبدء في إدارته',
-                style: TextStyle(color: Colors.grey, fontSize: 14),
+              const SizedBox(height: 10),
+              Image.asset('assets/icons/uniplus_icon1.png', height: 80),
+              const SizedBox(height: 20),
+              Text(
+                l10n.delegate,
+                style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: Color(0xFF3F51B5)),
               ),
               const SizedBox(height: 32),
-
-              _field(_nameController, 'اسمك الكامل', Icons.person_outline),
+              _field(_nameController, 'Full Name', Icons.person_outline),
               const SizedBox(height: 16),
-
-              _field(_universityController, 'الجامعة', Icons.school_outlined),
+              _field(_universityController, 'University', Icons.school_outlined),
               const SizedBox(height: 16),
-
-              _field(_facultyController, 'الكلية / القسم', Icons.account_balance_outlined),
+              _field(_facultyController, 'Faculty / Department', Icons.account_balance_outlined),
               const SizedBox(height: 16),
-
-              _field(_levelController, 'المستوى / المرحلة', Icons.layers_outlined),
+              _field(_levelController, 'Level / Year', Icons.layers_outlined),
               const SizedBox(height: 40),
-
               SizedBox(
                 width: double.infinity,
+                height: 55,
                 child: ElevatedButton(
                   onPressed: _createClass,
                   style: ElevatedButton.styleFrom(
                     backgroundColor: const Color(0xFF3F51B5),
-                    foregroundColor: Colors.white,
-                    padding: const EdgeInsets.symmetric(vertical: 16),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(16),
-                    ),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
                     elevation: 0,
                   ),
-                  child: const Text(
-                    'إنشاء الفصل',
-                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-                  ),
+                  child: Text(l10n.submit, style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
                 ),
               ),
-              // Add padding for keyboard
-              SizedBox(height: MediaQuery.of(context).viewInsets.bottom > 0 ? 20 : 0),
+              const SizedBox(height: 20),
             ],
           ),
         ),
@@ -142,17 +115,8 @@ class _DelegateSetupScreenState extends State<DelegateSetupScreen> {
       controller: controller,
       decoration: InputDecoration(
         labelText: label,
-        prefixIcon: Icon(icon, size: 22),
-        filled: true,
-        fillColor: Colors.white,
-        border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(16),
-          borderSide: BorderSide(color: Colors.grey[200]!),
-        ),
-        enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(16),
-          borderSide: BorderSide(color: Colors.grey[200]!),
-        ),
+        prefixIcon: Icon(icon, color: const Color(0xFF3F51B5)),
+        border: OutlineInputBorder(borderRadius: BorderRadius.circular(16)),
         contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
       ),
     );

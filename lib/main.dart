@@ -1,11 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
+import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 
 import 'core/auth/user_role.dart';
 import 'core/storage/secure_storage_service.dart';
+import 'core/providers/locale_provider.dart';
 import 'features/auth/role_selection/role_selection_screen.dart';
 import 'features/daily_feed/daily_feed_screen.dart';
 import 'features/admin_dashboard/admin_dashboard_screen.dart';
+import 'features/splash/splash_screen.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -17,29 +21,40 @@ void main() async {
   );
 }
 
-class UniPlusApp extends StatelessWidget {
+class UniPlusApp extends ConsumerWidget {
   const UniPlusApp({super.key});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final locale = ref.watch(localeProvider);
+
     return MaterialApp(
       debugShowCheckedModeBanner: false,
       title: 'Uni Plus',
       theme: ThemeData(
         useMaterial3: false,
+        primarySwatch: Colors.indigo,
         scaffoldBackgroundColor: const Color(0xFFF6F7FB),
         fontFamily: 'Roboto',
       ),
-      home: const _Bootstrap(),
+      locale: locale,
+      localizationsDelegates: const [
+        AppLocalizations.delegate,
+        GlobalMaterialLocalizations.delegate,
+        GlobalWidgetsLocalizations.delegate,
+        GlobalCupertinoLocalizations.delegate,
+      ],
+      supportedLocales: const [
+        Locale('en'),
+        Locale('ar'),
+      ],
+      home: const SplashScreen(),
     );
   }
 }
 
-///
-/// يقرر أول شاشة حسب حالة المستخدم
-///
-class _Bootstrap extends StatelessWidget {
-  const _Bootstrap();
+class Bootstrap extends StatelessWidget {
+  const Bootstrap({super.key});
 
   @override
   Widget build(BuildContext context) {

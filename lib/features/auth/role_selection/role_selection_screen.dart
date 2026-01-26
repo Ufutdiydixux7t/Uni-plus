@@ -1,65 +1,67 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_gen/gen_l10n/app_localizations.dart';
+import '../../../core/providers/locale_provider.dart';
 import '../student_register/student_register_screen.dart';
 import '../delegate_setup/delegate_setup_screen.dart';
 
-class RoleSelectionScreen extends StatelessWidget {
+class RoleSelectionScreen extends ConsumerWidget {
   const RoleSelectionScreen({super.key});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = AppLocalizations.of(context)!;
+
     return Scaffold(
-      backgroundColor: const Color(0xFFF6F7FB),
+      backgroundColor: Colors.white,
+      appBar: AppBar(
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.language, color: Color(0xFF3F51B5)),
+            onPressed: () => ref.read(localeProvider.notifier).toggleLocale(),
+          ),
+        ],
+      ),
       body: SafeArea(
         child: Padding(
-          padding: const EdgeInsets.all(24),
+          padding: const EdgeInsets.symmetric(horizontal: 30),
           child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const SizedBox(height: 20),
-              const Text(
-                'Welcome to Uni Plus',
-                style: TextStyle(
-                  fontSize: 26,
+              const SizedBox(height: 40),
+              Image.asset('assets/icons/uniplus_icon1.png', height: 100),
+              const SizedBox(height: 24),
+              Text(
+                l10n.appTitle,
+                style: const TextStyle(
+                  fontSize: 28,
                   fontWeight: FontWeight.bold,
+                  color: Color(0xFF3F51B5),
                 ),
               ),
-              const SizedBox(height: 8),
-              const Text(
-                'Choose how you want to continue',
-                style: TextStyle(color: Colors.black54),
+              const SizedBox(height: 12),
+              Text(
+                l10n.selectRole,
+                style: const TextStyle(fontSize: 16, color: Colors.grey),
               ),
-              const SizedBox(height: 40),
-
-              _roleCard(
-                context,
-                icon: Icons.school,
-                title: 'Student',
-                subtitle: 'Join your class using a code',
-                onTap: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (_) => const StudentRegisterScreen(),
-                    ),
-                  );
-                },
+              const SizedBox(height: 60),
+              _RoleButton(
+                title: l10n.student,
+                icon: Icons.school_outlined,
+                onTap: () => Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (_) => const StudentRegisterScreen()),
+                ),
               ),
-
               const SizedBox(height: 20),
-
-              _roleCard(
-                context,
-                icon: Icons.badge,
-                title: 'Delegate',
-                subtitle: 'Create and manage your class',
-                onTap: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (_) => const DelegateSetupScreen(),
-                    ),
-                  );
-                },
+              _RoleButton(
+                title: l10n.delegate,
+                icon: Icons.person_outline,
+                onTap: () => Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (_) => const DelegateSetupScreen()),
+                ),
               ),
             ],
           ),
@@ -67,64 +69,37 @@ class RoleSelectionScreen extends StatelessWidget {
       ),
     );
   }
+}
 
-  Widget _roleCard(
-      BuildContext context, {
-        required IconData icon,
-        required String title,
-        required String subtitle,
-        required VoidCallback onTap,
-      }) {
+class _RoleButton extends StatelessWidget {
+  final String title;
+  final IconData icon;
+  final VoidCallback onTap;
+
+  const _RoleButton({required this.title, required this.icon, required this.onTap});
+
+  @override
+  Widget build(BuildContext context) {
     return InkWell(
-      borderRadius: BorderRadius.circular(24),
       onTap: onTap,
+      borderRadius: BorderRadius.circular(16),
       child: Container(
-        padding: const EdgeInsets.all(20),
+        width: double.infinity,
+        padding: const EdgeInsets.symmetric(vertical: 20, horizontal: 24),
         decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(24),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withOpacity(0.06),
-              blurRadius: 14,
-              offset: const Offset(0, 6),
-            ),
-          ],
+          border: Border.all(color: const Color(0xFF3F51B5).withOpacity(0.3)),
+          borderRadius: BorderRadius.circular(16),
         ),
         child: Row(
           children: [
-            Container(
-              padding: const EdgeInsets.all(14),
-              decoration: BoxDecoration(
-                color: const Color(0xFFEEF1FF),
-                borderRadius: BorderRadius.circular(16),
-              ),
-              child: Icon(icon, color: const Color(0xFF3F51B5), size: 28),
+            Icon(icon, color: const Color(0xFF3F51B5), size: 28),
+            const SizedBox(width: 20),
+            Text(
+              title,
+              style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
             ),
-            const SizedBox(width: 16),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    title,
-                    style: const TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                  const SizedBox(height: 6),
-                  Text(
-                    subtitle,
-                    style: const TextStyle(
-                      color: Colors.black54,
-                      fontSize: 13,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            const Icon(Icons.arrow_forward_ios, size: 16),
+            const Spacer(),
+            const Icon(Icons.arrow_forward_ios, size: 16, color: Colors.grey),
           ],
         ),
       ),

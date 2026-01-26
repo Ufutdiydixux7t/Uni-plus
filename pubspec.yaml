@@ -9,6 +9,8 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
+  flutter_localizations:
+    sdk: flutter
   flutter_secure_storage: ^9.0.0
   flutter_riverpod: ^2.5.1
   cupertino_icons: ^1.0.8
@@ -29,6 +31,8 @@ flutter_icons:
   image_path: "assets/icons/uniplus_icon1.png"
 
 flutter:
+  generate: true
   uses-material-design: true
   assets:
     - assets/icons/
+    - assets/images/
