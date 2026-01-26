@@ -2,10 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import '../../core/storage/secure_storage_service.dart';
 import '../../shared/widgets/app_drawer.dart';
-import '../lectures/lectures_screen.dart';
-import '../materials/materials_screen.dart';
-import '../shared/generic_feature_screen.dart';
-import '../summaries/received_summaries_screen.dart';
+import '../../shared/widgets/add_content_dialog.dart';
 
 class AdminDashboardScreen extends StatefulWidget {
   const AdminDashboardScreen({super.key});
@@ -35,8 +32,11 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
     });
   }
 
-  void _navigateTo(Widget screen) {
-    Navigator.push(context, MaterialPageRoute(builder: (_) => screen));
+  void _showAddDialog(String title, String category) {
+    showDialog(
+      context: context,
+      builder: (context) => AddContentDialog(title: title, category: category),
+    );
   }
 
   @override
@@ -57,27 +57,30 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
           onPressed: () => _scaffoldKey.currentState?.openDrawer(),
         ),
       ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(20),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            _header(),
-            const SizedBox(height: 24),
-            const Text(
-              'Manage Content',
-              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-            ),
-            const SizedBox(height: 16),
-            _dashboardGrid(),
-            const SizedBox(height: 24),
-            const Text(
-              'Student Submissions',
-              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-            ),
-            const SizedBox(height: 16),
-            _submissionsCard(),
-          ],
+      body: SafeArea(
+        child: SingleChildScrollView(
+          physics: const BouncingScrollPhysics(),
+          padding: const EdgeInsets.all(20),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              _header(),
+              const SizedBox(height: 24),
+              const Text(
+                'Manage Content',
+                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+              ),
+              const SizedBox(height: 16),
+              _dashboardGrid(),
+              const SizedBox(height: 24),
+              const Text(
+                'Student Submissions',
+                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+              ),
+              const SizedBox(height: 16),
+              _submissionsCard(),
+            ],
+          ),
         ),
       ),
     );
@@ -127,28 +130,39 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
   }
 
   Widget _dashboardGrid() {
-    return GridView.count(
+    final List<Map<String, dynamic>> items = [
+      {'icon': Icons.menu_book, 'title': 'Lectures', 'cat': 'lectures'},
+      {'icon': Icons.task_alt, 'title': 'Tasks', 'cat': 'tasks'},
+      {'icon': Icons.picture_as_pdf, 'title': 'Materials', 'cat': 'materials'},
+      {'icon': Icons.table_chart, 'title': 'Grades (Excel)', 'cat': 'grades'},
+      {'icon': Icons.description, 'title': 'Forms', 'cat': 'forms'},
+      {'icon': Icons.assignment, 'title': 'Assignments', 'cat': 'assignments'},
+      {'icon': Icons.summarize, 'title': 'Summaries', 'cat': 'summaries'},
+    ];
+
+    return GridView.builder(
       shrinkWrap: true,
       physics: const NeverScrollableScrollPhysics(),
-      crossAxisCount: 2,
-      crossAxisSpacing: 16,
-      mainAxisSpacing: 16,
-      childAspectRatio: 1.3,
-      children: [
-        _DashboardCard(icon: Icons.menu_book, title: 'Lectures', onTap: () => _navigateTo(const LecturesScreen())),
-        _DashboardCard(icon: Icons.task_alt, title: 'Tasks', onTap: () => _navigateTo(const GenericFeatureScreen(title: 'Tasks', icon: Icons.task_alt))),
-        _DashboardCard(icon: Icons.picture_as_pdf, title: 'Materials', onTap: () => _navigateTo(const MaterialsScreen())),
-        _DashboardCard(icon: Icons.table_chart, title: 'Grades (Excel)', onTap: () => _navigateTo(const GenericFeatureScreen(title: 'Grades', icon: Icons.table_chart, isGrades: true))),
-        _DashboardCard(icon: Icons.description, title: 'Forms', onTap: () => _navigateTo(const GenericFeatureScreen(title: 'Forms', icon: Icons.description))),
-        _DashboardCard(icon: Icons.assignment, title: 'Assignments', onTap: () => _navigateTo(const GenericFeatureScreen(title: 'Assignments', icon: Icons.assignment))),
-        _DashboardCard(icon: Icons.summarize, title: 'Summaries', onTap: () => _navigateTo(const GenericFeatureScreen(title: 'Summaries', icon: Icons.summarize))),
-      ],
+      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+        crossAxisCount: 2,
+        crossAxisSpacing: 16,
+        mainAxisSpacing: 16,
+        childAspectRatio: 1.3,
+      ),
+      itemCount: items.length,
+      itemBuilder: (context, index) {
+        return _DashboardCard(
+          icon: items[index]['icon'],
+          title: items[index]['title'],
+          onTap: () => _showAddDialog(items[index]['title'], items[index]['cat']),
+        );
+      },
     );
   }
 
   Widget _submissionsCard() {
     return InkWell(
-      onTap: () => _navigateTo(const ReceivedSummariesScreen()),
+      onTap: () {},
       borderRadius: BorderRadius.circular(20),
       child: Container(
         padding: const EdgeInsets.all(20),
