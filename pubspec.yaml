@@ -31,7 +31,7 @@ flutter_icons:
   image_path: "assets/icons/uniplus_icon1.png"
 
 flutter:
-  generate: true
+  generate: false
   uses-material-design: true
   assets:
     - assets/icons/
