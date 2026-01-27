@@ -77,7 +77,7 @@ class _DelegateSetupScreenState extends ConsumerState<DelegateSetupScreen> {
               Image.asset('assets/icons/uniplus_icon1.png', height: 80),
               const SizedBox(height: 20),
               Text(
-                l10n.delegate,
+                l10n.roleDelegate, // Changed from delegate to roleDelegate
                 style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: Color(0xFF3F51B5)),
               ),
               const SizedBox(height: 32),

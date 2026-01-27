@@ -56,7 +56,7 @@ class RoleSelectionScreen extends ConsumerWidget {
               ),
               const SizedBox(height: 20),
               _RoleButton(
-                title: l10n.delegate,
+                title: l10n.roleDelegate, // Changed from delegate to roleDelegate
                 icon: Icons.person_outline,
                 onTap: () => Navigator.push(
                   context,

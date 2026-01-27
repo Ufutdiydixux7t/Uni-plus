@@ -60,7 +60,7 @@ class _AdminDashboardScreenState extends ConsumerState<AdminDashboardScreen> {
         backgroundColor: Colors.white,
         elevation: 0,
         title: Text(
-          l10n.delegate,
+          l10n.roleDelegate,
           style: const TextStyle(color: Colors.black, fontWeight: FontWeight.bold),
         ),
         leading: IconButton(

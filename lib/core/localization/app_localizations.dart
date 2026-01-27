@@ -14,7 +14,7 @@ class AppLocalizations {
     'en': {
       'appTitle': 'UniPlus',
       'student': 'Student',
-      'delegate': 'Delegate',
+      'roleDelegate': 'Delegate',
       'admin': 'Admin',
       'selectRole': 'Select your role to continue',
       'classCode': 'Class Code',
@@ -40,7 +40,7 @@ class AppLocalizations {
     'ar': {
       'appTitle': 'يوني بلس',
       'student': 'طالب',
-      'delegate': 'مندوب',
+      'roleDelegate': 'مندوب',
       'admin': 'مسؤول',
       'selectRole': 'اختر دورك للمتابعة',
       'classCode': 'رمز الفصل',
@@ -67,7 +67,7 @@ class AppLocalizations {
 
   String get appTitle => _localizedValues[locale.languageCode]!['appTitle']!;
   String get student => _localizedValues[locale.languageCode]!['student']!;
-  String get delegate => _localizedValues[locale.languageCode]!['delegate']!;
+  String get roleDelegate => _localizedValues[locale.languageCode]!['roleDelegate']!;
   String get admin => _localizedValues[locale.languageCode]!['admin']!;
   String get selectRole => _localizedValues[locale.languageCode]!['selectRole']!;
   String get classCode => _localizedValues[locale.languageCode]!['classCode']!;

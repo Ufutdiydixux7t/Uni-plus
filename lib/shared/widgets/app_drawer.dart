@@ -101,7 +101,7 @@ class _UserHeader extends StatelessWidget {
         final role = snapshot.data?['role'] as UserRole? ?? UserRole.student;
         
         String roleText = l10n.student;
-        if (role == UserRole.delegate) roleText = l10n.delegate;
+        if (role == UserRole.delegate) roleText = l10n.roleDelegate;
         if (role == UserRole.admin) roleText = l10n.admin;
 
         return Container(
