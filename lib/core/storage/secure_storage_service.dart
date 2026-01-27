@@ -10,18 +10,13 @@ class SecureStorageService {
   static const String _keyClassCode = 'class_code';
   static const String _welcomeKey = 'has_seen_welcome';
 
-  /// Explicitly maps UserRole enum to String for storage
-  static String _roleToString(UserRole role) => role.name;
-
-  /// Explicitly maps String from storage back to UserRole enum
-  static UserRole _stringToRole(String? roleString) => UserRoleX.fromString(roleString);
-
   static Future<void> saveUser({
     required UserRole role,
     required String name,
     String? classCode,
   }) async {
-    await _storage.write(key: _keyRole, value: _roleToString(role));
+    // Explicitly convert UserRole enum to String (using its name property)
+    await _storage.write(key: _keyRole, value: role.name);
     await _storage.write(key: _keyName, value: name);
     if (classCode != null && classCode.isNotEmpty) {
       await _storage.write(key: _keyClassCode, value: classCode);
@@ -30,7 +25,8 @@ class SecureStorageService {
 
   static Future<UserRole> getUserRole() async {
     final value = await _storage.read(key: _keyRole);
-    return _stringToRole(value);
+    // Use the extension to convert String back to UserRole enum
+    return UserRoleX.fromString(value);
   }
 
   static Future<UserRole> getRole() async => getUserRole();

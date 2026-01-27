@@ -32,7 +32,10 @@ class _DailyFeedScreenState extends ConsumerState<DailyFeedScreen> {
     Navigator.push(
       context,
       MaterialPageRoute(
-        builder: (context) => ContentListScreen(category: title),
+        builder: (context) => ContentListScreen(
+          category: category,
+          title: title,
+        ),
       ),
     );
   }

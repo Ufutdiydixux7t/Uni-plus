@@ -38,7 +38,10 @@ class _AdminDashboardScreenState extends ConsumerState<AdminDashboardScreen> {
     Navigator.push(
       context,
       MaterialPageRoute(
-        builder: (context) => ContentListScreen(category: title),
+        builder: (context) => ContentListScreen(
+          category: category,
+          title: title,
+        ),
       ),
     );
   }

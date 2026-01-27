@@ -6,7 +6,7 @@ import '../../core/storage/secure_storage_service.dart';
 import '../../core/localization/app_localizations.dart';
 
 class AddContentDialog extends ConsumerStatefulWidget {
-  final String title;
+  final String title; // Required parameter as per content_list_screen.dart needs
   final String category;
 
   const AddContentDialog({

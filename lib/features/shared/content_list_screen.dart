@@ -9,10 +9,12 @@ import 'package:intl/intl.dart';
 
 class ContentListScreen extends ConsumerWidget {
   final String category;
+  final String title; // Added to match needs and provide context to dialog
 
   const ContentListScreen({
     super.key,
     required this.category,
+    required this.title,
   });
 
   @override
@@ -27,7 +29,7 @@ class ContentListScreen extends ConsumerWidget {
         
         return Scaffold(
           appBar: AppBar(
-            title: Text(category),
+            title: Text(title),
             backgroundColor: Colors.white,
             foregroundColor: Colors.black,
             elevation: 0,
@@ -92,7 +94,10 @@ class ContentListScreen extends ConsumerWidget {
               ? FloatingActionButton(
                   onPressed: () => showDialog(
                     context: context,
-                    builder: (context) => AddContentDialog(category: category),
+                    builder: (context) => AddContentDialog(
+                      title: title, // Passing the required title parameter
+                      category: category,
+                    ),
                   ),
                   backgroundColor: Colors.indigo,
                   child: const Icon(Icons.add),

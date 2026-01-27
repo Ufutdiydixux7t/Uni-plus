@@ -1,11 +1,10 @@
-
-
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../storage/secure_storage_service.dart';
+import '../auth/user_role.dart';
 
 class UserState {
   final String name;
-  final String role;
+  final UserRole role; // Changed from String to UserRole
   final String? classCode;
 
   const UserState({
@@ -15,9 +14,8 @@ class UserState {
   });
 }
 
-final userProvider =
-StateNotifierProvider<UserNotifier, UserState?>(
-      (ref) => UserNotifier(),
+final userProvider = StateNotifierProvider<UserNotifier, UserState?>(
+  (ref) => UserNotifier(),
 );
 
 class UserNotifier extends StateNotifier<UserState?> {
@@ -25,10 +23,10 @@ class UserNotifier extends StateNotifier<UserState?> {
 
   Future<void> loadUser() async {
     final name = await SecureStorageService.getName();
-    final role = await SecureStorageService.getRole();
+    final role = await SecureStorageService.getUserRole();
     final code = await SecureStorageService.getClassCode();
 
-    if (name != null && role != null) {
+    if (name != null) {
       state = UserState(
         name: name,
         role: role,
