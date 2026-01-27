@@ -36,27 +36,63 @@ class SummariesScreen extends ConsumerWidget {
                     ],
                   ),
                 )
-              : ListView.builder(
+              : GridView.builder(
                   padding: const EdgeInsets.all(16),
+                  gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                    crossAxisCount: 2,
+                    crossAxisSpacing: 16,
+                    mainAxisSpacing: 16,
+                    childAspectRatio: 0.9,
+                  ),
                   itemCount: summaries.length,
                   itemBuilder: (context, index) {
                     final item = summaries[index];
                     return Card(
-                      margin: const EdgeInsets.only(bottom: 12),
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                      child: ListTile(
-                        leading: CircleAvatar(
-                          backgroundColor: const Color(0xFF3F51B5).withOpacity(0.1),
-                          child: const Icon(Icons.description, color: Color(0xFF3F51B5)),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                      elevation: 2,
+                      child: Padding(
+                        padding: const EdgeInsets.all(12),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                const Icon(Icons.description, color: Color(0xFF3F51B5)),
+                                if (isDelegate)
+                                  IconButton(
+                                    icon: const Icon(Icons.delete, color: Colors.red, size: 20),
+                                    onPressed: () => _confirmDelete(context, ref, item.id),
+                                    constraints: const BoxConstraints(),
+                                    padding: EdgeInsets.zero,
+                                  ),
+                              ],
+                            ),
+                            const SizedBox(height: 8),
+                            Text(
+                              item.title,
+                              style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                            const SizedBox(height: 4),
+                            Expanded(
+                              child: Text(
+                                item.description,
+                                style: const TextStyle(fontSize: 12, color: Colors.grey),
+                                maxLines: 4,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ),
+                            const Divider(height: 16),
+                            Text(
+                              item.uploaderName,
+                              style: const TextStyle(fontSize: 11, color: Colors.indigo, fontWeight: FontWeight.bold),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ],
                         ),
-                        title: Text(item.title, style: const TextStyle(fontWeight: FontWeight.bold)),
-                        subtitle: Text('${item.uploaderName} • ${item.description}'),
-                        trailing: isDelegate
-                            ? IconButton(
-                                icon: const Icon(Icons.delete_outline, color: Colors.red),
-                                onPressed: () => ref.read(contentProvider.notifier).deleteContent(item.id),
-                              )
-                            : null,
                       ),
                     );
                   },
@@ -71,6 +107,27 @@ class SummariesScreen extends ConsumerWidget {
               : null,
         );
       },
+    );
+  }
+
+  void _confirmDelete(BuildContext context, WidgetRef ref, String id) {
+    final l10n = AppLocalizations.of(context);
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text(l10n.delete),
+        content: Text(l10n.confirmDelete),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(context), child: Text(l10n.cancel)),
+          TextButton(
+            onPressed: () {
+              ref.read(contentProvider.notifier).deleteContent(id);
+              Navigator.pop(context);
+            },
+            child: Text(l10n.delete, style: const TextStyle(color: Colors.red)),
+          ),
+        ],
+      ),
     );
   }
 
@@ -98,7 +155,7 @@ class SummariesScreen extends ConsumerWidget {
           ),
         ),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(context), child: Text(l10n.cancel)),
+          TextButton(onPressed: () => Navigator.pop(context), child: Text(l10n.cancel, style: const TextStyle(color: Colors.grey))),
           ElevatedButton(
             onPressed: () async {
               if (subjectController.text.isEmpty) return;
@@ -111,9 +168,14 @@ class SummariesScreen extends ConsumerWidget {
                 category: 'summaries',
                 uploaderName: uploader,
               );
-              if (context.mounted) Navigator.pop(context);
+              if (context.mounted) {
+                Navigator.pop(context);
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(content: Text(l10n.success), backgroundColor: Colors.green),
+                );
+              }
             },
-            style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFF3F51B5)),
+            style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFF3F51B5), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10))),
             child: Text(l10n.submit, style: const TextStyle(color: Colors.white)),
           ),
         ],

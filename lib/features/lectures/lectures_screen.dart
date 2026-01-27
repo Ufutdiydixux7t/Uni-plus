@@ -42,7 +42,7 @@ class LecturesScreen extends ConsumerWidget {
                     crossAxisCount: 2,
                     crossAxisSpacing: 16,
                     mainAxisSpacing: 16,
-                    childAspectRatio: 0.85,
+                    childAspectRatio: 0.8,
                   ),
                   itemCount: lectures.length,
                   itemBuilder: (context, index) {
@@ -76,21 +76,23 @@ class LecturesScreen extends ConsumerWidget {
                               overflow: TextOverflow.ellipsis,
                             ),
                             const SizedBox(height: 4),
-                            Text(
-                              item.description,
-                              style: const TextStyle(fontSize: 12, color: Colors.grey),
-                              maxLines: 3,
-                              overflow: TextOverflow.ellipsis,
+                            Expanded(
+                              child: Text(
+                                item.description,
+                                style: const TextStyle(fontSize: 12, color: Colors.grey),
+                                maxLines: 5,
+                                overflow: TextOverflow.ellipsis,
+                              ),
                             ),
-                            const Spacer(),
+                            const Divider(height: 16),
                             Row(
                               children: [
-                                const Icon(Icons.person, size: 14, color: Colors.grey),
+                                const Icon(Icons.person, size: 14, color: Colors.indigo),
                                 const SizedBox(width: 4),
                                 Expanded(
                                   child: Text(
                                     item.uploaderName,
-                                    style: const TextStyle(fontSize: 11, color: Colors.grey),
+                                    style: const TextStyle(fontSize: 11, color: Colors.black87),
                                     maxLines: 1,
                                     overflow: TextOverflow.ellipsis,
                                   ),
@@ -104,10 +106,11 @@ class LecturesScreen extends ConsumerWidget {
                   },
                 ),
           floatingActionButton: isDelegate
-              ? FloatingActionButton(
+              ? FloatingActionButton.extended(
                   onPressed: () => _showAddLectureDialog(context, ref),
                   backgroundColor: const Color(0xFF3F51B5),
-                  child: const Icon(Icons.add),
+                  icon: const Icon(Icons.add),
+                  label: Text(l10n.addLecture),
                 )
               : null,
         );
@@ -170,14 +173,14 @@ class LecturesScreen extends ConsumerWidget {
           ElevatedButton(
             onPressed: () async {
               if (subjectController.text.isEmpty) return;
-              final uploader = await SecureStorageService.getName() ?? 'Delegate';
-              final desc = '${l10n.doctor}: ${doctorController.text}\n${l10n.time}: ${timeController.text}\n${l10n.place}: ${placeController.text}\n${descriptionController.text}';
+              final doctorName = doctorController.text.isEmpty ? 'Doctor' : doctorController.text;
+              final desc = '${l10n.doctor}: $doctorName\n${l10n.time}: ${timeController.text}\n${l10n.place}: ${placeController.text}\n${descriptionController.text}';
               
               await ref.read(contentProvider.notifier).addContent(
                 title: subjectController.text.trim(),
                 description: desc.trim(),
                 category: 'lectures',
-                uploaderName: uploader,
+                uploaderName: doctorName,
               );
               if (context.mounted) Navigator.pop(context);
             },

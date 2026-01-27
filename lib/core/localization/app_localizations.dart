@@ -53,6 +53,17 @@ class AppLocalizations {
       'receivedSummaries': 'Received Summaries',
       'delete': 'Delete',
       'confirmDelete': 'Are you sure you want to delete this?',
+      'home': 'Home',
+      'profile': 'Profile',
+      'success': 'Operation successful',
+      'error': 'Something went wrong',
+      'enterFullName': 'Enter your full name',
+      'setupProfile': 'Setup your profile',
+      'next': 'Next',
+      'joinClass': 'Join Class',
+      'announcement': 'Announcement',
+      'optional': 'Optional',
+      'noAnnouncements': 'No announcements for tomorrow',
     },
     'ar': {
       'appTitle': 'يوني بلس',
@@ -96,6 +107,17 @@ class AppLocalizations {
       'receivedSummaries': 'الملخصات المستلمة',
       'delete': 'حذف',
       'confirmDelete': 'هل أنت متأكد من الحذف؟',
+      'home': 'الرئيسية',
+      'profile': 'الملف الشخصي',
+      'success': 'تمت العملية بنجاح',
+      'error': 'حدث خطأ ما',
+      'enterFullName': 'أدخل اسمك الكامل',
+      'setupProfile': 'إعداد الملف الشخصي',
+      'next': 'التالي',
+      'joinClass': 'انضمام للفصل',
+      'announcement': 'إعلان',
+      'optional': 'اختياري',
+      'noAnnouncements': 'لا توجد إعلانات لغد',
     },
   };
 
@@ -140,6 +162,17 @@ class AppLocalizations {
   String get receivedSummaries => _localizedValues[locale.languageCode]!['receivedSummaries']!;
   String get delete => _localizedValues[locale.languageCode]!['delete']!;
   String get confirmDelete => _localizedValues[locale.languageCode]!['confirmDelete']!;
+  String get home => _localizedValues[locale.languageCode]!['home']!;
+  String get profile => _localizedValues[locale.languageCode]!['profile']!;
+  String get success => _localizedValues[locale.languageCode]!['success']!;
+  String get error => _localizedValues[locale.languageCode]!['error']!;
+  String get enterFullName => _localizedValues[locale.languageCode]!['enterFullName']!;
+  String get setupProfile => _localizedValues[locale.languageCode]!['setupProfile']!;
+  String get next => _localizedValues[locale.languageCode]!['next']!;
+  String get joinClass => _localizedValues[locale.languageCode]!['joinClass']!;
+  String get announcement => _localizedValues[locale.languageCode]!['announcement']!;
+  String get optional => _localizedValues[locale.languageCode]!['optional']!;
+  String get noAnnouncements => _localizedValues[locale.languageCode]!['noAnnouncements']!;
 }
 
 class _AppLocalizationsDelegate extends LocalizationsDelegate<AppLocalizations> {

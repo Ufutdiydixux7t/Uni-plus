@@ -29,10 +29,10 @@ class AppDrawer extends ConsumerWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   const SizedBox(height: 12),
-                  _section('NAVIGATION'),
+                  _section(l10n.home.toUpperCase()),
                   _drawerItem(
                     icon: Icons.home_outlined,
-                    title: 'Home',
+                    title: l10n.home,
                     onTap: () => Navigator.pop(context),
                   ),
                   _drawerItem(
@@ -51,7 +51,23 @@ class AppDrawer extends ConsumerWidget {
                       Navigator.push(context, MaterialPageRoute(builder: (_) => const SummariesScreen()));
                     },
                   ),
-                  const SizedBox(height: 12),
+                  _drawerItem(
+                    icon: Icons.assignment_outlined,
+                    title: l10n.tasks,
+                    onTap: () {
+                      Navigator.pop(context);
+                      // Navigator.push(context, MaterialPageRoute(builder: (_) => const TasksScreen()));
+                    },
+                  ),
+                  _drawerItem(
+                    icon: Icons.grade_outlined,
+                    title: l10n.grades,
+                    onTap: () {
+                      Navigator.pop(context);
+                      // Navigator.push(context, MaterialPageRoute(builder: (_) => const GradesScreen()));
+                    },
+                  ),
+                  const Divider(height: 24),
                   _section(l10n.language.toUpperCase()),
                   ListTile(
                     dense: true,

@@ -9,7 +9,7 @@ import 'package:intl/intl.dart';
 
 class ContentListScreen extends ConsumerWidget {
   final String category;
-  final String title; // Added to match needs and provide context to dialog
+  final String title;
 
   const ContentListScreen({
     super.key,
@@ -45,47 +45,68 @@ class ContentListScreen extends ConsumerWidget {
                     ],
                   ),
                 )
-              : ListView.builder(
+              : GridView.builder(
                   padding: const EdgeInsets.all(16),
+                  gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                    crossAxisCount: 2,
+                    crossAxisSpacing: 16,
+                    mainAxisSpacing: 16,
+                    childAspectRatio: 0.85,
+                  ),
                   itemCount: contentItems.length,
                   itemBuilder: (context, index) {
                     final item = contentItems[index];
                     return Card(
-                      margin: const EdgeInsets.only(bottom: 12),
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                      child: ListTile(
-                        leading: CircleAvatar(
-                          backgroundColor: Colors.indigo.withOpacity(0.1),
-                          child: Icon(
-                            item.fileName.toLowerCase().endsWith('.pdf') 
-                                ? Icons.picture_as_pdf 
-                                : Icons.image,
-                            color: Colors.indigo,
-                          ),
-                        ),
-                        title: Text(item.title, style: const TextStyle(fontWeight: FontWeight.bold)),
-                        subtitle: Column(
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                      elevation: 2,
+                      child: Padding(
+                        padding: const EdgeInsets.all(12),
+                        child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Text(item.description),
-                            const SizedBox(height: 4),
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                Icon(
+                                  item.fileName.toLowerCase().endsWith('.pdf') 
+                                      ? Icons.picture_as_pdf 
+                                      : Icons.image,
+                                  color: Colors.indigo,
+                                ),
+                                if (isDelegate)
+                                  IconButton(
+                                    icon: const Icon(Icons.delete_outline, color: Colors.redAccent, size: 20),
+                                    onPressed: () => _confirmDelete(context, ref, item.id),
+                                    constraints: const BoxConstraints(),
+                                    padding: EdgeInsets.zero,
+                                  ),
+                              ],
+                            ),
+                            const SizedBox(height: 8),
                             Text(
-                              '${item.uploaderName} • ${DateFormat('yyyy-MM-dd').format(item.date)}',
-                              style: const TextStyle(fontSize: 11, color: Colors.grey),
+                              item.title,
+                              style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                            const SizedBox(height: 4),
+                            Expanded(
+                              child: Text(
+                                item.description,
+                                style: const TextStyle(fontSize: 12, color: Colors.grey),
+                                maxLines: 3,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ),
+                            const Divider(height: 16),
+                            Text(
+                              '${item.uploaderName} • ${DateFormat('MM/dd').format(item.date)}',
+                              style: const TextStyle(fontSize: 10, color: Colors.grey),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
                             ),
                           ],
                         ),
-                        trailing: isDelegate 
-                            ? IconButton(
-                                icon: const Icon(Icons.delete_outline, color: Colors.redAccent),
-                                onPressed: () => ref.read(contentProvider.notifier).deleteContent(item.id),
-                              )
-                            : const Icon(Icons.download, color: Colors.indigo),
-                        onTap: () {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(content: Text('Download feature coming soon (Local Mock)')),
-                          );
-                        },
                       ),
                     );
                   },
@@ -95,7 +116,7 @@ class ContentListScreen extends ConsumerWidget {
                   onPressed: () => showDialog(
                     context: context,
                     builder: (context) => AddContentDialog(
-                      title: title, // Passing the required title parameter
+                      title: title,
                       category: category,
                     ),
                   ),
@@ -105,6 +126,27 @@ class ContentListScreen extends ConsumerWidget {
               : null,
         );
       },
+    );
+  }
+
+  void _confirmDelete(BuildContext context, WidgetRef ref, String id) {
+    final l10n = AppLocalizations.of(context);
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text(l10n.delete),
+        content: Text(l10n.confirmDelete),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(context), child: Text(l10n.cancel)),
+          TextButton(
+            onPressed: () {
+              ref.read(contentProvider.notifier).deleteContent(id);
+              Navigator.pop(context);
+            },
+            child: Text(l10n.delete, style: const TextStyle(color: Colors.red)),
+          ),
+        ],
+      ),
     );
   }
 }
