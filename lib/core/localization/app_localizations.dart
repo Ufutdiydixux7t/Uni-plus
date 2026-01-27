@@ -40,6 +40,19 @@ class AppLocalizations {
       'subject': 'Subject',
       'time': 'Time',
       'room': 'Room',
+      'doctor': 'Doctor',
+      'place': 'Place',
+      'fullName': 'Full Name',
+      'university': 'University',
+      'faculty': 'Faculty / Department',
+      'level': 'Level / Year',
+      'addLecture': 'Add Lecture',
+      'addAnnouncement': 'Add Announcement',
+      'note': 'Optional Note',
+      'sendSummary': 'Send Summary',
+      'receivedSummaries': 'Received Summaries',
+      'delete': 'Delete',
+      'confirmDelete': 'Are you sure you want to delete this?',
     },
     'ar': {
       'appTitle': 'يوني بلس',
@@ -70,6 +83,19 @@ class AppLocalizations {
       'subject': 'المادة',
       'time': 'الوقت',
       'room': 'القاعة',
+      'doctor': 'الدكتور',
+      'place': 'المكان',
+      'fullName': 'الاسم الكامل',
+      'university': 'الجامعة',
+      'faculty': 'الكلية / القسم',
+      'level': 'المستوى / السنة',
+      'addLecture': 'إضافة محاضرة',
+      'addAnnouncement': 'إضافة إعلان',
+      'note': 'ملاحظة اختيارية',
+      'sendSummary': 'إرسال ملخص',
+      'receivedSummaries': 'الملخصات المستلمة',
+      'delete': 'حذف',
+      'confirmDelete': 'هل أنت متأكد من الحذف؟',
     },
   };
 
@@ -101,6 +127,19 @@ class AppLocalizations {
   String get subject => _localizedValues[locale.languageCode]!['subject']!;
   String get time => _localizedValues[locale.languageCode]!['time']!;
   String get room => _localizedValues[locale.languageCode]!['room']!;
+  String get doctor => _localizedValues[locale.languageCode]!['doctor']!;
+  String get place => _localizedValues[locale.languageCode]!['place']!;
+  String get fullName => _localizedValues[locale.languageCode]!['fullName']!;
+  String get university => _localizedValues[locale.languageCode]!['university']!;
+  String get faculty => _localizedValues[locale.languageCode]!['faculty']!;
+  String get level => _localizedValues[locale.languageCode]!['level']!;
+  String get addLecture => _localizedValues[locale.languageCode]!['addLecture']!;
+  String get addAnnouncement => _localizedValues[locale.languageCode]!['addAnnouncement']!;
+  String get note => _localizedValues[locale.languageCode]!['note']!;
+  String get sendSummary => _localizedValues[locale.languageCode]!['sendSummary']!;
+  String get receivedSummaries => _localizedValues[locale.languageCode]!['receivedSummaries']!;
+  String get delete => _localizedValues[locale.languageCode]!['delete']!;
+  String get confirmDelete => _localizedValues[locale.languageCode]!['confirmDelete']!;
 }
 
 class _AppLocalizationsDelegate extends LocalizationsDelegate<AppLocalizations> {

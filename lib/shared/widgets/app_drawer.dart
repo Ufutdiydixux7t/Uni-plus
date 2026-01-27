@@ -5,6 +5,8 @@ import '../../core/storage/secure_storage_service.dart';
 import '../../core/auth/user_role.dart';
 import '../../core/localization/app_localizations.dart';
 import '../../features/auth/role_selection/role_selection_screen.dart';
+import '../../features/lectures/lectures_screen.dart';
+import '../../features/summaries/summaries_screen.dart';
 
 class AppDrawer extends ConsumerWidget {
   const AppDrawer({super.key});
@@ -26,6 +28,29 @@ class AppDrawer extends ConsumerWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
+                  const SizedBox(height: 12),
+                  _section('NAVIGATION'),
+                  _drawerItem(
+                    icon: Icons.home_outlined,
+                    title: 'Home',
+                    onTap: () => Navigator.pop(context),
+                  ),
+                  _drawerItem(
+                    icon: Icons.menu_book_outlined,
+                    title: l10n.lectures,
+                    onTap: () {
+                      Navigator.pop(context);
+                      Navigator.push(context, MaterialPageRoute(builder: (_) => const LecturesScreen()));
+                    },
+                  ),
+                  _drawerItem(
+                    icon: Icons.description_outlined,
+                    title: l10n.summaries,
+                    onTap: () {
+                      Navigator.pop(context);
+                      Navigator.push(context, MaterialPageRoute(builder: (_) => const SummariesScreen()));
+                    },
+                  ),
                   const SizedBox(height: 12),
                   _section(l10n.language.toUpperCase()),
                   ListTile(
@@ -78,6 +103,22 @@ class AppDrawer extends ConsumerWidget {
           color: Colors.black54,
         ),
       ),
+    );
+  }
+
+  Widget _drawerItem({
+    required IconData icon,
+    required String title,
+    required VoidCallback onTap,
+  }) {
+    return ListTile(
+      dense: true,
+      leading: Icon(icon, color: Colors.indigo, size: 22),
+      title: Text(
+        title,
+        style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w500),
+      ),
+      onTap: onTap,
     );
   }
 }

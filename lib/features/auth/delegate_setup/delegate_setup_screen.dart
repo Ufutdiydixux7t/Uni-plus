@@ -52,6 +52,15 @@ class _DelegateSetupScreenState extends ConsumerState<DelegateSetupScreen> {
   }
 
   @override
+  void dispose() {
+    _nameController.dispose();
+    _universityController.dispose();
+    _facultyController.dispose();
+    _levelController.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
 
@@ -77,17 +86,17 @@ class _DelegateSetupScreenState extends ConsumerState<DelegateSetupScreen> {
               Image.asset('assets/icons/uniplus_icon1.png', height: 80),
               const SizedBox(height: 20),
               Text(
-                l10n.roleDelegate, // Changed from delegate to roleDelegate
+                l10n.roleDelegate,
                 style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: Color(0xFF3F51B5)),
               ),
               const SizedBox(height: 32),
-              _field(_nameController, 'Full Name', Icons.person_outline),
+              _field(_nameController, l10n.fullName, Icons.person_outline),
               const SizedBox(height: 16),
-              _field(_universityController, 'University', Icons.school_outlined),
+              _field(_universityController, l10n.university, Icons.school_outlined),
               const SizedBox(height: 16),
-              _field(_facultyController, 'Faculty / Department', Icons.account_balance_outlined),
+              _field(_facultyController, l10n.faculty, Icons.account_balance_outlined),
               const SizedBox(height: 16),
-              _field(_levelController, 'Level / Year', Icons.layers_outlined),
+              _field(_levelController, l10n.level, Icons.layers_outlined),
               const SizedBox(height: 40),
               SizedBox(
                 width: double.infinity,

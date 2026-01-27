@@ -3,8 +3,10 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/localization/app_localizations.dart';
 import '../../core/storage/secure_storage_service.dart';
+import '../../core/providers/announcement_provider.dart';
 import '../../shared/widgets/app_drawer.dart';
 import '../shared/content_list_screen.dart';
+import '../lectures/lectures_screen.dart';
 
 class AdminDashboardScreen extends ConsumerStatefulWidget {
   const AdminDashboardScreen({super.key});
@@ -35,20 +37,25 @@ class _AdminDashboardScreenState extends ConsumerState<AdminDashboardScreen> {
   }
 
   void _navigateToContent(String title, String category) {
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (context) => ContentListScreen(
-          category: category,
-          title: title,
+    if (category == 'lectures') {
+      Navigator.push(context, MaterialPageRoute(builder: (_) => const LecturesScreen()));
+    } else {
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (context) => ContentListScreen(
+            category: category,
+            title: title,
+          ),
         ),
-      ),
-    );
+      );
+    }
   }
 
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
+    final announcements = ref.watch(announcementProvider);
     final screenWidth = MediaQuery.of(context).size.width;
     final crossAxisCount = screenWidth > 600 ? 3 : 2;
 
@@ -77,7 +84,7 @@ class _AdminDashboardScreenState extends ConsumerState<AdminDashboardScreen> {
             children: [
               _header(l10n),
               const SizedBox(height: 32),
-              _tomorrowLecturesSection(l10n),
+              _announcementSection(l10n, announcements),
               const SizedBox(height: 32),
               Text(
                 l10n.addContent,
@@ -155,62 +162,165 @@ class _AdminDashboardScreenState extends ConsumerState<AdminDashboardScreen> {
     );
   }
 
-  Widget _tomorrowLecturesSection(AppLocalizations l10n) {
+  Widget _announcementSection(AppLocalizations l10n, List<Announcement> announcements) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(
-          l10n.tomorrowLectures,
-          style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Text(
+              l10n.tomorrowLectures,
+              style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+            ),
+            TextButton.icon(
+              onPressed: () => _showAddAnnouncementDialog(context, ref),
+              icon: const Icon(Icons.add, size: 18),
+              label: Text(l10n.addAnnouncement),
+            ),
+          ],
         ),
         const SizedBox(height: 16),
-        Container(
-          width: double.infinity,
-          padding: const EdgeInsets.all(20),
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(20),
-            boxShadow: [
-              BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 10, offset: const Offset(0, 4)),
-            ],
-          ),
-          child: Column(
-            children: [
-              _lectureRow(l10n.subject, l10n.time, l10n.room, isHeader: true),
-              const Divider(height: 24),
-              _lectureRow('Data Structures', '09:00 AM', 'Hall A'),
-              const SizedBox(height: 12),
-              _lectureRow('Mathematics II', '11:00 AM', 'Lab 3'),
-            ],
-          ),
-        ),
+        if (announcements.isEmpty)
+          Container(
+            width: double.infinity,
+            padding: const EdgeInsets.all(20),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(20),
+            ),
+            child: Center(child: Text(l10n.noContent, style: const TextStyle(color: Colors.grey))),
+          )
+        else
+          ...announcements.map((a) => _announcementCard(a, l10n)).toList(),
       ],
     );
   }
 
-  Widget _lectureRow(String subject, String time, String room, {bool isHeader = false}) {
-    final style = TextStyle(
-      fontWeight: isHeader ? FontWeight.bold : FontWeight.normal,
-      color: isHeader ? Colors.grey[700] : Colors.black87,
-      fontSize: 14,
+  Widget _announcementCard(Announcement a, AppLocalizations l10n) {
+    return Container(
+      width: double.infinity,
+      margin: const EdgeInsets.only(bottom: 12),
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(20),
+        boxShadow: [
+          BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 10, offset: const Offset(0, 4)),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(a.subject, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: Color(0xFF3F51B5))),
+              IconButton(
+                icon: const Icon(Icons.delete, color: Colors.red, size: 20),
+                onPressed: () => ref.read(announcementProvider.notifier).deleteAnnouncement(a.id),
+                constraints: const BoxConstraints(),
+                padding: EdgeInsets.zero,
+              ),
+            ],
+          ),
+          const Divider(),
+          _infoRow(Icons.person_outline, '${l10n.doctor}: ${a.doctor}'),
+          const SizedBox(height: 8),
+          _infoRow(Icons.access_time, '${l10n.time}: ${a.time}'),
+          const SizedBox(height: 8),
+          _infoRow(Icons.place_outlined, '${l10n.place}: ${a.place}'),
+          if (a.note.isNotEmpty) ...[
+            const SizedBox(height: 8),
+            _infoRow(Icons.notes, '${l10n.note}: ${a.note}'),
+          ],
+        ],
+      ),
     );
+  }
+
+  Widget _infoRow(IconData icon, String text) {
     return Row(
       children: [
-        Expanded(flex: 3, child: Text(subject, style: style)),
-        Expanded(flex: 2, child: Text(time, style: style)),
-        Expanded(flex: 1, child: Text(room, style: style, textAlign: TextAlign.end)),
+        Icon(icon, size: 16, color: Colors.grey),
+        const SizedBox(width: 8),
+        Expanded(child: Text(text, style: const TextStyle(fontSize: 13, color: Colors.black87))),
       ],
+    );
+  }
+
+  void _showAddAnnouncementDialog(BuildContext context, WidgetRef ref) {
+    final l10n = AppLocalizations.of(context);
+    final subjectController = TextEditingController();
+    final doctorController = TextEditingController();
+    final timeController = TextEditingController();
+    final placeController = TextEditingController();
+    final noteController = TextEditingController();
+
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        title: Text(l10n.addAnnouncement, style: const TextStyle(color: Color(0xFF3F51B5), fontWeight: FontWeight.bold)),
+        content: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              _dialogField(subjectController, l10n.subject, Icons.book_outlined),
+              const SizedBox(height: 12),
+              _dialogField(doctorController, l10n.doctor, Icons.person_outline),
+              const SizedBox(height: 12),
+              _dialogField(timeController, l10n.time, Icons.access_time),
+              const SizedBox(height: 12),
+              _dialogField(placeController, l10n.place, Icons.place_outlined),
+              const SizedBox(height: 12),
+              _dialogField(noteController, l10n.note, Icons.notes, maxLines: 2),
+            ],
+          ),
+        ),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(context), child: Text(l10n.cancel)),
+          ElevatedButton(
+            onPressed: () {
+              if (subjectController.text.isEmpty) return;
+              ref.read(announcementProvider.notifier).addAnnouncement(
+                subject: subjectController.text.trim(),
+                doctor: doctorController.text.trim(),
+                time: timeController.text.trim(),
+                place: placeController.text.trim(),
+                note: noteController.text.trim(),
+              );
+              Navigator.pop(context);
+            },
+            style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFF3F51B5)),
+            child: Text(l10n.save, style: const TextStyle(color: Colors.white)),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _dialogField(TextEditingController controller, String label, IconData icon, {int maxLines = 1}) {
+    return TextField(
+      controller: controller,
+      maxLines: maxLines,
+      decoration: InputDecoration(
+        labelText: label,
+        prefixIcon: Icon(icon, color: const Color(0xFF3F51B5)),
+        border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+      ),
     );
   }
 
   Widget _dashboardGrid(int crossAxisCount, AppLocalizations l10n) {
     final List<Map<String, dynamic>> items = [
-      {'icon': Icons.menu_book, 'title': l10n.lectures},
-      {'icon': Icons.assessment_outlined, 'title': l10n.dailyReports}, // Changed from materials to dailyReports
-      {'icon': Icons.description, 'title': l10n.summaries},
-      {'icon': Icons.task_alt, 'title': l10n.tasks},
-      {'icon': Icons.grade, 'title': l10n.grades},
-      {'icon': Icons.assignment, 'title': l10n.forms},
+      {'icon': Icons.menu_book, 'title': l10n.lectures, 'category': 'lectures'},
+      {'icon': Icons.assessment_outlined, 'title': l10n.dailyReports, 'category': 'dailyReports'},
+      {'icon': Icons.description, 'title': l10n.summaries, 'category': 'summaries'},
+      {'icon': Icons.task_alt, 'title': l10n.tasks, 'category': 'tasks'},
+      {'icon': Icons.grade, 'title': l10n.grades, 'category': 'grades'},
+      {'icon': Icons.assignment, 'title': l10n.forms, 'category': 'forms'},
     ];
 
     return GridView.builder(
@@ -227,7 +337,7 @@ class _AdminDashboardScreenState extends ConsumerState<AdminDashboardScreen> {
         return _DashboardCard(
           icon: items[index]['icon'],
           title: items[index]['title'],
-          onTap: () => _navigateToContent(items[index]['title'], items[index]['title']),
+          onTap: () => _navigateToContent(items[index]['title'], items[index]['category']),
         );
       },
     );

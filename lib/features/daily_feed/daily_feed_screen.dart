@@ -2,8 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/storage/secure_storage_service.dart';
 import '../../core/localization/app_localizations.dart';
+import '../../core/providers/announcement_provider.dart';
 import '../../shared/widgets/app_drawer.dart';
 import '../shared/content_list_screen.dart';
+import '../lectures/lectures_screen.dart';
 
 class DailyFeedScreen extends ConsumerStatefulWidget {
   const DailyFeedScreen({super.key});
@@ -29,20 +31,25 @@ class _DailyFeedScreenState extends ConsumerState<DailyFeedScreen> {
   }
 
   void _navigateToContent(String title, String category) {
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (context) => ContentListScreen(
-          category: category,
-          title: title,
+    if (category == 'lectures') {
+      Navigator.push(context, MaterialPageRoute(builder: (_) => const LecturesScreen()));
+    } else {
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (context) => ContentListScreen(
+            category: category,
+            title: title,
+          ),
         ),
-      ),
-    );
+      );
+    }
   }
 
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
+    final announcements = ref.watch(announcementProvider);
     final screenWidth = MediaQuery.of(context).size.width;
     final crossAxisCount = screenWidth > 600 ? 3 : 2;
 
@@ -55,12 +62,23 @@ class _DailyFeedScreenState extends ConsumerState<DailyFeedScreen> {
           physics: const BouncingScrollPhysics(),
           slivers: [
             SliverToBoxAdapter(child: _header(l10n)),
-            SliverToBoxAdapter(
-              child: Padding(
+            if (announcements.isNotEmpty)
+              SliverPadding(
                 padding: const EdgeInsets.fromLTRB(20, 24, 20, 0),
-                child: _tomorrowLecturesSection(l10n),
+                sliver: SliverToBoxAdapter(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        l10n.tomorrowLectures,
+                        style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                      ),
+                      const SizedBox(height: 16),
+                      ...announcements.map((a) => _announcementCard(a, l10n)).toList(),
+                    ],
+                  ),
+                ),
               ),
-            ),
             SliverPadding(
               padding: const EdgeInsets.all(20),
               sliver: SliverGrid(
@@ -71,12 +89,12 @@ class _DailyFeedScreenState extends ConsumerState<DailyFeedScreen> {
                   childAspectRatio: 1.1,
                 ),
                 delegate: SliverChildListDelegate([
-                  _actionCard(Icons.menu_book, l10n.lectures, () => _navigateToContent(l10n.lectures, l10n.lectures)),
-                  _actionCard(Icons.assessment_outlined, l10n.dailyReports, () => _navigateToContent(l10n.dailyReports, l10n.dailyReports)),
-                  _actionCard(Icons.description, l10n.summaries, () => _navigateToContent(l10n.summaries, l10n.summaries)),
-                  _actionCard(Icons.task_alt, l10n.tasks, () => _navigateToContent(l10n.tasks, l10n.tasks)),
-                  _actionCard(Icons.assignment, l10n.forms, () => _navigateToContent(l10n.forms, l10n.forms)),
-                  _actionCard(Icons.grade, l10n.grades, () => _navigateToContent(l10n.grades, l10n.grades)),
+                  _actionCard(Icons.menu_book, l10n.lectures, () => _navigateToContent(l10n.lectures, 'lectures')),
+                  _actionCard(Icons.assessment_outlined, l10n.dailyReports, () => _navigateToContent(l10n.dailyReports, 'dailyReports')),
+                  _actionCard(Icons.description, l10n.summaries, () => _navigateToContent(l10n.summaries, 'summaries')),
+                  _actionCard(Icons.task_alt, l10n.tasks, () => _navigateToContent(l10n.tasks, 'tasks')),
+                  _actionCard(Icons.assignment, l10n.forms, () => _navigateToContent(l10n.forms, 'forms')),
+                  _actionCard(Icons.grade, l10n.grades, () => _navigateToContent(l10n.grades, 'grades')),
                 ]),
               ),
             ),
@@ -131,50 +149,43 @@ class _DailyFeedScreenState extends ConsumerState<DailyFeedScreen> {
     );
   }
 
-  Widget _tomorrowLecturesSection(AppLocalizations l10n) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          l10n.tomorrowLectures,
-          style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-        ),
-        const SizedBox(height: 16),
-        Container(
-          width: double.infinity,
-          padding: const EdgeInsets.all(20),
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(20),
-            boxShadow: [
-              BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 10, offset: const Offset(0, 4)),
-            ],
-          ),
-          child: Column(
-            children: [
-              _lectureRow(l10n.subject, l10n.time, l10n.room, isHeader: true),
-              const Divider(height: 24),
-              _lectureRow('Data Structures', '09:00 AM', 'Hall A'),
-              const SizedBox(height: 12),
-              _lectureRow('Mathematics II', '11:00 AM', 'Lab 3'),
-            ],
-          ),
-        ),
-      ],
+  Widget _announcementCard(Announcement a, AppLocalizations l10n) {
+    return Container(
+      width: double.infinity,
+      margin: const EdgeInsets.only(bottom: 12),
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(20),
+        boxShadow: [
+          BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 10, offset: const Offset(0, 4)),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(a.subject, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: Color(0xFF3F51B5))),
+          const Divider(),
+          _infoRow(Icons.person_outline, '${l10n.doctor}: ${a.doctor}'),
+          const SizedBox(height: 8),
+          _infoRow(Icons.access_time, '${l10n.time}: ${a.time}'),
+          const SizedBox(height: 8),
+          _infoRow(Icons.place_outlined, '${l10n.place}: ${a.place}'),
+          if (a.note.isNotEmpty) ...[
+            const SizedBox(height: 8),
+            _infoRow(Icons.notes, '${l10n.note}: ${a.note}'),
+          ],
+        ],
+      ),
     );
   }
 
-  Widget _lectureRow(String subject, String time, String room, {bool isHeader = false}) {
-    final style = TextStyle(
-      fontWeight: isHeader ? FontWeight.bold : FontWeight.normal,
-      color: isHeader ? Colors.grey[700] : Colors.black87,
-      fontSize: 14,
-    );
+  Widget _infoRow(IconData icon, String text) {
     return Row(
       children: [
-        Expanded(flex: 3, child: Text(subject, style: style)),
-        Expanded(flex: 2, child: Text(time, style: style)),
-        Expanded(flex: 1, child: Text(room, style: style, textAlign: TextAlign.end)),
+        Icon(icon, size: 16, color: Colors.grey),
+        const SizedBox(width: 8),
+        Expanded(child: Text(text, style: const TextStyle(fontSize: 13, color: Colors.black87))),
       ],
     );
   }
