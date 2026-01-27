@@ -26,7 +26,7 @@ class AppLocalizations {
       'save': 'Save',
       'cancel': 'Cancel',
       'lectures': 'Lectures',
-      'materials': 'Materials',
+      'dailyReports': 'Daily Reports',
       'summaries': 'Summaries',
       'tasks': 'Tasks',
       'grades': 'Grades',
@@ -36,6 +36,10 @@ class AppLocalizations {
       'logout': 'Logout',
       'welcome': 'Welcome',
       'noContent': 'No content available yet.',
+      'tomorrowLectures': 'Tomorrow Lectures',
+      'subject': 'Subject',
+      'time': 'Time',
+      'room': 'Room',
     },
     'ar': {
       'appTitle': 'يوني بلس',
@@ -52,7 +56,7 @@ class AppLocalizations {
       'save': 'حفظ',
       'cancel': 'إلغاء',
       'lectures': 'المحاضرات',
-      'materials': 'المصادر',
+      'dailyReports': 'التقارير اليومية',
       'summaries': 'الملخصات',
       'tasks': 'المهام',
       'grades': 'الدرجات',
@@ -62,6 +66,10 @@ class AppLocalizations {
       'logout': 'تسجيل الخروج',
       'welcome': 'أهلاً بك',
       'noContent': 'لا يوجد محتوى متاح بعد.',
+      'tomorrowLectures': 'محاضرات الغد',
+      'subject': 'المادة',
+      'time': 'الوقت',
+      'room': 'القاعة',
     },
   };
 
@@ -79,7 +87,7 @@ class AppLocalizations {
   String get save => _localizedValues[locale.languageCode]!['save']!;
   String get cancel => _localizedValues[locale.languageCode]!['cancel']!;
   String get lectures => _localizedValues[locale.languageCode]!['lectures']!;
-  String get materials => _localizedValues[locale.languageCode]!['materials']!;
+  String get dailyReports => _localizedValues[locale.languageCode]!['dailyReports']!;
   String get summaries => _localizedValues[locale.languageCode]!['summaries']!;
   String get tasks => _localizedValues[locale.languageCode]!['tasks']!;
   String get grades => _localizedValues[locale.languageCode]!['grades']!;
@@ -89,6 +97,10 @@ class AppLocalizations {
   String get logout => _localizedValues[locale.languageCode]!['logout']!;
   String get welcome => _localizedValues[locale.languageCode]!['welcome']!;
   String get noContent => _localizedValues[locale.languageCode]!['noContent']!;
+  String get tomorrowLectures => _localizedValues[locale.languageCode]!['tomorrowLectures']!;
+  String get subject => _localizedValues[locale.languageCode]!['subject']!;
+  String get time => _localizedValues[locale.languageCode]!['time']!;
+  String get room => _localizedValues[locale.languageCode]!['room']!;
 }
 
 class _AppLocalizationsDelegate extends LocalizationsDelegate<AppLocalizations> {

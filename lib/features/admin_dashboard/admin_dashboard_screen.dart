@@ -77,6 +77,8 @@ class _AdminDashboardScreenState extends ConsumerState<AdminDashboardScreen> {
             children: [
               _header(l10n),
               const SizedBox(height: 32),
+              _tomorrowLecturesSection(l10n),
+              const SizedBox(height: 32),
               Text(
                 l10n.addContent,
                 style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
@@ -153,10 +155,58 @@ class _AdminDashboardScreenState extends ConsumerState<AdminDashboardScreen> {
     );
   }
 
+  Widget _tomorrowLecturesSection(AppLocalizations l10n) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          l10n.tomorrowLectures,
+          style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+        ),
+        const SizedBox(height: 16),
+        Container(
+          width: double.infinity,
+          padding: const EdgeInsets.all(20),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(20),
+            boxShadow: [
+              BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 10, offset: const Offset(0, 4)),
+            ],
+          ),
+          child: Column(
+            children: [
+              _lectureRow(l10n.subject, l10n.time, l10n.room, isHeader: true),
+              const Divider(height: 24),
+              _lectureRow('Data Structures', '09:00 AM', 'Hall A'),
+              const SizedBox(height: 12),
+              _lectureRow('Mathematics II', '11:00 AM', 'Lab 3'),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _lectureRow(String subject, String time, String room, {bool isHeader = false}) {
+    final style = TextStyle(
+      fontWeight: isHeader ? FontWeight.bold : FontWeight.normal,
+      color: isHeader ? Colors.grey[700] : Colors.black87,
+      fontSize: 14,
+    );
+    return Row(
+      children: [
+        Expanded(flex: 3, child: Text(subject, style: style)),
+        Expanded(flex: 2, child: Text(time, style: style)),
+        Expanded(flex: 1, child: Text(room, style: style, textAlign: TextAlign.end)),
+      ],
+    );
+  }
+
   Widget _dashboardGrid(int crossAxisCount, AppLocalizations l10n) {
     final List<Map<String, dynamic>> items = [
       {'icon': Icons.menu_book, 'title': l10n.lectures},
-      {'icon': Icons.folder_open, 'title': l10n.materials},
+      {'icon': Icons.assessment_outlined, 'title': l10n.dailyReports}, // Changed from materials to dailyReports
       {'icon': Icons.description, 'title': l10n.summaries},
       {'icon': Icons.task_alt, 'title': l10n.tasks},
       {'icon': Icons.grade, 'title': l10n.grades},

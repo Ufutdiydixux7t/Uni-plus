@@ -6,7 +6,7 @@ import '../../core/storage/secure_storage_service.dart';
 import '../../core/localization/app_localizations.dart';
 
 class AddContentDialog extends ConsumerStatefulWidget {
-  final String title; // Required parameter as per content_list_screen.dart needs
+  final String title;
   final String category;
 
   const AddContentDialog({
@@ -21,7 +21,9 @@ class AddContentDialog extends ConsumerStatefulWidget {
 
 class _AddContentDialogState extends ConsumerState<AddContentDialog> {
   final _subjectController = TextEditingController();
-  final _descriptionController = TextEditingController();
+  final _dayController = TextEditingController();
+  final _dateController = TextEditingController();
+  final _notesController = TextEditingController();
   PlatformFile? _selectedFile;
 
   Future<void> _pickFile() async {
@@ -39,10 +41,13 @@ class _AddContentDialogState extends ConsumerState<AddContentDialog> {
     if (_subjectController.text.isEmpty) return;
 
     final uploaderName = await SecureStorageService.getName() ?? 'Delegate';
+    
+    // Combine fields for description
+    final fullDescription = 'Day: ${_dayController.text}\nDate: ${_dateController.text}\nNotes: ${_notesController.text}';
 
     await ref.read(contentProvider.notifier).addContent(
       title: _subjectController.text.trim(),
-      description: _descriptionController.text.trim(),
+      description: fullDescription.trim(),
       category: widget.category,
       fileName: _selectedFile?.name ?? 'No file',
       filePath: _selectedFile?.path,
@@ -52,7 +57,7 @@ class _AddContentDialogState extends ConsumerState<AddContentDialog> {
     if (mounted) {
       Navigator.of(context).pop({
         'subject': _subjectController.text.trim(),
-        'description': _descriptionController.text.trim(),
+        'description': fullDescription.trim(),
         'file': _selectedFile,
       });
     }
@@ -61,7 +66,9 @@ class _AddContentDialogState extends ConsumerState<AddContentDialog> {
   @override
   void dispose() {
     _subjectController.dispose();
-    _descriptionController.dispose();
+    _dayController.dispose();
+    _dateController.dispose();
+    _notesController.dispose();
     super.dispose();
   }
 
@@ -79,22 +86,13 @@ class _AddContentDialogState extends ConsumerState<AddContentDialog> {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            TextField(
-              controller: _subjectController,
-              decoration: InputDecoration(
-                labelText: l10n.title,
-                border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-              ),
-            ),
+            _dialogField(_subjectController, l10n.subject, Icons.book_outlined),
             const SizedBox(height: 16),
-            TextField(
-              controller: _descriptionController,
-              maxLines: 3,
-              decoration: InputDecoration(
-                labelText: l10n.description,
-                border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-              ),
-            ),
+            _dialogField(_dayController, 'Day', Icons.calendar_today_outlined),
+            const SizedBox(height: 16),
+            _dialogField(_dateController, 'Date', Icons.date_range_outlined),
+            const SizedBox(height: 16),
+            _dialogField(_notesController, 'Notes', Icons.notes_outlined, maxLines: 3),
             const SizedBox(height: 16),
             InkWell(
               onTap: _pickFile,
@@ -137,6 +135,19 @@ class _AddContentDialogState extends ConsumerState<AddContentDialog> {
           child: Text(l10n.save, style: const TextStyle(color: Colors.white)),
         ),
       ],
+    );
+  }
+
+  Widget _dialogField(TextEditingController controller, String label, IconData icon, {int maxLines = 1}) {
+    return TextField(
+      controller: controller,
+      maxLines: maxLines,
+      decoration: InputDecoration(
+        labelText: label,
+        prefixIcon: Icon(icon, color: const Color(0xFF3F51B5)),
+        border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+      ),
     );
   }
 }
