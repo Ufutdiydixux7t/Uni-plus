@@ -7,6 +7,7 @@ import '../../core/localization/app_localizations.dart';
 import '../../features/auth/role_selection/role_selection_screen.dart';
 import '../../features/lectures/lectures_screen.dart';
 import '../../features/summaries/summaries_screen.dart';
+import '../../features/shared/content_list_screen.dart';
 
 class AppDrawer extends ConsumerWidget {
   const AppDrawer({super.key});
@@ -36,6 +37,14 @@ class AppDrawer extends ConsumerWidget {
                     onTap: () => Navigator.pop(context),
                   ),
                   _drawerItem(
+                    icon: Icons.analytics_outlined,
+                    title: l10n.dailyReports,
+                    onTap: () {
+                      Navigator.pop(context);
+                      Navigator.push(context, MaterialPageRoute(builder: (_) => ContentListScreen(category: 'reports', title: l10n.dailyReports)));
+                    },
+                  ),
+                  _drawerItem(
                     icon: Icons.menu_book_outlined,
                     title: l10n.lectures,
                     onTap: () {
@@ -56,7 +65,15 @@ class AppDrawer extends ConsumerWidget {
                     title: l10n.tasks,
                     onTap: () {
                       Navigator.pop(context);
-                      // Navigator.push(context, MaterialPageRoute(builder: (_) => const TasksScreen()));
+                      Navigator.push(context, MaterialPageRoute(builder: (_) => ContentListScreen(category: 'tasks', title: l10n.tasks)));
+                    },
+                  ),
+                  _drawerItem(
+                    icon: Icons.list_alt_outlined,
+                    title: l10n.forms,
+                    onTap: () {
+                      Navigator.pop(context);
+                      Navigator.push(context, MaterialPageRoute(builder: (_) => ContentListScreen(category: 'forms', title: l10n.forms)));
                     },
                   ),
                   _drawerItem(
@@ -64,9 +81,10 @@ class AppDrawer extends ConsumerWidget {
                     title: l10n.grades,
                     onTap: () {
                       Navigator.pop(context);
-                      // Navigator.push(context, MaterialPageRoute(builder: (_) => const GradesScreen()));
+                      Navigator.push(context, MaterialPageRoute(builder: (_) => ContentListScreen(category: 'grades', title: l10n.grades)));
                     },
                   ),
+                  
                   const Divider(height: 24),
                   _section(l10n.language.toUpperCase()),
                   ListTile(
@@ -78,6 +96,15 @@ class AppDrawer extends ConsumerWidget {
                     ),
                     trailing: const Icon(Icons.swap_horiz, size: 18, color: Colors.grey),
                     onTap: () => ref.read(localeProvider.notifier).toggleLocale(),
+                  ),
+                  
+                  _drawerItem(
+                    icon: Icons.info_outline,
+                    title: l10n.about,
+                    onTap: () {
+                      Navigator.pop(context);
+                      _showAboutDialog(context, l10n);
+                    },
                   ),
                 ],
               ),
@@ -102,6 +129,22 @@ class AppDrawer extends ConsumerWidget {
             },
           ),
           SizedBox(height: MediaQuery.of(context).padding.bottom + 12),
+        ],
+      ),
+    );
+  }
+
+  void _showAboutDialog(BuildContext context, AppLocalizations l10n) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text(l10n.about),
+        content: Text(l10n.aboutText),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('OK'),
+          ),
         ],
       ),
     );

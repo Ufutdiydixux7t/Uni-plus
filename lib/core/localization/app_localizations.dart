@@ -64,6 +64,8 @@ class AppLocalizations {
       'announcement': 'Announcement',
       'optional': 'Optional',
       'noAnnouncements': 'No announcements for tomorrow',
+      'about': 'About',
+      'aboutText': 'This application was programmed by Mohammed Al-Madi',
     },
     'ar': {
       'appTitle': 'يوني بلس',
@@ -118,6 +120,8 @@ class AppLocalizations {
       'announcement': 'إعلان',
       'optional': 'اختياري',
       'noAnnouncements': 'لا توجد إعلانات لغد',
+      'about': 'نظرة عنا',
+      'aboutText': 'تم برمجة هذا التطبيق بواسطة محمد المدي',
     },
   };
 
@@ -173,6 +177,8 @@ class AppLocalizations {
   String get announcement => _localizedValues[locale.languageCode]!['announcement']!;
   String get optional => _localizedValues[locale.languageCode]!['optional']!;
   String get noAnnouncements => _localizedValues[locale.languageCode]!['noAnnouncements']!;
+  String get about => _localizedValues[locale.languageCode]!['about']!;
+  String get aboutText => _localizedValues[locale.languageCode]!['aboutText']!;
 }
 
 class _AppLocalizationsDelegate extends LocalizationsDelegate<AppLocalizations> {

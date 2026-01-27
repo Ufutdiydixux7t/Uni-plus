@@ -68,7 +68,7 @@ class ContentListScreen extends ConsumerWidget {
                               mainAxisAlignment: MainAxisAlignment.spaceBetween,
                               children: [
                                 Icon(
-                                  item.fileName.toLowerCase().endsWith('.pdf') 
+                                  (item.filePath ?? '').toLowerCase().endsWith('.pdf') 
                                       ? Icons.picture_as_pdf 
                                       : Icons.image,
                                   color: Colors.indigo,

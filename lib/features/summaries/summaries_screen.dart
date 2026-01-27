@@ -16,7 +16,8 @@ class SummariesScreen extends ConsumerWidget {
     return FutureBuilder<UserRole>(
       future: SecureStorageService.getUserRole(),
       builder: (context, snapshot) {
-        final isDelegate = snapshot.data == UserRole.delegate || snapshot.data == UserRole.admin;
+        final role = snapshot.data ?? UserRole.student;
+        final isDelegate = role == UserRole.delegate || role == UserRole.admin;
         
         return Scaffold(
           appBar: AppBar(
@@ -61,7 +62,7 @@ class SummariesScreen extends ConsumerWidget {
                                 const Icon(Icons.description, color: Color(0xFF3F51B5)),
                                 if (isDelegate)
                                   IconButton(
-                                    icon: const Icon(Icons.delete, color: Colors.red, size: 20),
+                                    icon: const Icon(Icons.delete_outline, color: Colors.red, size: 20),
                                     onPressed: () => _confirmDelete(context, ref, item.id),
                                     constraints: const BoxConstraints(),
                                     padding: EdgeInsets.zero,
