@@ -103,7 +103,7 @@ class _DailyFeedScreenState extends ConsumerState<DailyFeedScreen> {
 
             // Reusable GridView Section
             SliverPadding(
-              padding: const EdgeInsets.all(20),
+              padding: const EdgeInsets.fromLTRB(20, 20, 20, 0),
               sliver: SliverGrid(
                 gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
                   crossAxisCount: 2,
@@ -121,11 +121,28 @@ class _DailyFeedScreenState extends ConsumerState<DailyFeedScreen> {
               ),
             ),
 
-            // Role-based Bottom Section
+            // Rectangular Card Section (Directly below GridView)
             SliverPadding(
-              padding: const EdgeInsets.fromLTRB(20, 0, 20, 40),
+              padding: const EdgeInsets.fromLTRB(20, 16, 20, 40),
               sliver: SliverToBoxAdapter(
-                child: isDelegate ? _delegateBottomSection(l10n) : _studentBottomSection(l10n),
+                child: isDelegate 
+                  ? _horizontalActionCard(
+                      icon: Icons.inbox_rounded,
+                      title: l10n.receivedSummaries,
+                      subtitle: "View summaries sent by students",
+                      onTap: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (_) => ContentListScreen(
+                              category: 'summaries',
+                              title: l10n.receivedSummaries,
+                            ),
+                          ),
+                        );
+                      },
+                    )
+                  : _studentBottomSection(l10n),
               ),
             ),
           ],
@@ -208,38 +225,7 @@ class _DailyFeedScreenState extends ConsumerState<DailyFeedScreen> {
     );
   }
 
-  Widget _delegateBottomSection(AppLocalizations l10n) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        const Text(
-          "Student Submissions",
-          style: TextStyle(
-            fontSize: 22,
-            fontWeight: FontWeight.bold,
-            color: Colors.black87,
-          ),
-        ),
-        const SizedBox(height: 16),
-        _horizontalActionCard(
-          icon: Icons.inbox_rounded,
-          title: "Received Summaries",
-          subtitle: "View summaries sent by students",
-          onTap: () {
-            Navigator.push(
-              context,
-              MaterialPageRoute(
-                builder: (_) => ContentListScreen(
-                  category: 'summaries',
-                  title: l10n.receivedSummaries,
-                ),
-              ),
-            );
-          },
-        ),
-      ],
-    );
-  }
+
 
   Widget _actionCard(IconData icon, String title, VoidCallback onTap) {
     return InkWell(
