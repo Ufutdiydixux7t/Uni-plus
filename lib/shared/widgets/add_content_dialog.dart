@@ -21,8 +21,9 @@ class AddContentDialog extends ConsumerStatefulWidget {
 
 class _AddContentDialogState extends ConsumerState<AddContentDialog> {
   final _subjectController = TextEditingController();
-  final _dayController = TextEditingController();
-  final _dateController = TextEditingController();
+  final _doctorController = TextEditingController();
+  final _hallController = TextEditingController();
+  final _timeController = TextEditingController();
   final _notesController = TextEditingController();
   PlatformFile? _selectedFile;
 
@@ -38,36 +39,39 @@ class _AddContentDialogState extends ConsumerState<AddContentDialog> {
   }
 
   Future<void> _save() async {
+    final l10n = AppLocalizations.of(context);
     if (_subjectController.text.isEmpty) return;
 
     final uploaderName = await SecureStorageService.getName() ?? 'Delegate';
     
-    // Combine fields for description
-    final fullDescription = 'Day: ${_dayController.text}\nDate: ${_dateController.text}\nNotes: ${_notesController.text}';
+    // Phase 4: Custom description for Daily Reports
+    String fullDescription = '';
+    if (widget.category == 'reports') {
+      fullDescription = '${l10n.doctor}: ${_doctorController.text}\n${l10n.room}: ${_hallController.text}\n${l10n.time}: ${_timeController.text}\n${l10n.note}: ${_notesController.text}';
+    } else {
+      fullDescription = '${l10n.doctor}: ${_doctorController.text}\n${l10n.note}: ${_notesController.text}';
+    }
 
     await ref.read(contentProvider.notifier).addContent(
       title: _subjectController.text.trim(),
       description: fullDescription.trim(),
       category: widget.category,
-      fileName: _selectedFile?.name ?? 'No file',
+      fileName: _selectedFile?.name ?? '',
       filePath: _selectedFile?.path,
       uploaderName: uploaderName,
     );
 
     if (mounted) {
-      Navigator.of(context).pop({
-        'subject': _subjectController.text.trim(),
-        'description': fullDescription.trim(),
-        'file': _selectedFile,
-      });
+      Navigator.of(context).pop();
     }
   }
 
   @override
   void dispose() {
     _subjectController.dispose();
-    _dayController.dispose();
-    _dateController.dispose();
+    _doctorController.dispose();
+    _hallController.dispose();
+    _timeController.dispose();
     _notesController.dispose();
     super.dispose();
   }
@@ -75,6 +79,7 @@ class _AddContentDialogState extends ConsumerState<AddContentDialog> {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
+    final isReport = widget.category == 'reports';
 
     return AlertDialog(
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
@@ -87,12 +92,16 @@ class _AddContentDialogState extends ConsumerState<AddContentDialog> {
           mainAxisSize: MainAxisSize.min,
           children: [
             _dialogField(_subjectController, l10n.subject, Icons.book_outlined),
-            const SizedBox(height: 16),
-            _dialogField(_dayController, 'Day', Icons.calendar_today_outlined),
-            const SizedBox(height: 16),
-            _dialogField(_dateController, 'Date', Icons.date_range_outlined),
-            const SizedBox(height: 16),
-            _dialogField(_notesController, 'Notes', Icons.notes_outlined, maxLines: 3),
+            const SizedBox(height: 12),
+            _dialogField(_doctorController, l10n.doctor, Icons.person_outline),
+            const SizedBox(height: 12),
+            if (isReport) ...[
+              _dialogField(_hallController, l10n.room, Icons.room_outlined),
+              const SizedBox(height: 12),
+              _dialogField(_timeController, l10n.time, Icons.access_time),
+              const SizedBox(height: 12),
+            ],
+            _dialogField(_notesController, l10n.note, Icons.notes_outlined, maxLines: 2),
             const SizedBox(height: 16),
             InkWell(
               onTap: _pickFile,
