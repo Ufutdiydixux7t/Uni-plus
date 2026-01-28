@@ -31,19 +31,11 @@ class LecturesScreen extends ConsumerWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 // if (role == UserRole.student) _buildTomorrowLectures(context, lectures),
-                
-                Padding(
-                  padding: const EdgeInsets.all(16.0),
-                  child: Text(
-                    l10n.lectures,
-                    style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Color(0xFF3F51B5)),
-                  ),
-                ),
-                
+
                 lectures.isEmpty
                     ? Center(
                         child: Padding(
-                          padding: const EdgeInsets.symmetric(vertical: 40),
+                          padding: const EdgeInsets.only(top: 300),
                           child: Column(
                             children: [
                               const Icon(Icons.school_outlined, size: 64, color: Colors.grey),

@@ -92,7 +92,7 @@ class AppDrawer extends ConsumerWidget {
                               title: l10n.sendSummary,
                               onTap: () {
                                 Navigator.pop(context);
-                                Navigator.push(context, MaterialPageRoute(builder: (_) => const SummariesScreen()));
+                                Navigator.push(context, MaterialPageRoute(builder: (_) => ContentListScreen(category: 'Send Summary', title: l10n.sendSummary)));
                               },
                             ),
                         ],

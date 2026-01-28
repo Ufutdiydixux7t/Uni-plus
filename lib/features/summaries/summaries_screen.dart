@@ -40,7 +40,7 @@ class _SummariesScreenState extends ConsumerState<SummariesScreen> {
         actions: [
           if (isDelegate)
             IconButton(
-              icon: const Icon(Icons.inbox),
+              icon: const Icon(Icons.description),
               onPressed: () => Navigator.push(
                 context,
                 MaterialPageRoute(
@@ -62,7 +62,7 @@ class _SummariesScreenState extends ConsumerState<SummariesScreen> {
                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
                   child: ListTile(
                     leading: const CircleAvatar(
-                      backgroundColor: Color(0xFF3F51B5),
+                      backgroundColor: Color(0xFFFFFFFF),
                       child: Icon(Icons.description, color: Colors.white),
                     ),
                     title: Text(summary.title, style: const TextStyle(fontWeight: FontWeight.bold)),
@@ -75,20 +75,7 @@ class _SummariesScreenState extends ConsumerState<SummariesScreen> {
                 );
               },
             ),
-      floatingActionButton: !isDelegate
-          ? FloatingActionButton.extended(
-              onPressed: () => _showSendSummaryDialog(context, ref),
-              backgroundColor: const Color(0xFF3F51B5),
-              icon: const Icon(Icons.send, color: Colors.white),
-              label: Text(l10n.sendSummary, style: const TextStyle(color: Colors.white)),
-            )
-          : FloatingActionButton(
-              onPressed: () {
-                // Delegate add summary logic
-              },
-              backgroundColor: const Color(0xFF3F51B5),
-              child: const Icon(Icons.add, color: Colors.white),
-            ),
+
     );
   }
 
