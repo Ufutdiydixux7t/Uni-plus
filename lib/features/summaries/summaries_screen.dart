@@ -4,6 +4,7 @@ import '../../core/providers/content_provider.dart';
 import '../../core/storage/secure_storage_service.dart';
 import '../../core/auth/user_role.dart';
 import '../../core/localization/app_localizations.dart';
+import '../shared/content_list_screen.dart';
 
 class SummariesScreen extends ConsumerWidget {
   const SummariesScreen({super.key});
