@@ -80,6 +80,7 @@ class _AddContentDialogState extends ConsumerState<AddContentDialog> {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
     final isReport = widget.category == 'reports';
+    final isLecture = widget.category == 'lectures';
 
     return AlertDialog(
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
@@ -102,31 +103,33 @@ class _AddContentDialogState extends ConsumerState<AddContentDialog> {
               const SizedBox(height: 12),
             ],
             _dialogField(_notesController, l10n.note, Icons.notes_outlined, maxLines: 2),
-            const SizedBox(height: 16),
-            InkWell(
-              onTap: _pickFile,
-              child: Container(
-                padding: const EdgeInsets.all(16),
-                decoration: BoxDecoration(
-                  border: Border.all(color: Colors.grey[300]!),
-                  borderRadius: BorderRadius.circular(12),
-                  color: Colors.grey[50],
-                ),
-                child: Row(
-                  children: [
-                    const Icon(Icons.attach_file, color: Color(0xFF3F51B5)),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: Text(
-                        _selectedFile?.name ?? l10n.uploadFile,
-                        overflow: TextOverflow.ellipsis,
-                        style: TextStyle(color: _selectedFile == null ? Colors.grey : Colors.black),
+            if (isLecture || widget.category == 'summaries') ...[
+              const SizedBox(height: 16),
+              InkWell(
+                onTap: _pickFile,
+                child: Container(
+                  padding: const EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    border: Border.all(color: Colors.grey[300]!),
+                    borderRadius: BorderRadius.circular(12),
+                    color: Colors.grey[50],
+                  ),
+                  child: Row(
+                    children: [
+                      const Icon(Icons.attach_file, color: Color(0xFF3F51B5)),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Text(
+                          _selectedFile?.name ?? l10n.uploadFile,
+                          overflow: TextOverflow.ellipsis,
+                          style: TextStyle(color: _selectedFile == null ? Colors.grey : Colors.black),
+                        ),
                       ),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
               ),
-            ),
+            ],
           ],
         ),
       ),
