@@ -59,8 +59,6 @@ class _AdminDashboardScreenState extends ConsumerState<AdminDashboardScreen> {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
     final announcements = ref.watch(announcementProvider);
-    final screenWidth = MediaQuery.of(context).size.width;
-    final crossAxisCount = screenWidth > 600 ? 3 : 2;
 
     return Scaffold(
       key: _scaffoldKey,
@@ -94,8 +92,10 @@ class _AdminDashboardScreenState extends ConsumerState<AdminDashboardScreen> {
                 style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
               ),
               const SizedBox(height: 16),
-              _dashboardGrid(crossAxisCount, l10n),
-              const SizedBox(height: 24),
+              _dashboardGrid(l10n),
+              const SizedBox(height: 32),
+              
+              // Phase 3: Rectangular GridView Section at the bottom for Delegate
               Text(
                 l10n.receivedSummaries,
                 style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
@@ -120,6 +120,53 @@ class _AdminDashboardScreenState extends ConsumerState<AdminDashboardScreen> {
               const SizedBox(height: 40),
             ],
           ),
+        ),
+      ),
+    );
+  }
+
+  Widget _dashboardGrid(AppLocalizations l10n) {
+    return GridView.count(
+      shrinkWrap: true,
+      physics: const NeverScrollableScrollPhysics(),
+      crossAxisCount: 2,
+      crossAxisSpacing: 16,
+      mainAxisSpacing: 16,
+      childAspectRatio: 1.1,
+      children: [
+        _actionCard(Icons.menu_book, l10n.lectures, () => _navigateToContent(l10n.lectures, 'lectures')),
+        _actionCard(Icons.assessment_outlined, l10n.dailyReports, () => _navigateToContent(l10n.dailyReports, 'reports')),
+        _actionCard(Icons.description, l10n.summaries, () => _navigateToContent(l10n.summaries, 'summaries')),
+        _actionCard(Icons.task_alt, l10n.tasks, () => _navigateToContent(l10n.tasks, 'tasks')),
+        _actionCard(Icons.assignment, l10n.forms, () => _navigateToContent(l10n.forms, 'forms')),
+        _actionCard(Icons.grade, l10n.grades, () => _navigateToContent(l10n.grades, 'grades')),
+      ],
+    );
+  }
+
+  Widget _actionCard(IconData icon, String title, VoidCallback onTap) {
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(20),
+      child: Container(
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(20),
+          boxShadow: [
+            BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 10, offset: const Offset(0, 4)),
+          ],
+        ),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(icon, size: 32, color: const Color(0xFF3F51B5)),
+            const SizedBox(height: 12),
+            Text(
+              title,
+              textAlign: TextAlign.center,
+              style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
+            ),
+          ],
         ),
       ),
     );
@@ -190,9 +237,9 @@ class _AdminDashboardScreenState extends ConsumerState<AdminDashboardScreen> {
             style: const TextStyle(color: Colors.white, fontSize: 22, fontWeight: FontWeight.bold),
           ),
           const SizedBox(height: 8),
-          const Text(
-            'Share the code below with your students to join this class.',
-            style: TextStyle(color: Colors.white70, fontSize: 13),
+          Text(
+            l10n.locale.languageCode == 'ar' ? 'شارك الرمز أدناه مع طلابك للانضمام إلى هذا الفصل.' : 'Share the code below with your students to join this class.',
+            style: const TextStyle(color: Colors.white70, fontSize: 13),
           ),
           const SizedBox(height: 20),
           Container(
@@ -220,7 +267,7 @@ class _AdminDashboardScreenState extends ConsumerState<AdminDashboardScreen> {
                   onPressed: () {
                     Clipboard.setData(ClipboardData(text: classCode));
                     ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text('Code Copied!')),
+                      SnackBar(content: Text(l10n.locale.languageCode == 'ar' ? 'تم نسخ الرمز!' : 'Code Copied!')),
                     );
                   },
                 )
@@ -298,12 +345,6 @@ class _AdminDashboardScreenState extends ConsumerState<AdminDashboardScreen> {
           _infoRow(Icons.person_outline, '${l10n.doctor}: ${a.doctor}'),
           const SizedBox(height: 8),
           _infoRow(Icons.access_time, '${l10n.time}: ${a.time}'),
-          const SizedBox(height: 8),
-          _infoRow(Icons.place_outlined, '${l10n.place}: ${a.place}'),
-          if (a.note.isNotEmpty) ...[
-            const SizedBox(height: 8),
-            _infoRow(Icons.notes, '${l10n.note}: ${a.note}'),
-          ],
         ],
       ),
     );
@@ -314,7 +355,7 @@ class _AdminDashboardScreenState extends ConsumerState<AdminDashboardScreen> {
       children: [
         Icon(icon, size: 16, color: Colors.grey),
         const SizedBox(width: 8),
-        Expanded(child: Text(text, style: const TextStyle(fontSize: 13, color: Colors.black87))),
+        Text(text, style: const TextStyle(fontSize: 14, color: Colors.black87)),
       ],
     );
   }
@@ -324,32 +365,24 @@ class _AdminDashboardScreenState extends ConsumerState<AdminDashboardScreen> {
     final subjectController = TextEditingController();
     final doctorController = TextEditingController();
     final timeController = TextEditingController();
-    final placeController = TextEditingController();
-    final noteController = TextEditingController();
 
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
         title: Text(l10n.addAnnouncement, style: const TextStyle(color: Color(0xFF3F51B5), fontWeight: FontWeight.bold)),
-        content: SingleChildScrollView(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              _dialogField(subjectController, l10n.subject, Icons.book_outlined),
-              const SizedBox(height: 12),
-              _dialogField(doctorController, l10n.doctor, Icons.person_outline),
-              const SizedBox(height: 12),
-              _dialogField(timeController, l10n.time, Icons.access_time),
-              const SizedBox(height: 12),
-              _dialogField(placeController, l10n.place, Icons.place_outlined),
-              const SizedBox(height: 12),
-              _dialogField(noteController, l10n.note, Icons.notes, maxLines: 2),
-            ],
-          ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            _dialogField(subjectController, l10n.subject, Icons.book_outlined),
+            const SizedBox(height: 12),
+            _dialogField(doctorController, l10n.doctor, Icons.person_outline),
+            const SizedBox(height: 12),
+            _dialogField(timeController, l10n.time, Icons.access_time),
+          ],
         ),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(context), child: Text(l10n.cancel)),
+          TextButton(onPressed: () => Navigator.pop(context), child: Text(l10n.cancel, style: const TextStyle(color: Colors.grey))),
           ElevatedButton(
             onPressed: () {
               if (subjectController.text.isEmpty) return;
@@ -357,12 +390,10 @@ class _AdminDashboardScreenState extends ConsumerState<AdminDashboardScreen> {
                 subject: subjectController.text.trim(),
                 doctor: doctorController.text.trim(),
                 time: timeController.text.trim(),
-                place: placeController.text.trim(),
-                note: noteController.text.trim(),
               );
               Navigator.pop(context);
             },
-            style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFF3F51B5)),
+            style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFF3F51B5), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10))),
             child: Text(l10n.save, style: const TextStyle(color: Colors.white)),
           ),
         ],
@@ -370,82 +401,14 @@ class _AdminDashboardScreenState extends ConsumerState<AdminDashboardScreen> {
     );
   }
 
-  Widget _dialogField(TextEditingController controller, String label, IconData icon, {int maxLines = 1}) {
+  Widget _dialogField(TextEditingController controller, String label, IconData icon) {
     return TextField(
       controller: controller,
-      maxLines: maxLines,
       decoration: InputDecoration(
         labelText: label,
         prefixIcon: Icon(icon, color: const Color(0xFF3F51B5)),
         border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
         contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-      ),
-    );
-  }
-
-  Widget _dashboardGrid(int crossAxisCount, AppLocalizations l10n) {
-    final List<Map<String, dynamic>> items = [
-      {'icon': Icons.menu_book, 'title': l10n.lectures, 'category': 'lectures'},
-      {'icon': Icons.assessment_outlined, 'title': l10n.dailyReports, 'category': 'dailyReports'},
-      {'icon': Icons.description, 'title': l10n.summaries, 'category': 'summaries'},
-      {'icon': Icons.task_alt, 'title': l10n.tasks, 'category': 'tasks'},
-      {'icon': Icons.grade, 'title': l10n.grades, 'category': 'grades'},
-      {'icon': Icons.assignment, 'title': l10n.forms, 'category': 'forms'},
-    ];
-
-    return GridView.builder(
-      shrinkWrap: true,
-      physics: const NeverScrollableScrollPhysics(),
-      gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-        crossAxisCount: crossAxisCount,
-        crossAxisSpacing: 16,
-        mainAxisSpacing: 16,
-        childAspectRatio: 1.2,
-      ),
-      itemCount: items.length,
-      itemBuilder: (context, index) {
-        return _DashboardCard(
-          icon: items[index]['icon'],
-          title: items[index]['title'],
-          onTap: () => _navigateToContent(items[index]['title'], items[index]['category']),
-        );
-      },
-    );
-  }
-}
-
-class _DashboardCard extends StatelessWidget {
-  final IconData icon;
-  final String title;
-  final VoidCallback onTap;
-
-  const _DashboardCard({required this.icon, required this.title, required this.onTap});
-
-  @override
-  Widget build(BuildContext context) {
-    return InkWell(
-      onTap: onTap,
-      borderRadius: BorderRadius.circular(20),
-      child: Container(
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(20),
-          boxShadow: [
-            BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 10, offset: const Offset(0, 4)),
-          ],
-        ),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(icon, size: 32, color: const Color(0xFF3F51B5)),
-            const SizedBox(height: 12),
-            Text(
-              title,
-              style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600),
-              textAlign: TextAlign.center,
-            ),
-          ],
-        ),
       ),
     );
   }
