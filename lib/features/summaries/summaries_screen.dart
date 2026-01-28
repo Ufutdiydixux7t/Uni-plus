@@ -1,149 +1,107 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../../core/providers/content_provider.dart';
 import '../../core/storage/secure_storage_service.dart';
-import '../../core/auth/user_role.dart';
 import '../../core/localization/app_localizations.dart';
+import '../../core/providers/content_provider.dart';
+import '../../core/auth/user_role.dart';
 import '../shared/content_list_screen.dart';
 
-class SummariesScreen extends ConsumerWidget {
+class SummariesScreen extends ConsumerStatefulWidget {
   const SummariesScreen({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final l10n = AppLocalizations.of(context);
-    final summaries = ref.watch(contentProvider.notifier).getByCategory('summaries');
-    final receivedSummaries = ref.watch(contentProvider.notifier).getByCategory('received_summaries');
-    
-    return FutureBuilder<UserRole>(
-      future: SecureStorageService.getUserRole(),
-      builder: (context, snapshot) {
-        final role = snapshot.data ?? UserRole.student;
-        final isDelegate = role == UserRole.delegate || role == UserRole.admin;
-        
-        return Scaffold(
-          appBar: AppBar(
-            title: Text(l10n.summaries),
-            backgroundColor: Colors.white,
-            foregroundColor: Colors.black,
-            elevation: 0,
-            actions: [
-              if (isDelegate)
-                TextButton.icon(
-                  onPressed: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (_) => ContentListScreen(
-                          category: 'summaries',
-                          title: l10n.receivedSummaries,
-                        ),
-                      ),
-                    );
-                  },
-                  icon: const Icon(Icons.inbox, color: Color(0xFF3F51B5)),
-                  label: Text(l10n.receivedSummaries, style: const TextStyle(color: Color(0xFF3F51B5))),
-                )
-              else
-                TextButton.icon(
-                  onPressed: () => _showSendSummaryDialog(context, ref),
-                  icon: const Icon(Icons.send, color: Color(0xFF3F51B5)),
-                  label: Text(l10n.sendSummary, style: const TextStyle(color: Color(0xFF3F51B5))),
-                ),
-            ],
-          ),
-          body: summaries.isEmpty
-              ? const SizedBox.shrink()
-              : GridView.builder(
-                  padding: const EdgeInsets.all(16),
-                  gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                    crossAxisCount: 2,
-                    crossAxisSpacing: 16,
-                    mainAxisSpacing: 16,
-                    childAspectRatio: 0.9,
-                  ),
-                  itemCount: summaries.length,
-                  itemBuilder: (context, index) {
-                    final item = summaries[index];
-                    return Card(
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-                      elevation: 2,
-                      child: Padding(
-                        padding: const EdgeInsets.all(12),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                              children: [
-                                const Icon(Icons.description, color: Color(0xFF3F51B5)),
-                                if (isDelegate)
-                                  IconButton(
-                                    icon: const Icon(Icons.delete_outline, color: Colors.red, size: 20),
-                                    onPressed: () => _confirmDelete(context, ref, item.id),
-                                    constraints: const BoxConstraints(),
-                                    padding: EdgeInsets.zero,
-                                  ),
-                              ],
-                            ),
-                            const SizedBox(height: 8),
-                            Text(
-                              item.title,
-                              style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                            ),
-                            const SizedBox(height: 4),
-                            Expanded(
-                              child: Text(
-                                item.description,
-                                style: const TextStyle(fontSize: 12, color: Colors.grey),
-                                maxLines: 4,
-                                overflow: TextOverflow.ellipsis,
-                              ),
-                            ),
-                            const Divider(height: 16),
-                            Text(
-                              item.uploaderName,
-                              style: const TextStyle(fontSize: 11, color: Colors.indigo, fontWeight: FontWeight.bold),
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                            ),
-                          ],
-                        ),
-                      ),
-                    );
-                  },
-                ),
+  ConsumerState<SummariesScreen> createState() => _SummariesScreenState();
+}
 
-          floatingActionButton: !isDelegate
-              ? FloatingActionButton.extended(
-                  onPressed: () => _showSendSummaryDialog(context, ref),
-                  backgroundColor: const Color(0xFF3F51B5),
-                  icon: const Icon(Icons.send),
-                  label: Text(l10n.sendSummary),
-                )
-              : null,
-        );
-      },
+class _SummariesScreenState extends ConsumerState<SummariesScreen> {
+  UserRole _userRole = UserRole.student;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadRole();
+  }
+
+  Future<void> _loadRole() async {
+    final role = await SecureStorageService.getUserRole();
+    if (!mounted) return;
+    setState(() => _userRole = role);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+    final isDelegate = _userRole == UserRole.delegate || _userRole == UserRole.admin;
+    final summaries = ref.watch(contentProvider).where((c) => c.category == 'summaries').toList();
+
+    return Scaffold(
+      appBar: AppBar(
+        title: Text(l10n.summaries),
+        actions: [
+          if (isDelegate)
+            IconButton(
+              icon: const Icon(Icons.inbox),
+              onPressed: () => Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (_) => ContentListScreen(category: 'summaries', title: l10n.receivedSummaries),
+                ),
+              ),
+            ),
+        ],
+      ),
+      body: summaries.isEmpty
+          ? _buildEmptyState(isDelegate)
+          : ListView.builder(
+              padding: const EdgeInsets.all(16),
+              itemCount: summaries.length,
+              itemBuilder: (context, index) {
+                final summary = summaries[index];
+                return Card(
+                  margin: const EdgeInsets.only(bottom: 12),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
+                  child: ListTile(
+                    leading: const CircleAvatar(
+                      backgroundColor: Color(0xFF3F51B5),
+                      child: Icon(Icons.description, color: Colors.white),
+                    ),
+                    title: Text(summary.title, style: const TextStyle(fontWeight: FontWeight.bold)),
+                    subtitle: Text(summary.uploaderName),
+                    trailing: const Icon(Icons.chevron_right),
+                    onTap: () {
+                      // View summary logic
+                    },
+                  ),
+                );
+              },
+            ),
+      floatingActionButton: !isDelegate
+          ? FloatingActionButton.extended(
+              onPressed: () => _showSendSummaryDialog(context, ref),
+              backgroundColor: const Color(0xFF3F51B5),
+              icon: const Icon(Icons.send, color: Colors.white),
+              label: Text(l10n.sendSummary, style: const TextStyle(color: Colors.white)),
+            )
+          : FloatingActionButton(
+              onPressed: () {
+                // Delegate add summary logic
+              },
+              backgroundColor: const Color(0xFF3F51B5),
+              child: const Icon(Icons.add, color: Colors.white),
+            ),
     );
   }
 
-  void _confirmDelete(BuildContext context, WidgetRef ref, String id) {
-    final l10n = AppLocalizations.of(context);
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: Text(l10n.delete),
-        content: Text(l10n.confirmDelete),
-        actions: [
-          TextButton(onPressed: () => Navigator.pop(context), child: Text(l10n.cancel)),
-          TextButton(
-            onPressed: () {
-              ref.read(contentProvider.notifier).deleteContent(id);
-              Navigator.pop(context);
-            },
-            child: Text(l10n.delete, style: const TextStyle(color: Colors.red)),
+  Widget _buildEmptyState(bool isDelegate) {
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(Icons.description_outlined, size: 80, color: Colors.grey[400]),
+          const SizedBox(height: 16),
+          Text(
+            isDelegate ? "No summaries to manage yet" : "No summaries available",
+            style: TextStyle(fontSize: 18, color: Colors.grey[600], fontWeight: FontWeight.w500),
           ),
         ],
       ),
@@ -172,9 +130,7 @@ class SummariesScreen extends ConsumerWidget {
               _dialogField(descriptionController, l10n.description, Icons.notes, maxLines: 2),
               const SizedBox(height: 12),
               OutlinedButton.icon(
-                onPressed: () {
-                  // File picker logic would go here
-                },
+                onPressed: () {},
                 icon: const Icon(Icons.attach_file),
                 label: Text(l10n.uploadFile),
                 style: OutlinedButton.styleFrom(
