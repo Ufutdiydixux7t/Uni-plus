@@ -8,6 +8,7 @@ import '../../core/auth/user_role.dart';
 import '../../shared/widgets/app_drawer.dart';
 import '../shared/content_list_screen.dart';
 import '../lectures/lectures_screen.dart';
+import '../summaries/summaries_screen.dart';
 import './models/home_grid_item.dart';
 
 class DailyFeedScreen extends ConsumerStatefulWidget {
