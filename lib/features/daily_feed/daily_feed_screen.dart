@@ -125,24 +125,7 @@ class _DailyFeedScreenState extends ConsumerState<DailyFeedScreen> {
             SliverPadding(
               padding: const EdgeInsets.fromLTRB(20, 16, 20, 40),
               sliver: SliverToBoxAdapter(
-                child: isDelegate 
-                  ? _horizontalActionCard(
-                      icon: Icons.inbox_rounded,
-                      title: l10n.receivedSummaries,
-                      subtitle: "View summaries sent by students",
-                      onTap: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (_) => ContentListScreen(
-                              category: 'summaries',
-                              title: l10n.receivedSummaries,
-                            ),
-                          ),
-                        );
-                      },
-                    )
-                  : _studentBottomSection(l10n),
+                child: isDelegate ? _delegateBottomSection(l10n) : _studentBottomSection(l10n),
               ),
             ),
           ],
@@ -220,6 +203,35 @@ class _DailyFeedScreenState extends ConsumerState<DailyFeedScreen> {
           title: l10n.sendSummary,
           subtitle: l10n.locale.languageCode == 'ar' ? "شارك ملخصاتك مع زملائك" : "Share your summaries with the class",
           onTap: () => _showSendSummaryDialog(context, ref),
+        ),
+      ],
+    );
+  }
+
+  Widget _delegateBottomSection(AppLocalizations l10n) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          l10n.receivedSummaries,
+          style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+        ),
+        const SizedBox(height: 12),
+        _horizontalActionCard(
+          icon: Icons.inbox_rounded,
+          title: l10n.receivedSummaries,
+          subtitle: l10n.locale.languageCode == 'ar' ? "عرض الملخصات المرسلة من الطلاب" : "View summaries sent by students",
+          onTap: () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (_) => ContentListScreen(
+                  category: 'summaries',
+                  title: l10n.receivedSummaries,
+                ),
+              ),
+            );
+          },
         ),
       ],
     );
