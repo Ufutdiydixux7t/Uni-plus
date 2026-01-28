@@ -52,6 +52,8 @@ class _DailyFeedScreenState extends ConsumerState<DailyFeedScreen> {
   void _handleItemTap(HomeGridItem item) {
     if (item.category == 'lectures') {
       Navigator.push(context, MaterialPageRoute(builder: (_) => const LecturesScreen()));
+    } else if (item.category == 'summaries') {
+      Navigator.push(context, MaterialPageRoute(builder: (_) => const SummariesScreen()));
     } else {
       Navigator.push(
         context,

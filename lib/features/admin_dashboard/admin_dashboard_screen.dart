@@ -39,6 +39,8 @@ class _AdminDashboardScreenState extends ConsumerState<AdminDashboardScreen> {
   void _navigateToContent(String title, String category) {
     if (category == 'lectures') {
       Navigator.push(context, MaterialPageRoute(builder: (_) => const LecturesScreen()));
+    } else if (category == 'summaries') {
+      Navigator.push(context, MaterialPageRoute(builder: (_) => const SummariesScreen()));
     } else {
       Navigator.push(
         context,
