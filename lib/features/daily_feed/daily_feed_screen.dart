@@ -113,7 +113,7 @@ class _DailyFeedScreenState extends ConsumerState<DailyFeedScreen> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          isDelegate ? "Student Submissions" : "Send Summary",
+                          isDelegate ? l10n.receivedSummaries : l10n.sendSummary,
                           style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                         ),
                         const SizedBox(height: 12),
@@ -173,8 +173,8 @@ class _DailyFeedScreenState extends ConsumerState<DailyFeedScreen> {
                                       ),
                                       Text(
                                         isDelegate 
-                                          ? "View summaries sent by students" 
-                                          : "Share your summaries with the class",
+                                          ? (l10n.locale.languageCode == 'ar' ? "عرض الملخصات المرسلة من الطلاب" : "View summaries sent by students")
+                                          : (l10n.locale.languageCode == 'ar' ? "شارك ملخصاتك مع زملائك" : "Share your summaries with the class"),
                                         style: const TextStyle(
                                           fontSize: 13,
                                           color: Colors.grey,
