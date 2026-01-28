@@ -82,17 +82,7 @@ class AppDrawer extends ConsumerWidget {
                           },
                         );
                       } else {
-                        return _drawerItem(
-                          icon: Icons.send_outlined,
-                          title: l10n.sendSummary,
-                          onTap: () {
-                            Navigator.pop(context);
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(builder: (_) => const SummariesScreen()),
-                            );
-                          },
-                        );
+                        return const SizedBox.shrink();
                       }
                     },
                   ),
