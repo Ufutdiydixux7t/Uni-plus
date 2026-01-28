@@ -25,7 +25,8 @@ class ContentListScreen extends ConsumerWidget {
     return FutureBuilder<UserRole>(
       future: SecureStorageService.getUserRole(),
       builder: (context, snapshot) {
-        final isDelegate = snapshot.data == UserRole.delegate || snapshot.data == UserRole.admin;
+        final role = snapshot.data ?? UserRole.student;
+        final isDelegate = role == UserRole.delegate || role == UserRole.admin;
         
         return Scaffold(
           appBar: AppBar(
@@ -45,66 +46,82 @@ class ContentListScreen extends ConsumerWidget {
                     ],
                   ),
                 )
-              : GridView.builder(
+              : ListView.builder(
                   padding: const EdgeInsets.all(16),
-                  gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                    crossAxisCount: 2,
-                    crossAxisSpacing: 16,
-                    mainAxisSpacing: 16,
-                    childAspectRatio: 0.85,
-                  ),
                   itemCount: contentItems.length,
                   itemBuilder: (context, index) {
                     final item = contentItems[index];
                     return Card(
+                      margin: const EdgeInsets.only(bottom: 16),
                       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
                       elevation: 2,
                       child: Padding(
-                        padding: const EdgeInsets.all(12),
+                        padding: const EdgeInsets.all(16),
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Row(
                               mainAxisAlignment: MainAxisAlignment.spaceBetween,
                               children: [
-                                Icon(
-                                  (item.filePath ?? '').toLowerCase().endsWith('.pdf') 
-                                      ? Icons.picture_as_pdf 
-                                      : Icons.image,
-                                  color: Colors.indigo,
+                                Row(
+                                  children: [
+                                    const Icon(Icons.description, color: Color(0xFF3F51B5)),
+                                    const SizedBox(width: 12),
+                                    Text(
+                                      item.title,
+                                      style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
+                                    ),
+                                  ],
                                 ),
                                 if (isDelegate)
                                   IconButton(
-                                    icon: const Icon(Icons.delete_outline, color: Colors.redAccent, size: 20),
+                                    icon: const Icon(Icons.delete_outline, color: Colors.redAccent),
                                     onPressed: () => _confirmDelete(context, ref, item.id),
-                                    constraints: const BoxConstraints(),
-                                    padding: EdgeInsets.zero,
                                   ),
                               ],
                             ),
-                            const SizedBox(height: 8),
+                            const Divider(height: 24),
                             Text(
-                              item.title,
-                              style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
+                              item.description,
+                              style: const TextStyle(fontSize: 14, color: Colors.black87, height: 1.5),
                             ),
-                            const SizedBox(height: 4),
-                            Expanded(
-                              child: Text(
-                                item.description,
-                                style: const TextStyle(fontSize: 12, color: Colors.grey),
-                                maxLines: 3,
-                                overflow: TextOverflow.ellipsis,
+                            const SizedBox(height: 16),
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                Text(
+                                  '${l10n.welcome}: ${item.uploaderName}',
+                                  style: const TextStyle(fontSize: 12, color: Colors.grey),
+                                ),
+                                Text(
+                                  DateFormat('yyyy/MM/dd').format(item.date),
+                                  style: const TextStyle(fontSize: 12, color: Colors.grey),
+                                ),
+                              ],
+                            ),
+                            if (item.fileName.isNotEmpty) ...[
+                              const SizedBox(height: 12),
+                              Container(
+                                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                                decoration: BoxDecoration(
+                                  color: Colors.indigo.withOpacity(0.05),
+                                  borderRadius: BorderRadius.circular(8),
+                                ),
+                                child: Row(
+                                  children: [
+                                    const Icon(Icons.attach_file, size: 16, color: Colors.indigo),
+                                    const SizedBox(width: 8),
+                                    Expanded(
+                                      child: Text(
+                                        item.fileName,
+                                        style: const TextStyle(fontSize: 12, color: Colors.indigo),
+                                        overflow: TextOverflow.ellipsis,
+                                      ),
+                                    ),
+                                  ],
+                                ),
                               ),
-                            ),
-                            const Divider(height: 16),
-                            Text(
-                              '${item.uploaderName} • ${DateFormat('MM/dd').format(item.date)}',
-                              style: const TextStyle(fontSize: 10, color: Colors.grey),
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                            ),
+                            ],
                           ],
                         ),
                       ),
@@ -112,7 +129,7 @@ class ContentListScreen extends ConsumerWidget {
                   },
                 ),
           floatingActionButton: isDelegate
-              ? FloatingActionButton(
+              ? FloatingActionButton.extended(
                   onPressed: () => showDialog(
                     context: context,
                     builder: (context) => AddContentDialog(
@@ -120,8 +137,9 @@ class ContentListScreen extends ConsumerWidget {
                       category: category,
                     ),
                   ),
-                  backgroundColor: Colors.indigo,
-                  child: const Icon(Icons.add),
+                  backgroundColor: const Color(0xFF3F51B5),
+                  icon: const Icon(Icons.add, color: Colors.white),
+                  label: Text(l10n.addContent, style: const TextStyle(color: Colors.white)),
                 )
               : null,
         );
