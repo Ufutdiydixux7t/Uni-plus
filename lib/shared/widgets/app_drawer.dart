@@ -52,38 +52,51 @@ class AppDrawer extends ConsumerWidget {
                       Navigator.push(context, MaterialPageRoute(builder: (_) => const LecturesScreen()));
                     },
                   ),
-                  _drawerItem(
-                    icon: Icons.description_outlined,
-                    title: l10n.summaries,
-                    onTap: () {
-                      Navigator.pop(context);
-                      Navigator.push(context, MaterialPageRoute(builder: (_) => const SummariesScreen()));
-                    },
-                  ),
                   FutureBuilder<UserRole>(
                     future: SecureStorageService.getUserRole(),
                     builder: (context, snapshot) {
                       final role = snapshot.data ?? UserRole.student;
-                      if (role == UserRole.delegate || role == UserRole.admin) {
-                        return _drawerItem(
-                          icon: Icons.inbox_outlined,
-                          title: l10n.receivedSummaries,
-                          onTap: () {
-                            Navigator.pop(context);
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder: (_) => ContentListScreen(
-                                  category: 'summaries',
-                                  title: l10n.receivedSummaries,
-                                ),
-                              ),
-                            );
-                          },
-                        );
-                      } else {
-                        return const SizedBox.shrink();
-                      }
+                      final isDelegate = role == UserRole.delegate || role == UserRole.admin;
+                      
+                      return Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          _drawerItem(
+                            icon: Icons.description_outlined,
+                            title: l10n.summaries,
+                            onTap: () {
+                              Navigator.pop(context);
+                              Navigator.push(context, MaterialPageRoute(builder: (_) => const SummariesScreen()));
+                            },
+                          ),
+                          if (isDelegate)
+                            _drawerItem(
+                              icon: Icons.inbox_outlined,
+                              title: l10n.receivedSummaries,
+                              onTap: () {
+                                Navigator.pop(context);
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (_) => ContentListScreen(
+                                      category: 'summaries',
+                                      title: l10n.receivedSummaries,
+                                    ),
+                                  ),
+                                );
+                              },
+                            )
+                          else
+                            _drawerItem(
+                              icon: Icons.send_outlined,
+                              title: l10n.sendSummary,
+                              onTap: () {
+                                Navigator.pop(context);
+                                Navigator.push(context, MaterialPageRoute(builder: (_) => const SummariesScreen()));
+                              },
+                            ),
+                        ],
+                      );
                     },
                   ),
                   _drawerItem(
