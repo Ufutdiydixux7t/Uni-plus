@@ -38,7 +38,7 @@ class UniPlusApp extends ConsumerWidget {
         scaffoldBackgroundColor: const Color(0xFFF6F7FB),
         fontFamily: 'Roboto',
         // Correctly using cardTheme with CardTheme (which is the data class in Flutter)
-        cardTheme: const CardTheme(
+        cardTheme: const CardThemeData(
           elevation: 2,
           margin: EdgeInsets.zero,
           shape: RoundedRectangleBorder(

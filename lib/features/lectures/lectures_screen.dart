@@ -265,7 +265,7 @@ class LecturesScreen extends ConsumerWidget {
                 title: subjectController.text.trim(),
                 description: desc.trim(),
                 category: 'lectures',
-                uploaderName: uploader,
+                uploaderName: uploader, fileName: '',
               );
               if (context.mounted) {
                 Navigator.pop(context);
