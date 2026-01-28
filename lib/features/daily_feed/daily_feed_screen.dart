@@ -3,12 +3,12 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/storage/secure_storage_service.dart';
 import '../../core/localization/app_localizations.dart';
 import '../../core/providers/announcement_provider.dart';
-import '../../core/providers/content_provider.dart';
 import '../../core/auth/user_role.dart';
 import '../../shared/widgets/app_drawer.dart';
 import '../shared/content_list_screen.dart';
 import '../lectures/lectures_screen.dart';
 import '../summaries/summaries_screen.dart';
+import '../summaries/send_summary_screen.dart';
 import './models/home_grid_item.dart';
 
 class DailyFeedScreen extends ConsumerStatefulWidget {
@@ -85,7 +85,6 @@ class _DailyFeedScreenState extends ConsumerState<DailyFeedScreen> {
           slivers: [
             SliverToBoxAdapter(child: _header(l10n, isDelegate)),
             
-            // Announcements Section (Optional based on existing logic)
             if (announcements.isNotEmpty)
               SliverPadding(
                 padding: const EdgeInsets.fromLTRB(20, 24, 20, 0),
@@ -104,7 +103,6 @@ class _DailyFeedScreenState extends ConsumerState<DailyFeedScreen> {
                 ),
               ),
 
-            // Reusable GridView Section
             SliverPadding(
               padding: const EdgeInsets.fromLTRB(20, 20, 20, 0),
               sliver: SliverGrid(
@@ -124,11 +122,45 @@ class _DailyFeedScreenState extends ConsumerState<DailyFeedScreen> {
               ),
             ),
 
-            // Rectangular Card Section (Directly below GridView)
+            // Phase 3: Rectangular GridView Section at the bottom
             SliverPadding(
-              padding: const EdgeInsets.fromLTRB(20, 16, 20, 40),
+              padding: const EdgeInsets.fromLTRB(20, 24, 20, 40),
               sliver: SliverToBoxAdapter(
-                child: isDelegate ? _delegateBottomSection(l10n) : _studentBottomSection(l10n),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      isDelegate ? l10n.receivedSummaries : l10n.sendSummary,
+                      style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                    ),
+                    const SizedBox(height: 16),
+                    _horizontalActionCard(
+                      icon: isDelegate ? Icons.inbox_rounded : Icons.send_rounded,
+                      title: isDelegate ? l10n.receivedSummaries : l10n.sendSummary,
+                      subtitle: l10n.locale.languageCode == 'ar' 
+                          ? (isDelegate ? "عرض الملخصات المرسلة من الطلاب" : "شارك ملخصاتك مع زملائك")
+                          : (isDelegate ? "View summaries sent by students" : "Share your summaries with the class"),
+                      onTap: () {
+                        if (isDelegate) {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (_) => ContentListScreen(
+                                category: 'summaries',
+                                title: l10n.receivedSummaries,
+                              ),
+                            ),
+                          );
+                        } else {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(builder: (_) => const SendSummaryScreen()),
+                          );
+                        }
+                      },
+                    ),
+                  ],
+                ),
               ),
             ),
           ],
@@ -156,20 +188,11 @@ class _DailyFeedScreenState extends ConsumerState<DailyFeedScreen> {
         children: [
           Row(
             children: [
-              _menuButton(),
+              IconButton(
+                icon: const Icon(Icons.menu, color: Colors.white),
+                onPressed: () => _scaffoldKey.currentState?.openDrawer(),
+              ),
               const Spacer(),
-              if (isDelegate)
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                  decoration: BoxDecoration(
-                    color: Colors.white.withOpacity(0.2),
-                    borderRadius: BorderRadius.circular(20),
-                  ),
-                  child: const Text(
-                    "Add Content", // Static text as per requirement
-                    style: TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.bold),
-                  ),
-                ),
             ],
           ),
           const SizedBox(height: 16),
@@ -183,64 +206,14 @@ class _DailyFeedScreenState extends ConsumerState<DailyFeedScreen> {
             ),
           ),
           const SizedBox(height: 6),
-          const Text(
-            'Access your academic content easily',
-            style: TextStyle(color: Colors.white70, fontSize: 13),
+          Text(
+            l10n.locale.languageCode == 'ar' ? 'الوصول إلى المحتوى الأكاديمي بسهولة' : 'Access your academic content easily',
+            style: const TextStyle(color: Colors.white70, fontSize: 13),
           ),
         ],
       ),
     );
   }
-
-  Widget _studentBottomSection(AppLocalizations l10n) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          l10n.sendSummary,
-          style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-        ),
-        const SizedBox(height: 12),
-        _horizontalActionCard(
-          icon: Icons.send,
-          title: l10n.sendSummary,
-          subtitle: l10n.locale.languageCode == 'ar' ? "شارك ملخصاتك مع زملائك" : "Share your summaries with the class",
-          onTap: () => _showSendSummaryDialog(context, ref),
-        ),
-      ],
-    );
-  }
-
-  Widget _delegateBottomSection(AppLocalizations l10n) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          l10n.receivedSummaries,
-          style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-        ),
-        const SizedBox(height: 12),
-        _horizontalActionCard(
-          icon: Icons.inbox_rounded,
-          title: l10n.receivedSummaries,
-          subtitle: l10n.locale.languageCode == 'ar' ? "عرض الملخصات المرسلة من الطلاب" : "View summaries sent by students",
-          onTap: () {
-            Navigator.push(
-              context,
-              MaterialPageRoute(
-                builder: (_) => ContentListScreen(
-                  category: 'summaries',
-                  title: l10n.receivedSummaries,
-                ),
-              ),
-            );
-          },
-        ),
-      ],
-    );
-  }
-
-
 
   Widget _actionCard(IconData icon, String title, VoidCallback onTap) {
     return InkWell(
@@ -320,81 +293,6 @@ class _DailyFeedScreenState extends ConsumerState<DailyFeedScreen> {
     );
   }
 
-  void _showSendSummaryDialog(BuildContext context, WidgetRef ref) {
-    final l10n = AppLocalizations.of(context);
-    final subjectController = TextEditingController();
-    final doctorController = TextEditingController();
-    final descriptionController = TextEditingController();
-
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        title: Text(l10n.sendSummary, style: const TextStyle(color: Color(0xFF3F51B5), fontWeight: FontWeight.bold)),
-        content: SingleChildScrollView(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              _dialogField(subjectController, l10n.subject, Icons.book_outlined),
-              const SizedBox(height: 12),
-              _dialogField(doctorController, l10n.doctor, Icons.person_outline),
-              const SizedBox(height: 12),
-              _dialogField(descriptionController, l10n.description, Icons.notes, maxLines: 2),
-              const SizedBox(height: 12),
-              OutlinedButton.icon(
-                onPressed: () {},
-                icon: const Icon(Icons.attach_file),
-                label: Text(l10n.uploadFile),
-                style: OutlinedButton.styleFrom(
-                  minimumSize: const Size(double.infinity, 50),
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                ),
-              ),
-            ],
-          ),
-        ),
-        actions: [
-          TextButton(onPressed: () => Navigator.pop(context), child: Text(l10n.cancel, style: const TextStyle(color: Colors.grey))),
-          ElevatedButton(
-            onPressed: () async {
-              if (subjectController.text.isEmpty) return;
-              final uploader = await SecureStorageService.getName() ?? 'Student';
-              final desc = '${l10n.doctor}: ${doctorController.text}\n${descriptionController.text}';
-              
-              await ref.read(contentProvider.notifier).addContent(
-                title: subjectController.text.trim(),
-                description: desc.trim(),
-                category: 'summaries',
-                uploaderName: uploader, fileName: '',
-              );
-              if (context.mounted) {
-                Navigator.pop(context);
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(content: Text(l10n.success), backgroundColor: Colors.green),
-                );
-              }
-            },
-            style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFF3F51B5), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10))),
-            child: Text(l10n.submit, style: const TextStyle(color: Colors.white)),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _dialogField(TextEditingController controller, String label, IconData icon, {int maxLines = 1}) {
-    return TextField(
-      controller: controller,
-      maxLines: maxLines,
-      decoration: InputDecoration(
-        labelText: label,
-        prefixIcon: Icon(icon, color: const Color(0xFF3F51B5)),
-        border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-      ),
-    );
-  }
-
   Widget _announcementCard(Announcement a, AppLocalizations l10n) {
     return Container(
       width: double.infinity,
@@ -415,8 +313,6 @@ class _DailyFeedScreenState extends ConsumerState<DailyFeedScreen> {
           _infoRow(Icons.person_outline, '${l10n.doctor}: ${a.doctor}'),
           const SizedBox(height: 8),
           _infoRow(Icons.access_time, '${l10n.time}: ${a.time}'),
-          const SizedBox(height: 8),
-          _infoRow(Icons.place_outlined, '${l10n.place}: ${a.place}'),
         ],
       ),
     );
@@ -427,23 +323,8 @@ class _DailyFeedScreenState extends ConsumerState<DailyFeedScreen> {
       children: [
         Icon(icon, size: 16, color: Colors.grey),
         const SizedBox(width: 8),
-        Expanded(child: Text(text, style: const TextStyle(fontSize: 13, color: Colors.black87))),
+        Text(text, style: const TextStyle(fontSize: 14, color: Colors.black87)),
       ],
-    );
-  }
-
-  Widget _menuButton() {
-    return InkWell(
-      borderRadius: BorderRadius.circular(12),
-      onTap: () => _scaffoldKey.currentState?.openDrawer(),
-      child: Container(
-        padding: const EdgeInsets.all(10),
-        decoration: BoxDecoration(
-          color: Colors.white.withOpacity(0.15),
-          borderRadius: BorderRadius.circular(12),
-        ),
-        child: const Icon(Icons.menu, color: Colors.white, size: 22),
-      ),
     );
   }
 }
