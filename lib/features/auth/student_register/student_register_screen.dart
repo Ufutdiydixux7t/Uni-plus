@@ -80,7 +80,7 @@ class _StudentRegisterScreenState extends ConsumerState<StudentRegisterScreen> {
               const SizedBox(height: 40),
               _inputField(
                 controller: _nameController,
-                label: 'Your Full Name',
+                label: l10n.yourFullName,
                 icon: Icons.person_outline,
               ),
               const SizedBox(height: 20),
