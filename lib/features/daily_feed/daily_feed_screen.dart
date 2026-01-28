@@ -130,8 +130,8 @@ class _DailyFeedScreenState extends ConsumerState<DailyFeedScreen> {
                         
                         // Delegate Section: Received Summaries
                         if (isDelegate) ...[
-                          const Text(
-                            "Student Submissions",
+                          Text(
+                            l10n.receivedSummaries,
                             style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                           ),
                           const SizedBox(height: 12),
