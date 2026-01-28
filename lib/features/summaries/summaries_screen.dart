@@ -85,14 +85,12 @@ class _SummariesScreenState extends ConsumerState<SummariesScreen> {
             ),
       floatingActionButton: isDelegate
           ? FloatingActionButton(
-              onPressed: () => Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (_) => ContentListScreen(category: 'summaries', title: l10n.receivedSummaries),
-                ),
+              onPressed: () => showDialog(
+                context: context,
+                builder: (_) => const AddContentDialog(category: 'summaries'),
               ),
               backgroundColor: const Color(0xFF3F51B5),
-              child: const Icon(Icons.inbox_rounded, color: Colors.white),
+              child: const Icon(Icons.add, color: Colors.white),
             )
           : null,
     );
