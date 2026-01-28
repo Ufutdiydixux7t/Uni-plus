@@ -4,6 +4,7 @@ import '../../core/storage/secure_storage_service.dart';
 import '../../core/localization/app_localizations.dart';
 import '../../core/providers/content_provider.dart';
 import '../../core/auth/user_role.dart';
+import '../../shared/widgets/add_content_dialog.dart';
 import '../shared/content_list_screen.dart';
 
 class SummariesScreen extends ConsumerStatefulWidget {
@@ -76,6 +77,24 @@ class _SummariesScreenState extends ConsumerState<SummariesScreen> {
               },
             ),
 
+      floatingActionButton: !isDelegate
+          ? FloatingActionButton.extended(
+              onPressed: () => _showSendSummaryDialog(context, ref),
+              backgroundColor: const Color(0xFF3F51B5),
+              icon: const Icon(Icons.send, color: Colors.white),
+              label: Text(l10n.sendSummary, style: const TextStyle(color: Colors.white)),
+            )
+          : FloatingActionButton(
+              onPressed: () => showDialog(
+                context: context,
+                builder: (context) => AddContentDialog(
+                  title: l10n.summaries,
+                  category: 'summaries',
+                ),
+              ),
+              backgroundColor: const Color(0xFF3F51B5),
+              child: const Icon(Icons.add, color: Colors.white),
+            ),
     );
   }
 

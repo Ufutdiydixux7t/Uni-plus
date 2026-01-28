@@ -93,6 +93,8 @@ class AppDrawer extends ConsumerWidget {
                               onTap: () {
                                 Navigator.pop(context);
                                 Navigator.push(context, MaterialPageRoute(builder: (_) => ContentListScreen(category: 'Send Summary', title: l10n.sendSummary)));
+                                // Open SummariesScreen and the dialog will be accessible via FAB
+                                Navigator.push(context, MaterialPageRoute(builder: (_) => const SummariesScreen()));
                               },
                             ),
                         ],
