@@ -101,101 +101,112 @@ class _DailyFeedScreenState extends ConsumerState<DailyFeedScreen> {
                 ]),
               ),
             ),
-            SliverToBoxAdapter(
-              child: FutureBuilder<UserRole>(
-                future: SecureStorageService.getUserRole(),
-                builder: (context, snapshot) {
-                  final role = snapshot.data ?? UserRole.student;
-                  final isDelegate = role == UserRole.delegate || role == UserRole.admin;
-                  return Padding(
-                    padding: const EdgeInsets.fromLTRB(20, 0, 20, 40),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          isDelegate ? l10n.receivedSummaries : l10n.sendSummary,
-                          style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-                        ),
-                        const SizedBox(height: 12),
-                        InkWell(
-                          onTap: () {
-                            if (isDelegate) {
-                              Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                  builder: (_) => ContentListScreen(
-                                    category: 'summaries',
-                                    title: l10n.receivedSummaries,
-                                  ),
-                                ),
-                              );
-                            } else {
-                              _showSendSummaryDialog(context, ref);
-                            }
-                          },
-                          child: Container(
-                            padding: const EdgeInsets.all(16),
-                            decoration: BoxDecoration(
-                              color: Colors.white,
-                              borderRadius: BorderRadius.circular(20),
-                              boxShadow: [
-                                BoxShadow(
-                                  color: Colors.black.withOpacity(0.05),
-                                  blurRadius: 10,
-                                  offset: const Offset(0, 4),
-                                ),
-                              ],
-                            ),
-                            child: Row(
-                              children: [
-                                Container(
-                                  padding: const EdgeInsets.all(10),
-                                  decoration: BoxDecoration(
-                                    color: const Color(0xFF3F51B5).withOpacity(0.1),
-                                    borderRadius: BorderRadius.circular(12),
-                                  ),
-                                  child: Icon(
-                                    isDelegate ? Icons.inbox : Icons.send,
-                                    color: const Color(0xFF3F51B5),
-                                  ),
-                                ),
-                                const SizedBox(width: 16),
-                                Expanded(
-                                  child: Column(
-                                    crossAxisAlignment: CrossAxisAlignment.start,
-                                    children: [
-                                      Text(
-                                        isDelegate ? l10n.receivedSummaries : l10n.sendSummary,
-                                        style: const TextStyle(
-                                          fontSize: 16,
-                                          fontWeight: FontWeight.bold,
-                                        ),
-                                      ),
-                                      Text(
-                                        isDelegate 
-                                          ? (l10n.locale.languageCode == 'ar' ? "عرض الملخصات المرسلة من الطلاب" : "View summaries sent by students")
-                                          : (l10n.locale.languageCode == 'ar' ? "شارك ملخصاتك مع زملائك" : "Share your summaries with the class"),
-                                        style: const TextStyle(
-                                          fontSize: 13,
-                                          color: Colors.grey,
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                                const Icon(Icons.chevron_right, color: Colors.grey),
-                              ],
-                            ),
+            const SliverToBoxAdapter(child: SizedBox(height: 20)),
+          ],
+        ),
+      ),
+      bottomNavigationBar: FutureBuilder<UserRole>(
+        future: SecureStorageService.getUserRole(),
+        builder: (context, snapshot) {
+          final role = snapshot.data ?? UserRole.student;
+          final isDelegate = role == UserRole.delegate || role == UserRole.admin;
+          return Container(
+            padding: EdgeInsets.fromLTRB(20, 12, 20, MediaQuery.of(context).padding.bottom + 12),
+            decoration: BoxDecoration(
+              color: const Color(0xFFF6F7FB),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.03),
+                  blurRadius: 10,
+                  offset: const Offset(0, -5),
+                ),
+              ],
+            ),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  isDelegate ? l10n.receivedSummaries : l10n.sendSummary,
+                  style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                ),
+                const SizedBox(height: 10),
+                InkWell(
+                  onTap: () {
+                    if (isDelegate) {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) => ContentListScreen(
+                            category: 'summaries',
+                            title: l10n.receivedSummaries,
                           ),
+                        ),
+                      );
+                    } else {
+                      _showSendSummaryDialog(context, ref);
+                    }
+                  },
+                  child: Container(
+                    padding: const EdgeInsets.all(14),
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(18),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withOpacity(0.04),
+                          blurRadius: 8,
+                          offset: const Offset(0, 2),
                         ),
                       ],
                     ),
-                  );
-                },
-              ),
+                    child: Row(
+                      children: [
+                        Container(
+                          padding: const EdgeInsets.all(8),
+                          decoration: BoxDecoration(
+                            color: const Color(0xFF3F51B5).withOpacity(0.1),
+                            borderRadius: BorderRadius.circular(10),
+                          ),
+                          child: Icon(
+                            isDelegate ? Icons.inbox : Icons.send,
+                            color: const Color(0xFF3F51B5),
+                            size: 20,
+                          ),
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                isDelegate ? l10n.receivedSummaries : l10n.sendSummary,
+                                style: const TextStyle(
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                              Text(
+                                isDelegate 
+                                  ? (l10n.locale.languageCode == 'ar' ? "عرض الملخصات المرسلة من الطلاب" : "View summaries sent by students")
+                                  : (l10n.locale.languageCode == 'ar' ? "شارك ملخصاتك مع زملائك" : "Share your summaries with the class"),
+                                style: const TextStyle(
+                                  fontSize: 12,
+                                  color: Colors.grey,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        const Icon(Icons.chevron_right, color: Colors.grey, size: 20),
+                      ],
+                    ),
+                  ),
+                ),
+              ],
             ),
-          ],
-        ),
+          );
+        },
       ),
     );
   }
