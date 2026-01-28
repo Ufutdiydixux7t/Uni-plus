@@ -86,7 +86,7 @@ class _DailyFeedScreenState extends ConsumerState<DailyFeedScreen> {
             SliverToBoxAdapter(child: _header(l10n, isDelegate)),
             
             // Tomorrow Lectures Section - Student Only, Above GridView
-            if (!isDelegate && announcements.isNotEmpty)
+            if (!isDelegate)
               SliverPadding(
                 padding: const EdgeInsets.fromLTRB(20, 24, 20, 0),
                 sliver: SliverToBoxAdapter(
@@ -94,12 +94,12 @@ class _DailyFeedScreenState extends ConsumerState<DailyFeedScreen> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
                           Text(
                             l10n.tomorrowLectures,
                             style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                           ),
-                          const Spacer(),
                           Container(
                             padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                             decoration: BoxDecoration(
@@ -114,17 +114,35 @@ class _DailyFeedScreenState extends ConsumerState<DailyFeedScreen> {
                         ],
                       ),
                       const SizedBox(height: 16),
-                      // Horizontal list for tomorrow lectures (Read Only)
-                      SizedBox(
-                        height: 180,
-                        child: ListView.separated(
-                          scrollDirection: Axis.horizontal,
-                          physics: const BouncingScrollPhysics(),
-                          itemCount: announcements.length,
-                          separatorBuilder: (context, index) => const SizedBox(width: 12),
-                          itemBuilder: (context, index) => _announcementCard(announcements[index], l10n),
+                      if (announcements.isEmpty)
+                        Container(
+                          width: double.infinity,
+                          padding: const EdgeInsets.all(20),
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            borderRadius: BorderRadius.circular(16),
+                            boxShadow: [
+                              BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 10, offset: const Offset(0, 4)),
+                            ],
+                          ),
+                          child: Center(
+                            child: Text(
+                              l10n.locale.languageCode == 'ar' ? 'لا يوجد محتوى متاح بعد.' : 'No content available yet.',
+                              style: const TextStyle(color: Colors.grey),
+                            ),
+                          ),
+                        )
+                      else
+                        SizedBox(
+                          height: 180,
+                          child: ListView.separated(
+                            scrollDirection: Axis.horizontal,
+                            physics: const BouncingScrollPhysics(),
+                            itemCount: announcements.length,
+                            separatorBuilder: (context, index) => const SizedBox(width: 12),
+                            itemBuilder: (context, index) => _announcementCard(announcements[index], l10n),
+                          ),
                         ),
-                      ),
                     ],
                   ),
                 ),
