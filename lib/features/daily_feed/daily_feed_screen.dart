@@ -85,19 +85,46 @@ class _DailyFeedScreenState extends ConsumerState<DailyFeedScreen> {
           slivers: [
             SliverToBoxAdapter(child: _header(l10n, isDelegate)),
             
-            if (announcements.isNotEmpty)
+            // Tomorrow Lectures Section - Student Only, Above GridView
+            if (!isDelegate && announcements.isNotEmpty)
               SliverPadding(
                 padding: const EdgeInsets.fromLTRB(20, 24, 20, 0),
                 sliver: SliverToBoxAdapter(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(
-                        l10n.tomorrowLectures,
-                        style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                      Row(
+                        children: [
+                          Text(
+                            l10n.tomorrowLectures,
+                            style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                          ),
+                          const Spacer(),
+                          Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                            decoration: BoxDecoration(
+                              color: Colors.blue.withOpacity(0.1),
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                            child: Text(
+                              l10n.readOnly,
+                              style: const TextStyle(fontSize: 12, color: Colors.blue, fontWeight: FontWeight.w500),
+                            ),
+                          ),
+                        ],
                       ),
                       const SizedBox(height: 16),
-                      ...announcements.map((a) => _announcementCard(a, l10n)).toList(),
+                      // Horizontal list for tomorrow lectures (Read Only)
+                      SizedBox(
+                        height: 180,
+                        child: ListView.separated(
+                          scrollDirection: Axis.horizontal,
+                          physics: const BouncingScrollPhysics(),
+                          itemCount: announcements.length,
+                          separatorBuilder: (context, index) => const SizedBox(width: 12),
+                          itemBuilder: (context, index) => _announcementCard(announcements[index], l10n),
+                        ),
+                      ),
                     ],
                   ),
                 ),
@@ -295,9 +322,8 @@ class _DailyFeedScreenState extends ConsumerState<DailyFeedScreen> {
 
   Widget _announcementCard(Announcement a, AppLocalizations l10n) {
     return Container(
-      width: double.infinity,
-      margin: const EdgeInsets.only(bottom: 12),
-      padding: const EdgeInsets.all(20),
+      width: 260,
+      padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(20),
@@ -308,11 +334,29 @@ class _DailyFeedScreenState extends ConsumerState<DailyFeedScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(a.subject, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: Color(0xFF3F51B5))),
-          const Divider(),
+          Row(
+            children: [
+              Expanded(
+                child: Text(
+                  a.subject,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: Color(0xFF3F51B5)),
+                ),
+              ),
+              const Icon(Icons.bookmark_border, size: 18, color: Color(0xFF3F51B5)),
+            ],
+          ),
+          const Divider(height: 20),
           _infoRow(Icons.person_outline, '${l10n.doctor}: ${a.doctor}'),
           const SizedBox(height: 8),
           _infoRow(Icons.access_time, '${l10n.time}: ${a.time}'),
+          const SizedBox(height: 8),
+          _infoRow(Icons.location_on_outlined, '${l10n.room}: ${a.place}'),
+          if (a.note.isNotEmpty) ...[
+            const SizedBox(height: 8),
+            _infoRow(Icons.info_outline, '${l10n.description}: ${a.note}'),
+          ],
         ],
       ),
     );
