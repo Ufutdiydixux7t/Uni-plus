@@ -389,7 +389,7 @@ class _AdminDashboardScreenState extends ConsumerState<AdminDashboardScreen> {
               ref.read(announcementProvider.notifier).addAnnouncement(
                 subject: subjectController.text.trim(),
                 doctor: doctorController.text.trim(),
-                time: timeController.text.trim(),
+                time: timeController.text.trim(), place: '',
               );
               Navigator.pop(context);
             },

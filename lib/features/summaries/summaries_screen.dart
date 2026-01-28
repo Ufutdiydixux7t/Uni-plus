@@ -87,7 +87,7 @@ class _SummariesScreenState extends ConsumerState<SummariesScreen> {
           ? FloatingActionButton(
               onPressed: () => showDialog(
                 context: context,
-                builder: (_) => const AddContentDialog(category: 'summaries'),
+                builder: (_) => const AddContentDialog(category: 'summaries', title: '',),
               ),
               backgroundColor: const Color(0xFF3F51B5),
               child: const Icon(Icons.add, color: Colors.white),
