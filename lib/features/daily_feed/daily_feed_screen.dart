@@ -107,19 +107,39 @@ class _DailyFeedScreenState extends ConsumerState<DailyFeedScreen> {
                 builder: (context, snapshot) {
                   final role = snapshot.data ?? UserRole.student;
                   final isDelegate = role == UserRole.delegate || role == UserRole.admin;
+                  
                   return Padding(
                     padding: const EdgeInsets.fromLTRB(20, 0, 20, 40),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text(
-                          isDelegate ? l10n.receivedSummaries : l10n.sendSummary,
-                          style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-                        ),
-                        const SizedBox(height: 12),
-                        InkWell(
-                          onTap: () {
-                            if (isDelegate) {
+                        // Student Section: Send Summary
+                        if (!isDelegate) ...[
+                          Text(
+                            l10n.sendSummary,
+                            style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                          ),
+                          const SizedBox(height: 12),
+                          _horizontalActionCard(
+                            icon: Icons.send,
+                            title: l10n.sendSummary,
+                            subtitle: l10n.locale.languageCode == 'ar' ? "شارك ملخصاتك مع زملائك" : "Share your summaries with the class",
+                            onTap: () => _showSendSummaryDialog(context, ref),
+                          ),
+                        ],
+                        
+                        // Delegate Section: Received Summaries
+                        if (isDelegate) ...[
+                          const Text(
+                            "Student Submissions",
+                            style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                          ),
+                          const SizedBox(height: 12),
+                          _horizontalActionCard(
+                            icon: Icons.inbox,
+                            title: l10n.receivedSummaries,
+                            subtitle: l10n.locale.languageCode == 'ar' ? "عرض الملخصات المرسلة من الطلاب" : "View summaries sent by students",
+                            onTap: () {
                               Navigator.push(
                                 context,
                                 MaterialPageRoute(
@@ -129,65 +149,9 @@ class _DailyFeedScreenState extends ConsumerState<DailyFeedScreen> {
                                   ),
                                 ),
                               );
-                            } else {
-                              _showSendSummaryDialog(context, ref);
-                            }
-                          },
-                          child: Container(
-                            padding: const EdgeInsets.all(16),
-                            decoration: BoxDecoration(
-                              color: Colors.white,
-                              borderRadius: BorderRadius.circular(20),
-                              boxShadow: [
-                                BoxShadow(
-                                  color: Colors.black.withOpacity(0.05),
-                                  blurRadius: 10,
-                                  offset: const Offset(0, 4),
-                                ),
-                              ],
-                            ),
-                            child: Row(
-                              children: [
-                                Container(
-                                  padding: const EdgeInsets.all(10),
-                                  decoration: BoxDecoration(
-                                    color: const Color(0xFF3F51B5).withOpacity(0.1),
-                                    borderRadius: BorderRadius.circular(12),
-                                  ),
-                                  child: Icon(
-                                    isDelegate ? Icons.inbox : Icons.send,
-                                    color: const Color(0xFF3F51B5),
-                                  ),
-                                ),
-                                const SizedBox(width: 16),
-                                Expanded(
-                                  child: Column(
-                                    crossAxisAlignment: CrossAxisAlignment.start,
-                                    children: [
-                                      Text(
-                                        isDelegate ? l10n.receivedSummaries : l10n.sendSummary,
-                                        style: const TextStyle(
-                                          fontSize: 16,
-                                          fontWeight: FontWeight.bold,
-                                        ),
-                                      ),
-                                      Text(
-                                        isDelegate 
-                                          ? (l10n.locale.languageCode == 'ar' ? "عرض الملخصات المرسلة من الطلاب" : "View summaries sent by students")
-                                          : (l10n.locale.languageCode == 'ar' ? "شارك ملخصاتك مع زملائك" : "Share your summaries with the class"),
-                                        style: const TextStyle(
-                                          fontSize: 13,
-                                          color: Colors.grey,
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                                const Icon(Icons.chevron_right, color: Colors.grey),
-                              ],
-                            ),
+                            },
                           ),
-                        ),
+                        ],
                       ],
                     ),
                   );
@@ -412,6 +376,67 @@ class _DailyFeedScreenState extends ConsumerState<DailyFeedScreen> {
                 ),
               ),
             ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _horizontalActionCard({
+    required IconData icon,
+    required String title,
+    required String subtitle,
+    required VoidCallback onTap,
+  }) {
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(20),
+      child: Container(
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(20),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.05),
+              blurRadius: 10,
+              offset: const Offset(0, 4),
+            ),
+          ],
+        ),
+        child: Row(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(10),
+              decoration: BoxDecoration(
+                color: const Color(0xFF3F51B5).withOpacity(0.1),
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Icon(icon, color: const Color(0xFF3F51B5)),
+            ),
+            const SizedBox(width: 16),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    title,
+                    style: const TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  Text(
+                    subtitle,
+                    style: const TextStyle(
+                      fontSize: 13,
+                      color: Colors.grey,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const Icon(Icons.chevron_right, color: Colors.grey),
           ],
         ),
       ),
