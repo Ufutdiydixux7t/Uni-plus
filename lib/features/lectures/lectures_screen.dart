@@ -30,7 +30,7 @@ class LecturesScreen extends ConsumerWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                if (role == UserRole.student) _buildTomorrowLectures(context, lectures),
+                // if (role == UserRole.student) _buildTomorrowLectures(context, lectures),
                 
                 Padding(
                   padding: const EdgeInsets.all(16.0),
@@ -227,9 +227,7 @@ class LecturesScreen extends ConsumerWidget {
   void _showAddLectureDialog(BuildContext context, WidgetRef ref) {
     final l10n = AppLocalizations.of(context);
     final subjectController = TextEditingController();
-    final timeController = TextEditingController();
     final doctorController = TextEditingController();
-    final placeController = TextEditingController();
     final descController = TextEditingController();
 
     showDialog(
@@ -243,13 +241,21 @@ class LecturesScreen extends ConsumerWidget {
             children: [
               _dialogField(subjectController, l10n.subject, Icons.book_outlined),
               const SizedBox(height: 12),
-              _dialogField(timeController, l10n.time, Icons.access_time, hint: '00:00 AM/PM'),
-              const SizedBox(height: 12),
               _dialogField(doctorController, l10n.doctor, Icons.person_outline),
               const SizedBox(height: 12),
-              _dialogField(placeController, l10n.place, Icons.location_on_outlined),
-              const SizedBox(height: 12),
               _dialogField(descController, l10n.description, Icons.notes, maxLines: 2),
+              const SizedBox(height: 12),
+              OutlinedButton.icon(
+                onPressed: () {
+                  // File picker logic would go here
+                },
+                icon: const Icon(Icons.attach_file),
+                label: Text(l10n.uploadFile),
+                style: OutlinedButton.styleFrom(
+                  minimumSize: const Size(double.infinity, 50),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                ),
+              ),
             ],
           ),
         ),
@@ -259,7 +265,7 @@ class LecturesScreen extends ConsumerWidget {
             onPressed: () async {
               if (subjectController.text.isEmpty) return;
               final uploader = await SecureStorageService.getName() ?? 'Delegate';
-              final desc = '${timeController.text}\n${doctorController.text}\n${placeController.text}\n${descController.text}';
+              final desc = '${doctorController.text}\n${descController.text}';
               
               await ref.read(contentProvider.notifier).addContent(
                 title: subjectController.text.trim(),

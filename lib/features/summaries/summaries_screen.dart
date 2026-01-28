@@ -12,6 +12,7 @@ class SummariesScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = AppLocalizations.of(context);
     final summaries = ref.watch(contentProvider.notifier).getByCategory('summaries');
+    final receivedSummaries = ref.watch(contentProvider.notifier).getByCategory('received_summaries');
     
     return FutureBuilder<UserRole>(
       future: SecureStorageService.getUserRole(),
@@ -21,22 +22,31 @@ class SummariesScreen extends ConsumerWidget {
         
         return Scaffold(
           appBar: AppBar(
-            title: Text(isDelegate ? l10n.receivedSummaries : l10n.summaries),
+            title: Text(l10n.summaries),
             backgroundColor: Colors.white,
             foregroundColor: Colors.black,
             elevation: 0,
+            actions: [
+              if (isDelegate)
+                TextButton.icon(
+                  onPressed: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => ContentListScreen(
+                          category: 'summaries',
+                          title: l10n.receivedSummaries,
+                        ),
+                      ),
+                    );
+                  },
+                  icon: const Icon(Icons.inbox, color: Color(0xFF3F51B5)),
+                  label: Text(l10n.receivedSummaries, style: const TextStyle(color: Color(0xFF3F51B5))),
+                ),
+            ],
           ),
           body: summaries.isEmpty
-              ? Center(
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      const Icon(Icons.description_outlined, size: 64, color: Colors.grey),
-                      const SizedBox(height: 16),
-                      Text(l10n.noContent, style: const TextStyle(color: Colors.grey)),
-                    ],
-                  ),
-                )
+              ? const SizedBox.shrink()
               : GridView.builder(
                   padding: const EdgeInsets.all(16),
                   gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
