@@ -26,107 +26,41 @@ class LecturesScreen extends ConsumerWidget {
             foregroundColor: Colors.black,
             elevation: 0,
           ),
-          body: SingleChildScrollView(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                // if (role == UserRole.student) _buildTomorrowLectures(context, lectures),
-
-                lectures.isEmpty
-                    ? Center(
-                        child: Padding(
-                          padding: const EdgeInsets.only(top: 300),
-                          child: Column(
-                            children: [
-                              const Icon(Icons.school_outlined, size: 64, color: Colors.grey),
-                              const SizedBox(height: 16),
-                              Text(l10n.noContent, style: const TextStyle(color: Colors.grey)),
-                            ],
-                          ),
-                        ),
-                      )
-                    : GridView.builder(
-                        shrinkWrap: true,
-                        physics: const NeverScrollableScrollPhysics(),
-                        padding: const EdgeInsets.symmetric(horizontal: 16),
-                        gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                          crossAxisCount: 2,
-                          crossAxisSpacing: 16,
-                          mainAxisSpacing: 16,
-                          childAspectRatio: 0.85,
-                        ),
-                        itemCount: lectures.length,
-                        itemBuilder: (context, index) {
-                          final item = lectures[index];
-                          return _buildLectureCard(context, ref, item, isDelegate);
-                        },
-                      ),
-                const SizedBox(height: 80),
-              ],
-            ),
-          ),
+          body: lectures.isEmpty
+              ? Center(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      const Icon(Icons.school_outlined, size: 64, color: Colors.grey),
+                      const SizedBox(height: 16),
+                      Text(l10n.noContent, style: const TextStyle(color: Colors.grey)),
+                    ],
+                  ),
+                )
+              : GridView.builder(
+                  padding: const EdgeInsets.all(16),
+                  gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                    crossAxisCount: 2,
+                    crossAxisSpacing: 16,
+                    mainAxisSpacing: 16,
+                    childAspectRatio: 0.85,
+                  ),
+                  itemCount: lectures.length,
+                  itemBuilder: (context, index) {
+                    final item = lectures[index];
+                    return _buildLectureCard(context, ref, item, isDelegate);
+                  },
+                ),
           floatingActionButton: isDelegate
               ? FloatingActionButton.extended(
                   onPressed: () => _showAddLectureDialog(context, ref),
                   backgroundColor: const Color(0xFF3F51B5),
-                  icon: const Icon(Icons.add),
-                  label: Text(l10n.addLecture),
+                  icon: const Icon(Icons.add, color: Colors.white),
+                  label: Text(l10n.addLecture, style: const TextStyle(color: Colors.white)),
                 )
               : null,
         );
       },
-    );
-  }
-
-  Widget _buildTomorrowLectures(BuildContext context, List<dynamic> lectures) {
-    final l10n = AppLocalizations.of(context);
-    // Mock logic: assuming some lectures are for tomorrow
-    final tomorrowLectures = lectures.take(2).toList(); 
-
-    return Container(
-      width: double.infinity,
-      margin: const EdgeInsets.all(16),
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        gradient: const LinearGradient(colors: [Color(0xFF3F51B5), Color(0xFF6A5AE0)]),
-        borderRadius: BorderRadius.circular(20),
-        boxShadow: [BoxShadow(color: Colors.indigo.withOpacity(0.3), blurRadius: 10, offset: const Offset(0, 4))],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              const Icon(Icons.event_available, color: Colors.white, size: 20),
-              const SizedBox(width: 8),
-              Text(
-                l10n.tomorrowLectures,
-                style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 16),
-              ),
-            ],
-          ),
-          const SizedBox(height: 12),
-          if (tomorrowLectures.isEmpty)
-            Text(l10n.noContent, style: const TextStyle(color: Colors.white70))
-          else
-            ...tomorrowLectures.map((l) => Padding(
-              padding: const EdgeInsets.only(bottom: 8.0),
-              child: Row(
-                children: [
-                  const Icon(Icons.arrow_right, color: Colors.white70),
-                  Expanded(
-                    child: Text(
-                      '${l.title} - ${l.description.split('\n')[0]}',
-                      style: const TextStyle(color: Colors.white, fontSize: 14),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                  ),
-                ],
-              ),
-            )).toList(),
-        ],
-      ),
     );
   }
 
@@ -236,18 +170,6 @@ class LecturesScreen extends ConsumerWidget {
               _dialogField(doctorController, l10n.doctor, Icons.person_outline),
               const SizedBox(height: 12),
               _dialogField(descController, l10n.description, Icons.notes, maxLines: 2),
-              const SizedBox(height: 12),
-              OutlinedButton.icon(
-                onPressed: () {
-                  // File picker logic would go here
-                },
-                icon: const Icon(Icons.attach_file),
-                label: Text(l10n.uploadFile),
-                style: OutlinedButton.styleFrom(
-                  minimumSize: const Size(double.infinity, 50),
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                ),
-              ),
             ],
           ),
         ),
@@ -263,7 +185,8 @@ class LecturesScreen extends ConsumerWidget {
                 title: subjectController.text.trim(),
                 description: desc.trim(),
                 category: 'lectures',
-                uploaderName: uploader, fileName: '',
+                uploaderName: uploader,
+                fileName: '',
               );
               if (context.mounted) {
                 Navigator.pop(context);
@@ -280,13 +203,12 @@ class LecturesScreen extends ConsumerWidget {
     );
   }
 
-  Widget _dialogField(TextEditingController controller, String label, IconData icon, {int maxLines = 1, String? hint}) {
+  Widget _dialogField(TextEditingController controller, String label, IconData icon, {int maxLines = 1}) {
     return TextField(
       controller: controller,
       maxLines: maxLines,
       decoration: InputDecoration(
         labelText: label,
-        hintText: hint,
         prefixIcon: Icon(icon, color: const Color(0xFF3F51B5)),
         border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
         contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
