@@ -66,6 +66,9 @@ class AppLocalizations {
       'noAnnouncements': 'No announcements for tomorrow',
       'about': 'About',
       'aboutText': 'This application was programmed by Mohammed Al-Madi',
+      'readOnly': 'Read Only',
+      'noSummariesYet': 'No summaries to manage yet',
+      'yourFullName': 'Your full name',
     },
     'ar': {
       'appTitle': 'يوني بلس',
@@ -122,6 +125,9 @@ class AppLocalizations {
       'noAnnouncements': 'لا توجد إعلانات لغد',
       'about': 'نظرة عنا',
       'aboutText': 'تم برمجة هذا التطبيق بواسطة محمد المدي',
+      'readOnly': 'قراءة فقط',
+      'noSummariesYet': 'لا توجد ملخصات لإدارتها بعد',
+      'yourFullName': 'اسمك الكامل',
     },
   };
 
@@ -179,6 +185,9 @@ class AppLocalizations {
   String get noAnnouncements => _localizedValues[locale.languageCode]!['noAnnouncements']!;
   String get about => _localizedValues[locale.languageCode]!['about']!;
   String get aboutText => _localizedValues[locale.languageCode]!['aboutText']!;
+  String get readOnly => _localizedValues[locale.languageCode]!['readOnly']!;
+  String get noSummariesYet => _localizedValues[locale.languageCode]!['noSummariesYet']!;
+  String get yourFullName => _localizedValues[locale.languageCode]!['yourFullName']!;
 }
 
 class _AppLocalizationsDelegate extends LocalizationsDelegate<AppLocalizations> {
