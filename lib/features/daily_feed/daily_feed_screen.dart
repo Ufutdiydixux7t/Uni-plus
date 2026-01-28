@@ -214,12 +214,16 @@ class _DailyFeedScreenState extends ConsumerState<DailyFeedScreen> {
       children: [
         const Text(
           "Student Submissions",
-          style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+          style: TextStyle(
+            fontSize: 22,
+            fontWeight: FontWeight.bold,
+            color: Colors.black87,
+          ),
         ),
-        const SizedBox(height: 12),
+        const SizedBox(height: 16),
         _horizontalActionCard(
           icon: Icons.inbox_rounded,
-          title: l10n.receivedSummaries,
+          title: "Received Summaries",
           subtitle: "View summaries sent by students",
           onTap: () {
             Navigator.push(
