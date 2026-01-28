@@ -130,15 +130,19 @@ class _DailyFeedScreenState extends ConsumerState<DailyFeedScreen> {
                         
                         // Delegate Section: Received Summaries
                         if (isDelegate) ...[
-                          Text(
-                            l10n.receivedSummaries,
-                            style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                          const Text(
+                            "Student Submissions",
+                            style: TextStyle(
+                              fontSize: 24,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.black87,
+                            ),
                           ),
-                          const SizedBox(height: 12),
+                          const SizedBox(height: 16),
                           _horizontalActionCard(
-                            icon: Icons.inbox,
-                            title: l10n.receivedSummaries,
-                            subtitle: l10n.locale.languageCode == 'ar' ? "عرض الملخصات المرسلة من الطلاب" : "View summaries sent by students",
+                            icon: Icons.inbox_rounded,
+                            title: "Received Summaries",
+                            subtitle: "View summaries sent by students",
                             onTap: () {
                               Navigator.push(
                                 context,
