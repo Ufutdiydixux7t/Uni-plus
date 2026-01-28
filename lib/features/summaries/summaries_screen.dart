@@ -43,6 +43,12 @@ class SummariesScreen extends ConsumerWidget {
                   },
                   icon: const Icon(Icons.inbox, color: Color(0xFF3F51B5)),
                   label: Text(l10n.receivedSummaries, style: const TextStyle(color: Color(0xFF3F51B5))),
+                )
+              else
+                TextButton.icon(
+                  onPressed: () => _showSendSummaryDialog(context, ref),
+                  icon: const Icon(Icons.send, color: Color(0xFF3F51B5)),
+                  label: Text(l10n.sendSummary, style: const TextStyle(color: Color(0xFF3F51B5))),
                 ),
             ],
           ),
@@ -146,8 +152,8 @@ class SummariesScreen extends ConsumerWidget {
   void _showSendSummaryDialog(BuildContext context, WidgetRef ref) {
     final l10n = AppLocalizations.of(context);
     final subjectController = TextEditingController();
+    final doctorController = TextEditingController();
     final descriptionController = TextEditingController();
-    final noteController = TextEditingController();
 
     showDialog(
       context: context,
@@ -160,9 +166,21 @@ class SummariesScreen extends ConsumerWidget {
             children: [
               _dialogField(subjectController, l10n.subject, Icons.book_outlined),
               const SizedBox(height: 12),
+              _dialogField(doctorController, l10n.doctor, Icons.person_outline),
+              const SizedBox(height: 12),
               _dialogField(descriptionController, l10n.description, Icons.notes, maxLines: 2),
               const SizedBox(height: 12),
-              _dialogField(noteController, l10n.note, Icons.comment_outlined),
+              OutlinedButton.icon(
+                onPressed: () {
+                  // File picker logic would go here
+                },
+                icon: const Icon(Icons.attach_file),
+                label: Text(l10n.uploadFile),
+                style: OutlinedButton.styleFrom(
+                  minimumSize: const Size(double.infinity, 50),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                ),
+              ),
             ],
           ),
         ),
@@ -172,7 +190,7 @@ class SummariesScreen extends ConsumerWidget {
             onPressed: () async {
               if (subjectController.text.isEmpty) return;
               final uploader = await SecureStorageService.getName() ?? 'Student';
-              final desc = '${descriptionController.text}\n${l10n.note}: ${noteController.text}';
+              final desc = '${l10n.doctor}: ${doctorController.text}\n${descriptionController.text}';
               
               await ref.read(contentProvider.notifier).addContent(
                 title: subjectController.text.trim(),
