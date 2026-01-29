@@ -23,14 +23,14 @@ class _AddContentDialogState extends ConsumerState<AddContentDialog> {
   final _subjectController = TextEditingController();
   final _doctorController = TextEditingController();
   final _hallController = TextEditingController();
-  final _timeController = TextEditingController();
+  final _dayController = TextEditingController();
   final _notesController = TextEditingController();
   PlatformFile? _selectedFile;
 
   Future<void> _pickFile() async {
     final result = await FilePicker.platform.pickFiles(
       type: FileType.custom,
-      allowedExtensions: ['pdf', 'jpg', 'jpeg', 'png', 'xlsx'],
+      allowedExtensions: ['pdf', 'jpg', 'jpeg', 'png', 'xlsx', 'docx', 'pptx'],
     );
 
     if (result != null) {
@@ -44,10 +44,9 @@ class _AddContentDialogState extends ConsumerState<AddContentDialog> {
 
     final uploaderName = await SecureStorageService.getName() ?? 'Delegate';
     
-    // Phase 4: Custom description for Daily Reports
     String fullDescription = '';
     if (widget.category == 'reports') {
-      fullDescription = '${l10n.doctor}: ${_doctorController.text}\n${l10n.room}: ${_hallController.text}\n${l10n.time}: ${_timeController.text}\n${l10n.note}: ${_notesController.text}';
+      fullDescription = '${l10n.doctor}: ${_doctorController.text}\n${l10n.place}: ${_hallController.text}\n${l10n.day}: ${_dayController.text}\n${l10n.note}: ${_notesController.text}';
     } else {
       fullDescription = '${l10n.doctor}: ${_doctorController.text}\n${l10n.note}: ${_notesController.text}';
     }
@@ -71,7 +70,7 @@ class _AddContentDialogState extends ConsumerState<AddContentDialog> {
     _subjectController.dispose();
     _doctorController.dispose();
     _hallController.dispose();
-    _timeController.dispose();
+    _dayController.dispose();
     _notesController.dispose();
     super.dispose();
   }
@@ -80,7 +79,8 @@ class _AddContentDialogState extends ConsumerState<AddContentDialog> {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
     final isReport = widget.category == 'reports';
-    final isLecture = widget.category == 'lectures';
+    final noFileCategories = ['tasks']; // Tasks don't mention file in requirements, but others do
+    final needsFile = !noFileCategories.contains(widget.category);
 
     return AlertDialog(
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
@@ -97,13 +97,13 @@ class _AddContentDialogState extends ConsumerState<AddContentDialog> {
             _dialogField(_doctorController, l10n.doctor, Icons.person_outline),
             const SizedBox(height: 12),
             if (isReport) ...[
-              _dialogField(_hallController, l10n.room, Icons.room_outlined),
+              _dialogField(_hallController, l10n.place, Icons.room_outlined),
               const SizedBox(height: 12),
-              _dialogField(_timeController, l10n.time, Icons.access_time),
+              _dialogField(_dayController, l10n.day, Icons.calendar_today),
               const SizedBox(height: 12),
             ],
             _dialogField(_notesController, l10n.note, Icons.notes_outlined, maxLines: 2),
-            if (isLecture || widget.category == 'summaries') ...[
+            if (needsFile) ...[
               const SizedBox(height: 16),
               InkWell(
                 onTap: _pickFile,
@@ -120,7 +120,7 @@ class _AddContentDialogState extends ConsumerState<AddContentDialog> {
                       const SizedBox(width: 12),
                       Expanded(
                         child: Text(
-                          _selectedFile?.name ?? l10n.uploadFile,
+                          _selectedFile?.name ?? l10n.attachFile,
                           overflow: TextOverflow.ellipsis,
                           style: TextStyle(color: _selectedFile == null ? Colors.grey : Colors.black),
                         ),

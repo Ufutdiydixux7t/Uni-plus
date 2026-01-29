@@ -42,7 +42,7 @@ class _DailyFeedScreenState extends ConsumerState<DailyFeedScreen> {
   List<HomeGridItem> _getGridItems(AppLocalizations l10n) {
     return [
       HomeGridItem(icon: Icons.menu_book, title: l10n.lectures, category: 'lectures'),
-      HomeGridItem(icon: Icons.assessment_outlined, title: l10n.dailyReports, category: 'dailyReports'),
+      HomeGridItem(icon: Icons.assessment_outlined, title: l10n.dailyReports, category: 'reports'),
       HomeGridItem(icon: Icons.description, title: l10n.summaries, category: 'summaries'),
       HomeGridItem(icon: Icons.task_alt, title: l10n.tasks, category: 'tasks'),
       HomeGridItem(icon: Icons.assignment, title: l10n.forms, category: 'forms'),
@@ -85,71 +85,72 @@ class _DailyFeedScreenState extends ConsumerState<DailyFeedScreen> {
           slivers: [
             SliverToBoxAdapter(child: _header(l10n, isDelegate)),
             
-            // Tomorrow Lectures Section - Student Only, Above GridView
-            if (!isDelegate)
-              SliverPadding(
-                padding: const EdgeInsets.fromLTRB(20, 24, 20, 0),
-                sliver: SliverToBoxAdapter(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          Text(
-                            l10n.tomorrowLectures,
-                            style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-                          ),
-                          Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                            decoration: BoxDecoration(
-                              color: Colors.blue.withOpacity(0.1),
-                              borderRadius: BorderRadius.circular(8),
-                            ),
-                            child: Text(
-                              l10n.readOnly,
-                              style: const TextStyle(fontSize: 12, color: Colors.blue, fontWeight: FontWeight.w500),
-                            ),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 16),
-                      if (announcements.isEmpty)
+            // Tomorrow Lectures Section - Student and Delegate (Read Only)
+            SliverPadding(
+              padding: const EdgeInsets.fromLTRB(20, 24, 20, 0),
+              sliver: SliverToBoxAdapter(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text(
+                          l10n.tomorrowLectures,
+                          style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                        ),
                         Container(
-                          width: double.infinity,
-                          padding: const EdgeInsets.all(20),
+                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                           decoration: BoxDecoration(
-                            color: Colors.white,
-                            borderRadius: BorderRadius.circular(16),
-                            boxShadow: [
-                              BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 10, offset: const Offset(0, 4)),
-                            ],
+                            color: Colors.blue.withOpacity(0.1),
+                            borderRadius: BorderRadius.circular(8),
                           ),
-                          child: Center(
-                            child: Text(
-                              l10n.locale.languageCode == 'ar' ? 'لا يوجد محتوى متاح بعد.' : 'No content available yet.',
-                              style: const TextStyle(color: Colors.grey),
-                            ),
-                          ),
-                        )
-                      else
-                        SizedBox(
-                          height: 180,
-                          child: ListView.separated(
-                            scrollDirection: Axis.horizontal,
-                            physics: const BouncingScrollPhysics(),
-                            itemCount: announcements.length,
-                            separatorBuilder: (context, index) => const SizedBox(width: 12),
-                            itemBuilder: (context, index) => _announcementCard(announcements[index], l10n),
+                          child: Text(
+                            l10n.readOnly,
+                            style: const TextStyle(fontSize: 12, color: Colors.blue, fontWeight: FontWeight.w500),
                           ),
                         ),
-                    ],
-                  ),
+                      ],
+                    ),
+                    const SizedBox(height: 16),
+                    if (announcements.isEmpty)
+                      Container(
+                        width: double.infinity,
+                        padding: const EdgeInsets.all(20),
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(16),
+                          boxShadow: [
+                            BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 10, offset: const Offset(0, 4)),
+                          ],
+                        ),
+                        child: Center(
+                          child: Text(
+                            l10n.noContent,
+                            style: const TextStyle(color: Colors.grey),
+                          ),
+                        ),
+                      )
+                    else
+                      GridView.builder(
+                        shrinkWrap: true,
+                        physics: const NeverScrollableScrollPhysics(),
+                        gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                          crossAxisCount: 2,
+                          crossAxisSpacing: 12,
+                          mainAxisSpacing: 12,
+                          childAspectRatio: 1.2,
+                        ),
+                        itemCount: announcements.length,
+                        itemBuilder: (context, index) => _announcementCard(announcements[index], l10n),
+                      ),
+                  ],
                 ),
               ),
+            ),
 
             SliverPadding(
-              padding: const EdgeInsets.fromLTRB(20, 20, 20, 0),
+              padding: const EdgeInsets.fromLTRB(20, 24, 20, 0),
               sliver: SliverGrid(
                 gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
                   crossAxisCount: 2,
@@ -167,7 +168,7 @@ class _DailyFeedScreenState extends ConsumerState<DailyFeedScreen> {
               ),
             ),
 
-            // Phase 3: Rectangular GridView Section at the bottom
+            // Received Summaries (Delegate) / Send Summary (Student)
             SliverPadding(
               padding: const EdgeInsets.fromLTRB(20, 24, 20, 40),
               sliver: SliverToBoxAdapter(
@@ -191,16 +192,13 @@ class _DailyFeedScreenState extends ConsumerState<DailyFeedScreen> {
                             context,
                             MaterialPageRoute(
                               builder: (_) => ContentListScreen(
-                                category: 'summaries',
+                                category: 'student_summaries',
                                 title: l10n.receivedSummaries,
                               ),
                             ),
                           );
                         } else {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(builder: (_) => const SendSummaryScreen()),
-                          );
+                          _showSendSummaryDialog(context, l10n);
                         }
                       },
                     ),
@@ -282,9 +280,7 @@ class _DailyFeedScreenState extends ConsumerState<DailyFeedScreen> {
               child: Text(
                 title,
                 textAlign: TextAlign.center,
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: Colors.black87),
+                style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 14),
               ),
             ),
           ],
@@ -293,20 +289,64 @@ class _DailyFeedScreenState extends ConsumerState<DailyFeedScreen> {
     );
   }
 
-  Widget _horizontalActionCard({
-    required IconData icon,
-    required String title,
-    required String subtitle,
-    required VoidCallback onTap,
-  }) {
+  Widget _announcementCard(Announcement announcement, AppLocalizations l10n) {
+    return Container(
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(color: Colors.black.withOpacity(0.03), blurRadius: 8, offset: const Offset(0, 2)),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Text(
+            announcement.subject,
+            style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14, color: Color(0xFF3F51B5)),
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+          ),
+          const SizedBox(height: 6),
+          _infoRow(Icons.person_outline, announcement.doctor),
+          _infoRow(Icons.room_outlined, announcement.place),
+          _infoRow(Icons.access_time, announcement.time),
+        ],
+      ),
+    );
+  }
+
+  Widget _infoRow(IconData icon, String text) {
+    return Padding(
+      padding: const EdgeInsets.only(top: 4.0),
+      child: Row(
+        children: [
+          Icon(icon, size: 12, color: Colors.grey),
+          const SizedBox(width: 4),
+          Expanded(
+            child: Text(
+              text,
+              style: const TextStyle(fontSize: 11, color: Colors.black87),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _horizontalActionCard({required IconData icon, required String title, required String subtitle, required VoidCallback onTap}) {
     return InkWell(
       onTap: onTap,
-      borderRadius: BorderRadius.circular(20),
+      borderRadius: BorderRadius.circular(16),
       child: Container(
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
           color: Colors.white,
-          borderRadius: BorderRadius.circular(20),
+          borderRadius: BorderRadius.circular(16),
           boxShadow: [
             BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 10, offset: const Offset(0, 4)),
           ],
@@ -314,7 +354,7 @@ class _DailyFeedScreenState extends ConsumerState<DailyFeedScreen> {
         child: Row(
           children: [
             Container(
-              padding: const EdgeInsets.all(10),
+              padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
                 color: const Color(0xFF3F51B5).withOpacity(0.1),
                 borderRadius: BorderRadius.circular(12),
@@ -326,8 +366,9 @@ class _DailyFeedScreenState extends ConsumerState<DailyFeedScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(title, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
-                  Text(subtitle, style: const TextStyle(fontSize: 13, color: Colors.grey)),
+                  Text(title, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+                  const SizedBox(height: 4),
+                  Text(subtitle, style: const TextStyle(color: Colors.grey, fontSize: 12)),
                 ],
               ),
             ),
@@ -338,55 +379,104 @@ class _DailyFeedScreenState extends ConsumerState<DailyFeedScreen> {
     );
   }
 
-  Widget _announcementCard(Announcement a, AppLocalizations l10n) {
-    return Container(
-      width: 260,
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(20),
-        boxShadow: [
-          BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 10, offset: const Offset(0, 4)),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Expanded(
-                child: Text(
-                  a.subject,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: Color(0xFF3F51B5)),
+  void _showSendSummaryDialog(BuildContext context, AppLocalizations l10n) {
+    showDialog(
+      context: context,
+      builder: (context) => const SendSummaryDialog(),
+    );
+  }
+}
+
+class SendSummaryDialog extends ConsumerStatefulWidget {
+  const SendSummaryDialog({super.key});
+
+  @override
+  ConsumerState<SendSummaryDialog> createState() => _SendSummaryDialogState();
+}
+
+class _SendSummaryDialogState extends ConsumerState<SendSummaryDialog> {
+  final _subjectController = TextEditingController();
+  final _doctorController = TextEditingController();
+  final _noteController = TextEditingController();
+  String _fileName = '';
+  String? _filePath;
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+    return AlertDialog(
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+      title: Text(l10n.sendSummary, style: const TextStyle(color: Color(0xFF3F51B5), fontWeight: FontWeight.bold)),
+      content: SingleChildScrollView(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            _field(_subjectController, l10n.subject, Icons.book_outlined),
+            const SizedBox(height: 12),
+            _field(_doctorController, l10n.doctor, Icons.person_outline),
+            const SizedBox(height: 12),
+            _field(_noteController, l10n.optionalNote, Icons.notes, maxLines: 2),
+            const SizedBox(height: 16),
+            InkWell(
+              onTap: () async {
+                // In a real app, use FilePicker. Here we simulate.
+                setState(() {
+                  _fileName = "summary_file.pdf";
+                  _filePath = "/dummy/path/summary_file.pdf";
+                });
+              },
+              child: Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  border: Border.all(color: Colors.grey[300]!),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Row(
+                  children: [
+                    const Icon(Icons.attach_file, size: 20, color: Color(0xFF3F51B5)),
+                    const SizedBox(width: 8),
+                    Expanded(child: Text(_fileName.isEmpty ? l10n.attachFile : _fileName, style: TextStyle(color: _fileName.isEmpty ? Colors.grey : Colors.black))),
+                  ],
                 ),
               ),
-              const Icon(Icons.bookmark_border, size: 18, color: Color(0xFF3F51B5)),
-            ],
-          ),
-          const Divider(height: 20),
-          _infoRow(Icons.person_outline, '${l10n.doctor}: ${a.doctor}'),
-          const SizedBox(height: 8),
-          _infoRow(Icons.access_time, '${l10n.time}: ${a.time}'),
-          const SizedBox(height: 8),
-          _infoRow(Icons.location_on_outlined, '${l10n.room}: ${a.place}'),
-          if (a.note.isNotEmpty) ...[
-            const SizedBox(height: 8),
-            _infoRow(Icons.info_outline, '${l10n.description}: ${a.note}'),
+            ),
           ],
-        ],
+        ),
       ),
+      actions: [
+        TextButton(onPressed: () => Navigator.pop(context), child: Text(l10n.cancel)),
+        ElevatedButton(
+          onPressed: () async {
+            if (_subjectController.text.isEmpty) return;
+            final uploader = await SecureStorageService.getName() ?? 'Student';
+            final desc = '${l10n.doctor}: ${_doctorController.text}\n${l10n.note}: ${_noteController.text}';
+            await ref.read(contentProvider.notifier).addContent(
+              title: _subjectController.text.trim(),
+              description: desc.trim(),
+              category: 'student_summaries',
+              uploaderName: uploader,
+              fileName: _fileName,
+              filePath: _filePath,
+            );
+            if (context.mounted) Navigator.pop(context);
+          },
+          style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFF3F51B5)),
+          child: Text(l10n.submit, style: const TextStyle(color: Colors.white)),
+        ),
+      ],
     );
   }
 
-  Widget _infoRow(IconData icon, String text) {
-    return Row(
-      children: [
-        Icon(icon, size: 16, color: Colors.grey),
-        const SizedBox(width: 8),
-        Text(text, style: const TextStyle(fontSize: 14, color: Colors.black87)),
-      ],
+  Widget _field(TextEditingController controller, String label, IconData icon, {int maxLines = 1}) {
+    return TextField(
+      controller: controller,
+      maxLines: maxLines,
+      decoration: InputDecoration(
+        labelText: label,
+        prefixIcon: Icon(icon, color: const Color(0xFF3F51B5)),
+        border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+      ),
     );
   }
 }

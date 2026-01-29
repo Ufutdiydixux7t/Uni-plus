@@ -48,7 +48,8 @@ class AppLocalizations {
       'level': 'Level / Year',
       'addLecture': 'Add Lecture',
       'addAnnouncement': 'Add Announcement',
-      'note': 'Optional Note',
+      'note': 'Note',
+      'optionalNote': 'Optional Note',
       'sendSummary': 'Send Summary',
       'receivedSummaries': 'Received Summaries',
       'delete': 'Delete',
@@ -69,6 +70,12 @@ class AppLocalizations {
       'readOnly': 'Read Only',
       'noSummariesYet': 'No summaries to manage yet',
       'yourFullName': 'Your full name',
+      'attachFile': 'Attach File',
+      'day': 'Day',
+      'studentSummaries': 'Student Summaries',
+      'download': 'Download',
+      'fileAttached': 'File Attached',
+      'noFile': 'No File',
     },
     'ar': {
       'appTitle': 'يوني بلس',
@@ -107,7 +114,8 @@ class AppLocalizations {
       'level': 'المستوى / السنة',
       'addLecture': 'إضافة محاضرة',
       'addAnnouncement': 'إضافة إعلان',
-      'note': 'ملاحظة اختيارية',
+      'note': 'ملاحظة',
+      'optionalNote': 'ملاحظة اختيارية',
       'sendSummary': 'إرسال ملخص',
       'receivedSummaries': 'الملخصات المستلمة',
       'delete': 'حذف',
@@ -128,6 +136,12 @@ class AppLocalizations {
       'readOnly': 'قراءة فقط',
       'noSummariesYet': 'لا توجد ملخصات لإدارتها بعد',
       'yourFullName': 'اسمك الكامل',
+      'attachFile': 'إضافة ملف',
+      'day': 'اليوم',
+      'studentSummaries': 'ملخصات الطلاب',
+      'download': 'تنزيل',
+      'fileAttached': 'ملف مرفق',
+      'noFile': 'لا يوجد ملف',
     },
   };
 
@@ -168,6 +182,7 @@ class AppLocalizations {
   String get addLecture => _localizedValues[locale.languageCode]!['addLecture']!;
   String get addAnnouncement => _localizedValues[locale.languageCode]!['addAnnouncement']!;
   String get note => _localizedValues[locale.languageCode]!['note']!;
+  String get optionalNote => _localizedValues[locale.languageCode]!['optionalNote']!;
   String get sendSummary => _localizedValues[locale.languageCode]!['sendSummary']!;
   String get receivedSummaries => _localizedValues[locale.languageCode]!['receivedSummaries']!;
   String get delete => _localizedValues[locale.languageCode]!['delete']!;
@@ -188,6 +203,12 @@ class AppLocalizations {
   String get readOnly => _localizedValues[locale.languageCode]!['readOnly']!;
   String get noSummariesYet => _localizedValues[locale.languageCode]!['noSummariesYet']!;
   String get yourFullName => _localizedValues[locale.languageCode]!['yourFullName']!;
+  String get attachFile => _localizedValues[locale.languageCode]!['attachFile']!;
+  String get day => _localizedValues[locale.languageCode]!['day']!;
+  String get studentSummaries => _localizedValues[locale.languageCode]!['studentSummaries']!;
+  String get download => _localizedValues[locale.languageCode]!['download']!;
+  String get fileAttached => _localizedValues[locale.languageCode]!['fileAttached']!;
+  String get noFile => _localizedValues[locale.languageCode]!['noFile']!;
 }
 
 class _AppLocalizationsDelegate extends LocalizationsDelegate<AppLocalizations> {

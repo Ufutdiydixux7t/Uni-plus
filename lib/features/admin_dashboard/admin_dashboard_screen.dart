@@ -95,7 +95,6 @@ class _AdminDashboardScreenState extends ConsumerState<AdminDashboardScreen> {
               _dashboardGrid(l10n),
               const SizedBox(height: 32),
               
-              // Phase 3: Rectangular GridView Section at the bottom for Delegate
               Text(
                 l10n.receivedSummaries,
                 style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
@@ -110,7 +109,7 @@ class _AdminDashboardScreenState extends ConsumerState<AdminDashboardScreen> {
                     context,
                     MaterialPageRoute(
                       builder: (_) => ContentListScreen(
-                        category: 'summaries',
+                        category: 'student_summaries',
                         title: l10n.receivedSummaries,
                       ),
                     ),
@@ -304,59 +303,93 @@ class _AdminDashboardScreenState extends ConsumerState<AdminDashboardScreen> {
             padding: const EdgeInsets.all(20),
             decoration: BoxDecoration(
               color: Colors.white,
-              borderRadius: BorderRadius.circular(20),
+              borderRadius: BorderRadius.circular(16),
+              boxShadow: [
+                BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 10, offset: const Offset(0, 4)),
+              ],
             ),
-            child: Center(child: Text(l10n.noContent, style: const TextStyle(color: Colors.grey))),
+            child: Center(
+              child: Text(
+                l10n.noAnnouncements,
+                style: const TextStyle(color: Colors.grey),
+              ),
+            ),
           )
         else
-          ...announcements.map((a) => _announcementCard(a, l10n)).toList(),
-      ],
-    );
-  }
-
-  Widget _announcementCard(Announcement a, AppLocalizations l10n) {
-    return Container(
-      width: double.infinity,
-      margin: const EdgeInsets.only(bottom: 12),
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(20),
-        boxShadow: [
-          BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 10, offset: const Offset(0, 4)),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Text(a.subject, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: Color(0xFF3F51B5))),
-              IconButton(
-                icon: const Icon(Icons.delete, color: Colors.red, size: 20),
-                onPressed: () => ref.read(announcementProvider.notifier).deleteAnnouncement(a.id),
-                constraints: const BoxConstraints(),
-                padding: EdgeInsets.zero,
-              ),
-            ],
+          GridView.builder(
+            shrinkWrap: true,
+            physics: const NeverScrollableScrollPhysics(),
+            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+              crossAxisCount: 2,
+              crossAxisSpacing: 12,
+              mainAxisSpacing: 12,
+              childAspectRatio: 1.2,
+            ),
+            itemCount: announcements.length,
+            itemBuilder: (context, index) {
+              final a = announcements[index];
+              return Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(16),
+                  boxShadow: [
+                    BoxShadow(color: Colors.black.withOpacity(0.03), blurRadius: 8, offset: const Offset(0, 2)),
+                  ],
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Expanded(
+                          child: Text(
+                            a.subject,
+                            style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14, color: Color(0xFF3F51B5)),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
+                        IconButton(
+                          icon: const Icon(Icons.delete_outline, size: 16, color: Colors.red),
+                          onPressed: () => ref.read(announcementProvider.notifier).deleteAnnouncement(a.id),
+                          constraints: const BoxConstraints(),
+                          padding: EdgeInsets.zero,
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 4),
+                    _infoRow(Icons.person_outline, a.doctor),
+                    _infoRow(Icons.room_outlined, a.place),
+                    _infoRow(Icons.access_time, a.time),
+                  ],
+                ),
+              );
+            },
           ),
-          const Divider(),
-          _infoRow(Icons.person_outline, '${l10n.doctor}: ${a.doctor}'),
-          const SizedBox(height: 8),
-          _infoRow(Icons.access_time, '${l10n.time}: ${a.time}'),
-        ],
-      ),
+      ],
     );
   }
 
   Widget _infoRow(IconData icon, String text) {
-    return Row(
-      children: [
-        Icon(icon, size: 16, color: Colors.grey),
-        const SizedBox(width: 8),
-        Text(text, style: const TextStyle(fontSize: 14, color: Colors.black87)),
-      ],
+    return Padding(
+      padding: const EdgeInsets.only(top: 4.0),
+      child: Row(
+        children: [
+          Icon(icon, size: 12, color: Colors.grey),
+          const SizedBox(width: 4),
+          Expanded(
+            child: Text(
+              text,
+              style: const TextStyle(fontSize: 11, color: Colors.black87),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+            ),
+          ),
+        ],
+      ),
     );
   }
 
@@ -365,35 +398,41 @@ class _AdminDashboardScreenState extends ConsumerState<AdminDashboardScreen> {
     final subjectController = TextEditingController();
     final doctorController = TextEditingController();
     final timeController = TextEditingController();
+    final placeController = TextEditingController();
 
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
         title: Text(l10n.addAnnouncement, style: const TextStyle(color: Color(0xFF3F51B5), fontWeight: FontWeight.bold)),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            _dialogField(subjectController, l10n.subject, Icons.book_outlined),
-            const SizedBox(height: 12),
-            _dialogField(doctorController, l10n.doctor, Icons.person_outline),
-            const SizedBox(height: 12),
-            _dialogField(timeController, l10n.time, Icons.access_time),
-          ],
+        content: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              _dialogField(subjectController, l10n.subject, Icons.book_outlined),
+              const SizedBox(height: 12),
+              _dialogField(doctorController, l10n.doctor, Icons.person_outline),
+              const SizedBox(height: 12),
+              _dialogField(timeController, l10n.time, Icons.access_time),
+              const SizedBox(height: 12),
+              _dialogField(placeController, l10n.place, Icons.room_outlined),
+            ],
+          ),
         ),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(context), child: Text(l10n.cancel, style: const TextStyle(color: Colors.grey))),
+          TextButton(onPressed: () => Navigator.pop(context), child: Text(l10n.cancel)),
           ElevatedButton(
             onPressed: () {
               if (subjectController.text.isEmpty) return;
               ref.read(announcementProvider.notifier).addAnnouncement(
-                subject: subjectController.text.trim(),
-                doctor: doctorController.text.trim(),
-                time: timeController.text.trim(), place: '',
+                subject: subjectController.text,
+                doctor: doctorController.text,
+                time: timeController.text,
+                place: placeController.text,
               );
               Navigator.pop(context);
             },
-            style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFF3F51B5), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10))),
+            style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFF3F51B5)),
             child: Text(l10n.save, style: const TextStyle(color: Colors.white)),
           ),
         ],

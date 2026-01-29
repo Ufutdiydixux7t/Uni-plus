@@ -5,7 +5,6 @@ import '../../core/localization/app_localizations.dart';
 import '../../core/providers/content_provider.dart';
 import '../../core/auth/user_role.dart';
 import '../../shared/widgets/add_content_dialog.dart';
-import '../shared/content_list_screen.dart';
 
 class SummariesScreen extends ConsumerStatefulWidget {
   const SummariesScreen({super.key});
@@ -33,7 +32,7 @@ class _SummariesScreenState extends ConsumerState<SummariesScreen> {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
     final isDelegate = _userRole == UserRole.delegate || _userRole == UserRole.admin;
-    final summaries = ref.watch(contentProvider).where((c) => c.category == 'summaries').toList();
+    final summaries = ref.watch(contentProvider.notifier).getByCategory('summaries');
 
     return Scaffold(
       appBar: AppBar(
@@ -60,37 +59,95 @@ class _SummariesScreenState extends ConsumerState<SummariesScreen> {
       ),
       body: summaries.isEmpty
           ? _buildEmptyState(l10n, isDelegate)
-          : ListView.builder(
+          : GridView.builder(
               padding: const EdgeInsets.all(16),
+              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                crossAxisCount: 2,
+                crossAxisSpacing: 12,
+                mainAxisSpacing: 12,
+                childAspectRatio: 0.8,
+              ),
               itemCount: summaries.length,
               itemBuilder: (context, index) {
                 final summary = summaries[index];
                 return Card(
-                  margin: const EdgeInsets.only(bottom: 12),
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
-                  child: ListTile(
-                    leading: const CircleAvatar(
-                      backgroundColor: Color(0xFF3F51B5),
-                      child: Icon(Icons.description, color: Colors.white),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                  elevation: 2,
+                  child: Padding(
+                    padding: const EdgeInsets.all(12),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            const Icon(Icons.description, color: Color(0xFF3F51B5), size: 20),
+                            if (isDelegate)
+                              IconButton(
+                                icon: const Icon(Icons.delete_outline, color: Colors.red, size: 18),
+                                onPressed: () => _confirmDelete(context, ref, summary.id),
+                                constraints: const BoxConstraints(),
+                                padding: EdgeInsets.zero,
+                              ),
+                          ],
+                        ),
+                        const SizedBox(height: 8),
+                        Text(
+                          summary.title,
+                          style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                        const SizedBox(height: 4),
+                        Expanded(
+                          child: SingleChildScrollView(
+                            child: Text(
+                              summary.description,
+                              style: const TextStyle(fontSize: 11, color: Colors.black87),
+                            ),
+                          ),
+                        ),
+                        if (summary.fileName.isNotEmpty) ...[
+                          const SizedBox(height: 8),
+                          Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                            decoration: BoxDecoration(
+                              color: Colors.indigo.withOpacity(0.05),
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                            child: Row(
+                              children: [
+                                const Icon(Icons.attach_file, size: 12, color: Colors.indigo),
+                                const SizedBox(width: 4),
+                                Expanded(
+                                  child: Text(
+                                    summary.fileName,
+                                    style: const TextStyle(fontSize: 10, color: Colors.indigo),
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
+                      ],
                     ),
-                    title: Text(summary.title, style: const TextStyle(fontWeight: FontWeight.bold)),
-                    subtitle: Text(summary.uploaderName),
-                    trailing: const Icon(Icons.chevron_right),
-                    onTap: () {
-                      // View summary logic - Read Only
-                    },
                   ),
                 );
               },
             ),
       floatingActionButton: isDelegate
-          ? FloatingActionButton(
+          ? FloatingActionButton.extended(
               onPressed: () => showDialog(
                 context: context,
-                builder: (_) => const AddContentDialog(category: 'summaries', title: '',),
+                builder: (_) => AddContentDialog(
+                  category: 'summaries',
+                  title: l10n.summaries,
+                ),
               ),
               backgroundColor: const Color(0xFF3F51B5),
-              child: const Icon(Icons.add, color: Colors.white),
+              icon: const Icon(Icons.add, color: Colors.white),
+              label: Text(l10n.addContent, style: const TextStyle(color: Colors.white)),
             )
           : null,
     );
@@ -106,6 +163,27 @@ class _SummariesScreenState extends ConsumerState<SummariesScreen> {
           Text(
             isDelegate ? l10n.noSummariesYet : l10n.noContent,
             style: TextStyle(fontSize: 18, color: Colors.grey[600], fontWeight: FontWeight.w500),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _confirmDelete(BuildContext context, WidgetRef ref, String id) {
+    final l10n = AppLocalizations.of(context);
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text(l10n.delete),
+        content: Text(l10n.confirmDelete),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(context), child: Text(l10n.cancel)),
+          TextButton(
+            onPressed: () {
+              ref.read(contentProvider.notifier).deleteContent(id);
+              Navigator.pop(context);
+            },
+            child: Text(l10n.delete, style: const TextStyle(color: Colors.red)),
           ),
         ],
       ),

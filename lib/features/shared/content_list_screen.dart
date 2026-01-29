@@ -5,7 +5,6 @@ import '../../core/storage/secure_storage_service.dart';
 import '../../core/auth/user_role.dart';
 import '../../core/localization/app_localizations.dart';
 import '../../shared/widgets/add_content_dialog.dart';
-import 'package:intl/intl.dart';
 
 class ContentListScreen extends ConsumerWidget {
   final String category;
@@ -28,6 +27,17 @@ class ContentListScreen extends ConsumerWidget {
         final role = snapshot.data ?? UserRole.student;
         final isDelegate = role == UserRole.delegate || role == UserRole.admin;
         
+        // Specific logic for Student Summaries (category: 'summaries')
+        // Students: Read Only
+        // Delegate: Can add/delete (via SummariesScreen or here)
+        bool canAdd = isDelegate;
+        if (category == 'student_summaries') {
+            // Only delegate can manage received summaries
+            canAdd = false; // They are received from students
+        } else if (category == 'summaries' && !isDelegate) {
+            canAdd = false;
+        }
+
         return Scaffold(
           appBar: AppBar(
             title: Text(title),
@@ -46,78 +56,75 @@ class ContentListScreen extends ConsumerWidget {
                     ],
                   ),
                 )
-              : ListView.builder(
+              : GridView.builder(
                   padding: const EdgeInsets.all(16),
+                  gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                    crossAxisCount: 2,
+                    crossAxisSpacing: 12,
+                    mainAxisSpacing: 12,
+                    childAspectRatio: 0.75,
+                  ),
                   itemCount: contentItems.length,
                   itemBuilder: (context, index) {
                     final item = contentItems[index];
                     return Card(
-                      margin: const EdgeInsets.only(bottom: 16),
                       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
                       elevation: 2,
                       child: Padding(
-                        padding: const EdgeInsets.all(16),
+                        padding: const EdgeInsets.all(12),
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Row(
                               mainAxisAlignment: MainAxisAlignment.spaceBetween,
                               children: [
-                                Row(
-                                  children: [
-                                    const Icon(Icons.description, color: Color(0xFF3F51B5)),
-                                    const SizedBox(width: 12),
-                                    Text(
-                                      item.title,
-                                      style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
-                                    ),
-                                  ],
-                                ),
+                                const Icon(Icons.description, color: Color(0xFF3F51B5), size: 20),
                                 if (isDelegate)
                                   IconButton(
-                                    icon: const Icon(Icons.delete_outline, color: Colors.redAccent),
+                                    icon: const Icon(Icons.delete_outline, color: Colors.redAccent, size: 18),
                                     onPressed: () => _confirmDelete(context, ref, item.id),
+                                    constraints: const BoxConstraints(),
+                                    padding: EdgeInsets.zero,
                                   ),
                               ],
                             ),
-                            const Divider(height: 24),
+                            const SizedBox(height: 8),
                             Text(
-                              item.description,
-                              style: const TextStyle(fontSize: 14, color: Colors.black87, height: 1.5),
+                              item.title,
+                              style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
                             ),
-                            const SizedBox(height: 16),
-                            Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                              children: [
-                                Text(
-                                  '${l10n.welcome}: ${item.uploaderName}',
-                                  style: const TextStyle(fontSize: 12, color: Colors.grey),
+                            const SizedBox(height: 4),
+                            Expanded(
+                              child: SingleChildScrollView(
+                                child: Text(
+                                  item.description,
+                                  style: const TextStyle(fontSize: 11, color: Colors.black87),
                                 ),
-                                Text(
-                                  DateFormat('yyyy/MM/dd').format(item.date),
-                                  style: const TextStyle(fontSize: 12, color: Colors.grey),
-                                ),
-                              ],
+                              ),
                             ),
                             if (item.fileName.isNotEmpty) ...[
-                              const SizedBox(height: 12),
+                              const SizedBox(height: 8),
                               Container(
-                                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                                 decoration: BoxDecoration(
                                   color: Colors.indigo.withOpacity(0.05),
                                   borderRadius: BorderRadius.circular(8),
                                 ),
                                 child: Row(
                                   children: [
-                                    const Icon(Icons.attach_file, size: 16, color: Colors.indigo),
-                                    const SizedBox(width: 8),
+                                    const Icon(Icons.attach_file, size: 12, color: Colors.indigo),
+                                    const SizedBox(width: 4),
                                     Expanded(
                                       child: Text(
                                         item.fileName,
-                                        style: const TextStyle(fontSize: 12, color: Colors.indigo),
+                                        style: const TextStyle(fontSize: 10, color: Colors.indigo),
                                         overflow: TextOverflow.ellipsis,
                                       ),
                                     ),
+                                    if (category == 'student_summaries' && isDelegate)
+                                        const Icon(Icons.download, size: 12, color: Colors.indigo),
                                   ],
                                 ),
                               ),
@@ -128,7 +135,7 @@ class ContentListScreen extends ConsumerWidget {
                     );
                   },
                 ),
-          floatingActionButton: isDelegate
+          floatingActionButton: canAdd
               ? FloatingActionButton.extended(
                   onPressed: () => showDialog(
                     context: context,

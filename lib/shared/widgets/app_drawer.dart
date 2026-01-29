@@ -7,8 +7,8 @@ import '../../core/localization/app_localizations.dart';
 import '../../features/auth/role_selection/role_selection_screen.dart';
 import '../../features/lectures/lectures_screen.dart';
 import '../../features/summaries/summaries_screen.dart';
-import '../../features/summaries/send_summary_screen.dart';
 import '../../features/shared/content_list_screen.dart';
+import '../../features/daily_feed/daily_feed_screen.dart';
 
 class AppDrawer extends ConsumerWidget {
   const AppDrawer({super.key});
@@ -102,7 +102,7 @@ class AppDrawer extends ConsumerWidget {
                               context,
                               MaterialPageRoute(
                                 builder: (_) => ContentListScreen(
-                                  category: 'summaries',
+                                  category: 'student_summaries',
                                   title: l10n.receivedSummaries,
                                 ),
                               ),
@@ -115,7 +115,10 @@ class AppDrawer extends ConsumerWidget {
                           title: l10n.sendSummary,
                           onTap: () {
                             Navigator.pop(context);
-                            Navigator.push(context, MaterialPageRoute(builder: (_) => const SendSummaryScreen()));
+                            showDialog(
+                              context: context,
+                              builder: (context) => const SendSummaryDialog(),
+                            );
                           },
                         );
                       }

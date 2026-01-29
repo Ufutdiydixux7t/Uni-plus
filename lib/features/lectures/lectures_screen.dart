@@ -4,6 +4,7 @@ import '../../core/providers/content_provider.dart';
 import '../../core/storage/secure_storage_service.dart';
 import '../../core/auth/user_role.dart';
 import '../../core/localization/app_localizations.dart';
+import '../../shared/widgets/add_content_dialog.dart';
 
 class LecturesScreen extends ConsumerWidget {
   const LecturesScreen({super.key});
@@ -41,9 +42,9 @@ class LecturesScreen extends ConsumerWidget {
                   padding: const EdgeInsets.all(16),
                   gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
                     crossAxisCount: 2,
-                    crossAxisSpacing: 16,
-                    mainAxisSpacing: 16,
-                    childAspectRatio: 0.85,
+                    crossAxisSpacing: 12,
+                    mainAxisSpacing: 12,
+                    childAspectRatio: 0.8,
                   ),
                   itemCount: lectures.length,
                   itemBuilder: (context, index) {
@@ -53,7 +54,13 @@ class LecturesScreen extends ConsumerWidget {
                 ),
           floatingActionButton: isDelegate
               ? FloatingActionButton.extended(
-                  onPressed: () => _showAddLectureDialog(context, ref),
+                  onPressed: () => showDialog(
+                    context: context,
+                    builder: (context) => AddContentDialog(
+                      title: l10n.lectures,
+                      category: 'lectures',
+                    ),
+                  ),
                   backgroundColor: const Color(0xFF3F51B5),
                   icon: const Icon(Icons.add, color: Colors.white),
                   label: Text(l10n.addLecture, style: const TextStyle(color: Colors.white)),
@@ -66,10 +73,6 @@ class LecturesScreen extends ConsumerWidget {
 
   Widget _buildLectureCard(BuildContext context, WidgetRef ref, dynamic item, bool isDelegate) {
     final l10n = AppLocalizations.of(context);
-    final details = item.description.split('\n');
-    final time = details.length > 0 ? details[0] : '';
-    final doctor = details.length > 1 ? details[1] : '';
-    final place = details.length > 2 ? details[2] : '';
 
     return Card(
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
@@ -85,7 +88,7 @@ class LecturesScreen extends ConsumerWidget {
                 const Icon(Icons.book, color: Color(0xFF3F51B5), size: 20),
                 if (isDelegate)
                   IconButton(
-                    icon: const Icon(Icons.delete_outline, color: Colors.red, size: 20),
+                    icon: const Icon(Icons.delete_outline, color: Colors.red, size: 18),
                     onPressed: () => _confirmDelete(context, ref, item.id),
                     constraints: const BoxConstraints(),
                     padding: EdgeInsets.zero,
@@ -95,36 +98,44 @@ class LecturesScreen extends ConsumerWidget {
             const SizedBox(height: 8),
             Text(
               item.title,
-              style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15),
+              style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
             ),
             const SizedBox(height: 4),
-            _infoRow(Icons.access_time, time),
-            _infoRow(Icons.person_outline, doctor),
-            _infoRow(Icons.location_on_outlined, place),
+            Expanded(
+              child: SingleChildScrollView(
+                child: Text(
+                  item.description,
+                  style: const TextStyle(fontSize: 11, color: Colors.black87),
+                ),
+              ),
+            ),
+            if (item.fileName.isNotEmpty) ...[
+              const SizedBox(height: 8),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                decoration: BoxDecoration(
+                  color: Colors.indigo.withOpacity(0.05),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Row(
+                  children: [
+                    const Icon(Icons.attach_file, size: 12, color: Colors.indigo),
+                    const SizedBox(width: 4),
+                    Expanded(
+                      child: Text(
+                        item.fileName,
+                        style: const TextStyle(fontSize: 10, color: Colors.indigo),
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
           ],
         ),
-      ),
-    );
-  }
-
-  Widget _infoRow(IconData icon, String text) {
-    return Padding(
-      padding: const EdgeInsets.only(top: 2.0),
-      child: Row(
-        children: [
-          Icon(icon, size: 12, color: Colors.grey),
-          const SizedBox(width: 4),
-          Expanded(
-            child: Text(
-              text,
-              style: const TextStyle(fontSize: 11, color: Colors.black87),
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-            ),
-          ),
-        ],
       ),
     );
   }
@@ -146,72 +157,6 @@ class LecturesScreen extends ConsumerWidget {
             child: Text(l10n.delete, style: const TextStyle(color: Colors.red)),
           ),
         ],
-      ),
-    );
-  }
-
-  void _showAddLectureDialog(BuildContext context, WidgetRef ref) {
-    final l10n = AppLocalizations.of(context);
-    final subjectController = TextEditingController();
-    final doctorController = TextEditingController();
-    final descController = TextEditingController();
-
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        title: Text(l10n.addLecture, style: const TextStyle(color: Color(0xFF3F51B5), fontWeight: FontWeight.bold)),
-        content: SingleChildScrollView(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              _dialogField(subjectController, l10n.subject, Icons.book_outlined),
-              const SizedBox(height: 12),
-              _dialogField(doctorController, l10n.doctor, Icons.person_outline),
-              const SizedBox(height: 12),
-              _dialogField(descController, l10n.description, Icons.notes, maxLines: 2),
-            ],
-          ),
-        ),
-        actions: [
-          TextButton(onPressed: () => Navigator.pop(context), child: Text(l10n.cancel, style: const TextStyle(color: Colors.grey))),
-          ElevatedButton(
-            onPressed: () async {
-              if (subjectController.text.isEmpty) return;
-              final uploader = await SecureStorageService.getName() ?? 'Delegate';
-              final desc = '${doctorController.text}\n${descController.text}';
-              
-              await ref.read(contentProvider.notifier).addContent(
-                title: subjectController.text.trim(),
-                description: desc.trim(),
-                category: 'lectures',
-                uploaderName: uploader,
-                fileName: '',
-              );
-              if (context.mounted) {
-                Navigator.pop(context);
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(content: Text(l10n.success), backgroundColor: Colors.green),
-                );
-              }
-            },
-            style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFF3F51B5), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10))),
-            child: Text(l10n.save, style: const TextStyle(color: Colors.white)),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _dialogField(TextEditingController controller, String label, IconData icon, {int maxLines = 1}) {
-    return TextField(
-      controller: controller,
-      maxLines: maxLines,
-      decoration: InputDecoration(
-        labelText: label,
-        prefixIcon: Icon(icon, color: const Color(0xFF3F51B5)),
-        border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       ),
     );
   }

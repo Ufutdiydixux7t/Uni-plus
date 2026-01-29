@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:file_picker/file_picker.dart';
 import '../../core/storage/secure_storage_service.dart';
 import '../../core/localization/app_localizations.dart';
 import '../../core/providers/content_provider.dart';
@@ -15,61 +14,13 @@ class SendSummaryScreen extends ConsumerStatefulWidget {
 class _SendSummaryScreenState extends ConsumerState<SendSummaryScreen> {
   final _subjectController = TextEditingController();
   final _doctorController = TextEditingController();
-  final _descriptionController = TextEditingController();
-  PlatformFile? _selectedFile;
-
-  Future<void> _pickFile() async {
-    final result = await FilePicker.platform.pickFiles(
-      type: FileType.custom,
-      allowedExtensions: ['pdf', 'jpg', 'jpeg', 'png', 'xlsx'],
-    );
-
-    if (result != null) {
-      setState(() => _selectedFile = result.files.first);
-    }
-  }
-
-  Future<void> _submit() async {
-    final l10n = AppLocalizations.of(context);
-    if (_subjectController.text.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(l10n.locale.languageCode == 'ar' ? 'يرجى إدخال المادة' : 'Please enter subject')),
-      );
-      return;
-    }
-
-    final uploader = await SecureStorageService.getName() ?? 'Student';
-    final desc = '${l10n.doctor}: ${_doctorController.text}\n${_descriptionController.text}';
-    
-    await ref.read(contentProvider.notifier).addContent(
-      title: _subjectController.text.trim(),
-      description: desc.trim(),
-      category: 'summaries',
-      uploaderName: uploader,
-      fileName: _selectedFile?.name ?? '',
-      filePath: _selectedFile?.path,
-    );
-
-    if (mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(l10n.success), backgroundColor: Colors.green),
-      );
-      Navigator.pop(context);
-    }
-  }
-
-  @override
-  void dispose() {
-    _subjectController.dispose();
-    _doctorController.dispose();
-    _descriptionController.dispose();
-    super.dispose();
-  }
+  final _noteController = TextEditingController();
+  String _fileName = '';
+  String? _filePath;
 
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
-
     return Scaffold(
       appBar: AppBar(
         title: Text(l10n.sendSummary),
@@ -86,10 +37,16 @@ class _SendSummaryScreenState extends ConsumerState<SendSummaryScreen> {
             const SizedBox(height: 16),
             _field(_doctorController, l10n.doctor, Icons.person_outline),
             const SizedBox(height: 16),
-            _field(_descriptionController, l10n.description, Icons.notes, maxLines: 3),
+            _field(_noteController, l10n.optionalNote, Icons.notes, maxLines: 3),
             const SizedBox(height: 24),
             InkWell(
-              onTap: _pickFile,
+              onTap: () {
+                // Simulated file picker
+                setState(() {
+                  _fileName = "summary_${DateTime.now().millisecondsSinceEpoch}.pdf";
+                  _filePath = "/simulated/path/$_fileName";
+                });
+              },
               child: Container(
                 padding: const EdgeInsets.all(16),
                 decoration: BoxDecoration(
@@ -103,9 +60,9 @@ class _SendSummaryScreenState extends ConsumerState<SendSummaryScreen> {
                     const SizedBox(width: 12),
                     Expanded(
                       child: Text(
-                        _selectedFile?.name ?? l10n.uploadFile,
+                        _fileName.isEmpty ? l10n.attachFile : _fileName,
                         overflow: TextOverflow.ellipsis,
-                        style: TextStyle(color: _selectedFile == null ? Colors.grey : Colors.black),
+                        style: TextStyle(color: _fileName.isEmpty ? Colors.grey : Colors.black),
                       ),
                     ),
                   ],
@@ -117,7 +74,25 @@ class _SendSummaryScreenState extends ConsumerState<SendSummaryScreen> {
               width: double.infinity,
               height: 55,
               child: ElevatedButton(
-                onPressed: _submit,
+                onPressed: () async {
+                  if (_subjectController.text.isEmpty) return;
+                  final uploader = await SecureStorageService.getName() ?? 'Student';
+                  final desc = '${l10n.doctor}: ${_doctorController.text}\n${l10n.note}: ${_noteController.text}';
+                  await ref.read(contentProvider.notifier).addContent(
+                    title: _subjectController.text.trim(),
+                    description: desc.trim(),
+                    category: 'student_summaries',
+                    uploaderName: uploader,
+                    fileName: _fileName,
+                    filePath: _filePath,
+                  );
+                  if (mounted) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(content: Text(l10n.success), backgroundColor: Colors.green),
+                    );
+                    Navigator.pop(context);
+                  }
+                },
                 style: ElevatedButton.styleFrom(
                   backgroundColor: const Color(0xFF3F51B5),
                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
