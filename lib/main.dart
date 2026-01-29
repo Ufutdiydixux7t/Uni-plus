@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
+import 'package:supabase_flutter/supabase_flutter.dart'; // New: Supabase Import
 
 import 'core/auth/user_role.dart';
 import 'core/storage/secure_storage_service.dart';
@@ -14,6 +15,14 @@ import 'features/auth/splash/splash_screen.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+
+  // --- Supabase Initialization (Phase 1) ---
+  await Supabase.initialize(
+    url: '<SUPABASE_PROJECT_URL>',
+    anonKey: '<SUPABASE_ANON_KEY>',
+    // لا يوجد منطق مصادقة أو UI هنا، فقط التهيئة الأساسية
+  );
+  // -----------------------------------------
 
   runApp(
     const ProviderScope(
@@ -38,7 +47,7 @@ class UniPlusApp extends ConsumerWidget {
         scaffoldBackgroundColor: const Color(0xFFF6F7FB),
         fontFamily: 'Roboto',
         // Correctly using cardTheme with CardTheme (which is the data class in Flutter)
-        cardTheme: const CardThemeData(
+        cardTheme: const CardTheme(
           elevation: 2,
           margin: EdgeInsets.zero,
           shape: RoundedRectangleBorder(
