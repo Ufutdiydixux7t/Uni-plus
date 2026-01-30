@@ -1,12 +1,15 @@
 import 'dart:math';
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:uuid/uuid.dart';
+import 'package:file_picker/file_picker.dart';
 import '../../core/localization/app_localizations.dart';
 import '../../core/storage/secure_storage_service.dart';
 import '../../core/providers/announcement_provider.dart';
+import '../../core/providers/grade_provider.dart';
 import '../../shared/widgets/app_drawer.dart';
 import '../shared/content_list_screen.dart';
 import '../lectures/lectures_screen.dart';
@@ -45,16 +48,14 @@ class _AdminDashboardScreenState extends ConsumerState<AdminDashboardScreen> {
       
       if (user == null) return;
 
-      // 1. Try to fetch from profiles
       final profile = await supabase
           .from('profiles')
-          .select('join_code')
+          .select('join_code, role')
           .eq('id', user.id)
           .maybeSingle();
 
       String? code = profile?['join_code'];
 
-      // 2. If not in profile, try groups
       if (code == null || code.isEmpty) {
         final group = await supabase
             .from('groups')
@@ -64,12 +65,10 @@ class _AdminDashboardScreenState extends ConsumerState<AdminDashboardScreen> {
         code = group?['join_code'];
       }
 
-      // 3. If still null, generate and update both
       if (code == null || code.isEmpty) {
         code = _generateJoinCode();
         final now = DateTime.now().toIso8601String();
 
-        // Update/Insert Group
         final existingGroup = await supabase
             .from('groups')
             .select()
@@ -89,13 +88,11 @@ class _AdminDashboardScreenState extends ConsumerState<AdminDashboardScreen> {
           }).eq('delegate_id', user.id);
         }
 
-        // Update Profile
         await supabase.from('profiles').update({
           'join_code': code,
         }).eq('id', user.id);
       }
 
-      // 4. Save locally and update UI
       await SecureStorageService.saveUser(
         role: (profile?['role'] == 'admin') ? UserRole.admin : UserRole.delegate,
         name: code,
@@ -114,6 +111,10 @@ class _AdminDashboardScreenState extends ConsumerState<AdminDashboardScreen> {
   }
 
   void _navigateToContent(String title, String category) {
+    if (category == 'grades') {
+      _showGradesManagement();
+      return;
+    }
     if (category == 'lectures') {
       Navigator.push(context, MaterialPageRoute(builder: (_) => const LecturesScreen()));
     } else if (category == 'summaries') {
@@ -129,6 +130,15 @@ class _AdminDashboardScreenState extends ConsumerState<AdminDashboardScreen> {
         ),
       );
     }
+  }
+
+  void _showGradesManagement() {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(20))),
+      builder: (context) => const GradesManagementSheet(),
+    );
   }
 
   @override
@@ -291,247 +301,180 @@ class _AdminDashboardScreenState extends ConsumerState<AdminDashboardScreen> {
   }
 
   Widget _actionCard(IconData icon, String title, VoidCallback onTap) {
-    return InkWell(
-      onTap: onTap,
-      borderRadius: BorderRadius.circular(20),
-      child: Container(
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(20),
-          boxShadow: [
-            BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 10, offset: const Offset(0, 4)),
-          ],
-        ),
+    return Card(
+      elevation: 0,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20), side: BorderSide(color: Colors.grey.shade200)),
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(20),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Icon(icon, size: 32, color: const Color(0xFF3F51B5)),
             const SizedBox(height: 12),
-            Text(
-              title,
-              textAlign: TextAlign.center,
-              style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
-            ),
+            Text(title, style: const TextStyle(fontWeight: FontWeight.bold)),
           ],
         ),
       ),
     );
   }
 
-  Widget _horizontalActionCard({
-    required IconData icon,
-    required String title,
-    required String subtitle,
-    required VoidCallback onTap,
-  }) {
-    return InkWell(
-      onTap: onTap,
-      borderRadius: BorderRadius.circular(20),
-      child: Container(
-        padding: const EdgeInsets.all(16),
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(20),
-          boxShadow: [
-            BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 10, offset: const Offset(0, 4)),
-          ],
-        ),
-        child: Row(
-          children: [
-            Container(
-              padding: const EdgeInsets.all(10),
-              decoration: BoxDecoration(
-                color: const Color(0xFF3F51B5).withOpacity(0.1),
-                borderRadius: BorderRadius.circular(12),
+  Widget _horizontalActionCard({required IconData icon, required String title, required String subtitle, required VoidCallback onTap}) {
+    return Card(
+      elevation: 0,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20), side: BorderSide(color: Colors.grey.shade200)),
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(20),
+        child: Padding(
+          padding: const EdgeInsets.all(16),
+          child: Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(color: const Color(0xFF3F51B5).withOpacity(0.1), borderRadius: BorderRadius.circular(12)),
+                child: Icon(icon, color: const Color(0xFF3F51B5)),
               ),
-              child: Icon(icon, color: const Color(0xFF3F51B5)),
-            ),
-            const SizedBox(width: 16),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(title, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
-                  Text(subtitle, style: const TextStyle(fontSize: 13, color: Colors.grey)),
-                ],
+              const SizedBox(width: 16),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(title, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+                    Text(subtitle, style: TextStyle(color: Colors.grey.shade600, fontSize: 12)),
+                  ],
+                ),
               ),
-            ),
-            const Icon(Icons.chevron_right, color: Colors.grey),
-          ],
+              const Icon(Icons.arrow_forward_ios, size: 16, color: Colors.grey),
+            ],
+          ),
         ),
       ),
     );
   }
 
-  Widget _announcementSection(AppLocalizations l10n, List<Announcement> announcements) {
+  Widget _announcementSection(AppLocalizations l10n, List announcements) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            Text(
-              l10n.tomorrowLectures,
-              style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-            ),
-            TextButton.icon(
-              onPressed: () => _showAddAnnouncementDialog(context, ref),
-              icon: const Icon(Icons.add, size: 18),
-              label: Text(l10n.addAnnouncement),
-            ),
+            Text(l10n.announcements, style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+            TextButton(onPressed: () {}, child: Text(l10n.locale.languageCode == 'ar' ? 'عرض الكل' : 'View All')),
           ],
         ),
-        const SizedBox(height: 16),
+        const SizedBox(height: 12),
         if (announcements.isEmpty)
-          Container(
-            width: double.infinity,
-            padding: const EdgeInsets.all(24),
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(20),
-              border: Border.all(color: Colors.grey.withOpacity(0.1)),
-            ),
-            child: Column(
-              children: [
-                Icon(Icons.notifications_none_rounded, size: 48, color: Colors.grey.withOpacity(0.3)),
-                const SizedBox(height: 12),
-                Text(
-                  l10n.locale.languageCode == 'ar' ? "لا توجد إعلانات حالياً" : "No announcements yet",
-                  style: TextStyle(color: Colors.grey.withOpacity(0.5)),
-                ),
-              ],
-            ),
-          )
+          Center(child: Text(l10n.locale.languageCode == 'ar' ? 'لا توجد إعلانات' : 'No announcements'))
         else
-          ListView.separated(
-            shrinkWrap: true,
-            physics: const NeverScrollableScrollPhysics(),
-            itemCount: announcements.length,
-            separatorBuilder: (_, __) => const SizedBox(height: 12),
-            itemBuilder: (context, index) {
-              final announcement = announcements[index];
-              return Container(
-                padding: const EdgeInsets.all(16),
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(16),
-                  boxShadow: [
-                    BoxShadow(color: Colors.black.withOpacity(0.02), blurRadius: 5, offset: const Offset(0, 2)),
-                  ],
-                ),
-                child: Row(
-                  children: [
-                    Container(
-                      width: 4,
-                      height: 40,
-                      decoration: BoxDecoration(
-                        color: const Color(0xFF3F51B5),
-                        borderRadius: BorderRadius.circular(2),
-                      ),
-                    ),
-                    const SizedBox(width: 16),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(announcement.subject, style: const TextStyle(fontWeight: FontWeight.bold)),
-                          Text('${announcement.doctor} - ${announcement.time}', style: const TextStyle(fontSize: 13, color: Colors.grey)),
-                        ],
-                      ),
-                    ),
-                    IconButton(
-                      icon: const Icon(Icons.delete_outline, color: Colors.redAccent, size: 20),
-                      onPressed: () => ref.read(announcementProvider.notifier).deleteAnnouncement(announcement.id),
-                    ),
-                  ],
-                ),
-              );
-            },
+          SizedBox(
+            height: 120,
+            child: ListView.builder(
+              scrollDirection: Axis.horizontal,
+              itemCount: announcements.length,
+              itemBuilder: (context, index) {
+                final ann = announcements[index];
+                return Container(
+                  width: 280,
+                  margin: const EdgeInsets.only(right: 16),
+                  padding: const EdgeInsets.all(16),
+                  decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(20), border: BorderSide(color: Colors.grey.shade200)),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(ann.subject, style: const TextStyle(fontWeight: FontWeight.bold), maxLines: 1, overflow: TextOverflow.ellipsis),
+                      const SizedBox(height: 8),
+                      Text(ann.note ?? '', style: TextStyle(color: Colors.grey.shade600, fontSize: 12), maxLines: 2, overflow: TextOverflow.ellipsis),
+                    ],
+                  ),
+                );
+              },
+            ),
           ),
       ],
     );
   }
+}
 
-  void _showAddAnnouncementDialog(BuildContext context, WidgetRef ref) {
-    final subjectController = TextEditingController();
-    final doctorController = TextEditingController();
-    final timeController = TextEditingController();
-    final placeController = TextEditingController();
-    final noteController = TextEditingController();
-    final l10n = AppLocalizations.of(context);
+class GradesManagementSheet extends ConsumerStatefulWidget {
+  const GradesManagementSheet({super.key});
 
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        title: Text(l10n.addAnnouncement),
-        content: SingleChildScrollView(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              TextField(
-                controller: subjectController,
-                decoration: InputDecoration(
-                  labelText: l10n.locale.languageCode == 'ar' ? 'المادة' : 'Subject',
-                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-                ),
-              ),
-              const SizedBox(height: 12),
-              TextField(
-                controller: doctorController,
-                decoration: InputDecoration(
-                  labelText: l10n.locale.languageCode == 'ar' ? 'الدكتور' : 'Doctor',
-                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-                ),
-              ),
-              const SizedBox(height: 12),
-              TextField(
-                controller: timeController,
-                decoration: InputDecoration(
-                  labelText: l10n.locale.languageCode == 'ar' ? 'الوقت' : 'Time',
-                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-                ),
-              ),
-              const SizedBox(height: 12),
-              TextField(
-                controller: placeController,
-                decoration: InputDecoration(
-                  labelText: l10n.locale.languageCode == 'ar' ? 'المكان' : 'Place',
-                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-                ),
-              ),
-              const SizedBox(height: 12),
-              TextField(
-                controller: noteController,
-                decoration: InputDecoration(
-                  labelText: l10n.locale.languageCode == 'ar' ? 'ملاحظة' : 'Note',
-                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-                ),
-              ),
-            ],
+  @override
+  ConsumerState<GradesManagementSheet> createState() => _GradesManagementSheetState();
+}
+
+class _GradesManagementSheetState extends ConsumerState<GradesManagementSheet> {
+  final _subjectController = TextEditingController();
+  final _doctorController = TextEditingController();
+  final _noteController = TextEditingController();
+  File? _selectedFile;
+  bool _isUploading = false;
+
+  Future<void> _pickFile() async {
+    final result = await FilePicker.platform.pickFiles();
+    if (result != null) {
+      setState(() => _selectedFile = File(result.files.single.path!));
+    }
+  }
+
+  Future<void> _submit() async {
+    if (_subjectController.text.isEmpty) return;
+    setState(() => _isUploading = true);
+
+    final user = Supabase.instance.client.auth.currentUser;
+    final success = await ref.read(gradeProvider.notifier).addGrade(
+      subject: _subjectController.text,
+      doctor: _doctorController.text,
+      note: _noteController.text,
+      groupId: user?.id, // Assuming delegate_id is used as group identifier for now
+      file: _selectedFile,
+    );
+
+    if (mounted) {
+      setState(() => _isUploading = false);
+      if (success) {
+        Navigator.pop(context);
+        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Grade added successfully!')));
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Failed to add grade.')));
+      }
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: EdgeInsets.only(bottom: MediaQuery.of(context).viewInsets.bottom, left: 20, right: 20, top: 20),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          const Text('Add New Grade', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
+          const SizedBox(height: 20),
+          TextField(controller: _subjectController, decoration: const InputDecoration(labelText: 'Subject', border: OutlineInputBorder())),
+          const SizedBox(height: 12),
+          TextField(controller: _doctorController, decoration: const InputDecoration(labelText: 'Doctor', border: OutlineInputBorder())),
+          const SizedBox(height: 12),
+          TextField(controller: _noteController, decoration: const InputDecoration(labelText: 'Note', border: OutlineInputBorder())),
+          const SizedBox(height: 20),
+          ListTile(
+            leading: const Icon(Icons.attach_file),
+            title: Text(_selectedFile == null ? 'Attach File (Optional)' : _selectedFile!.path.split('/').last),
+            onTap: _pickFile,
+            tileColor: Colors.grey.shade100,
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
           ),
-        ),
-        actions: [
-          TextButton(onPressed: () => Navigator.pop(context), child: Text(l10n.locale.languageCode == 'ar' ? 'إلغاء' : 'Cancel')),
-          ElevatedButton(
-            onPressed: () {
-              if (subjectController.text.isNotEmpty) {
-                ref.read(announcementProvider.notifier).addAnnouncement(
-                      subject: subjectController.text,
-                      doctor: doctorController.text,
-                      time: timeController.text,
-                      place: placeController.text,
-                      note: noteController.text,
-                    );
-                Navigator.pop(context);
-              }
-            },
-            style: ElevatedButton.styleFrom(
-              backgroundColor: const Color(0xFF3F51B5),
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+          const SizedBox(height: 24),
+          SizedBox(
+            width: double.infinity,
+            height: 50,
+            child: ElevatedButton(
+              onPressed: _isUploading ? null : _submit,
+              style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFF3F51B5), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12))),
+              child: _isUploading ? const CircularProgressIndicator(color: Colors.white) : const Text('Submit Grade'),
             ),
-            child: Text(l10n.locale.languageCode == 'ar' ? 'إضافة' : 'Add'),
           ),
+          const SizedBox(height: 20),
         ],
       ),
     );
