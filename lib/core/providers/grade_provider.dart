@@ -43,7 +43,15 @@ class GradeNotifier extends StateNotifier<List<Grade>> {
       String? fileUrl;
       if (file != null) {
         final fileName = '${DateTime.now().millisecondsSinceEpoch}_${file.path.split('/').last}';
-        await _supabase.storage.from('grades').upload(fileName, file);
+        
+        // Upload to 'grades' bucket
+        await _supabase.storage.from('grades').upload(
+          fileName, 
+          file,
+          fileOptions: const FileOptions(cacheControl: '3600', upsert: false),
+        );
+        
+        // Get public URL
         fileUrl = _supabase.storage.from('grades').getPublicUrl(fileName);
       }
 
@@ -59,6 +67,8 @@ class GradeNotifier extends StateNotifier<List<Grade>> {
       };
 
       await _supabase.from('grades').insert(newGrade);
+      
+      // Refresh state
       await fetchGrades(studentId: studentId, groupId: groupId);
       return true;
     } catch (e) {

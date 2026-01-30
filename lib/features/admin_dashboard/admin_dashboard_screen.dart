@@ -437,11 +437,21 @@ class _GradesManagementSheetState extends ConsumerState<GradesManagementSheet> {
     setState(() => _isUploading = true);
 
     final user = Supabase.instance.client.auth.currentUser;
+    
+    // Get group_id for this delegate
+    final groupData = await Supabase.instance.client
+        .from('groups')
+        .select('id')
+        .eq('delegate_id', user?.id ?? '')
+        .maybeSingle();
+    
+    final groupId = groupData?['id'];
+
     final success = await ref.read(gradeProvider.notifier).addGrade(
       subject: _subjectController.text,
       doctor: _doctorController.text,
       note: _noteController.text,
-      groupId: user?.id, // Assuming delegate_id is used as group identifier for now
+      groupId: groupId,
       file: _selectedFile,
     );
 
