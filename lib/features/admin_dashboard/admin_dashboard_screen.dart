@@ -18,8 +18,7 @@ class AdminDashboardScreen extends ConsumerStatefulWidget {
 
 class _AdminDashboardScreenState extends ConsumerState<AdminDashboardScreen> {
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
-  String delegateName = '';
-  String classCode = '';
+  String joinCode = '';
 
   @override
   void initState() {
@@ -28,12 +27,11 @@ class _AdminDashboardScreenState extends ConsumerState<AdminDashboardScreen> {
   }
 
   Future<void> _loadUser() async {
-    final name = await SecureStorageService.getName();
-    final code = await SecureStorageService.getClassCode();
+    // We stored join_code in the 'name' field in SecureStorage during login
+    final code = await SecureStorageService.getName();
     if (!mounted) return;
     setState(() {
-      delegateName = name ?? 'Delegate';
-      classCode = code ?? '';
+      joinCode = code ?? '';
     });
   }
 
@@ -83,7 +81,7 @@ class _AdminDashboardScreenState extends ConsumerState<AdminDashboardScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              _header(l10n),
+              _joinCodeCard(l10n),
               const SizedBox(height: 32),
               _announcementSection(l10n, announcements),
               const SizedBox(height: 32),
@@ -120,6 +118,68 @@ class _AdminDashboardScreenState extends ConsumerState<AdminDashboardScreen> {
             ],
           ),
         ),
+      ),
+    );
+  }
+
+  Widget _joinCodeCard(AppLocalizations l10n) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(24),
+      decoration: BoxDecoration(
+        gradient: const LinearGradient(
+          colors: [Color(0xFF3F51B5), Color(0xFF6A5AE0)],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+        borderRadius: BorderRadius.circular(24),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            l10n.locale.languageCode == 'ar' ? 'رمز الانضمام' : 'Join Code',
+            style: const TextStyle(color: Colors.white, fontSize: 22, fontWeight: FontWeight.bold),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            l10n.locale.languageCode == 'ar' ? 'شارك هذا الرمز مع طلابك للانضمام إلى فصلك.' : 'Share this code with your students to join your class.',
+            style: const TextStyle(color: Colors.white70, fontSize: 13),
+          ),
+          const SizedBox(height: 20),
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+            decoration: BoxDecoration(
+              color: Colors.white.withOpacity(0.15),
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: Row(
+              children: [
+                const Icon(Icons.key, color: Colors.white70, size: 18),
+                const SizedBox(width: 12),
+                Text(
+                  joinCode,
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontWeight: FontWeight.bold,
+                    fontSize: 18,
+                    letterSpacing: 2,
+                  ),
+                ),
+                const Spacer(),
+                IconButton(
+                  icon: const Icon(Icons.copy, color: Colors.white),
+                  onPressed: () {
+                    Clipboard.setData(ClipboardData(text: joinCode));
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(content: Text(l10n.locale.languageCode == 'ar' ? 'تم نسخ الرمز!' : 'Code Copied!')),
+                    );
+                  },
+                )
+              ],
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -216,68 +276,6 @@ class _AdminDashboardScreenState extends ConsumerState<AdminDashboardScreen> {
     );
   }
 
-  Widget _header(AppLocalizations l10n) {
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(24),
-      decoration: BoxDecoration(
-        gradient: const LinearGradient(
-          colors: [Color(0xFF3F51B5), Color(0xFF6A5AE0)],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
-        borderRadius: BorderRadius.circular(24),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            '${l10n.welcome}, $delegateName',
-            style: const TextStyle(color: Colors.white, fontSize: 22, fontWeight: FontWeight.bold),
-          ),
-          const SizedBox(height: 8),
-          Text(
-            l10n.locale.languageCode == 'ar' ? 'شارك الرمز أدناه مع طلابك للانضمام إلى هذا الفصل.' : 'Share the code below with your students to join this class.',
-            style: const TextStyle(color: Colors.white70, fontSize: 13),
-          ),
-          const SizedBox(height: 20),
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-            decoration: BoxDecoration(
-              color: Colors.white.withOpacity(0.15),
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: Row(
-              children: [
-                const Icon(Icons.key, color: Colors.white70, size: 18),
-                const SizedBox(width: 12),
-                Text(
-                  classCode,
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontWeight: FontWeight.bold,
-                    fontSize: 18,
-                    letterSpacing: 2,
-                  ),
-                ),
-                const Spacer(),
-                IconButton(
-                  icon: const Icon(Icons.copy, color: Colors.white),
-                  onPressed: () {
-                    Clipboard.setData(ClipboardData(text: classCode));
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(content: Text(l10n.locale.languageCode == 'ar' ? 'تم نسخ الرمز!' : 'Code Copied!')),
-                    );
-                  },
-                )
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
   Widget _announcementSection(AppLocalizations l10n, List<Announcement> announcements) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -300,70 +298,64 @@ class _AdminDashboardScreenState extends ConsumerState<AdminDashboardScreen> {
         if (announcements.isEmpty)
           Container(
             width: double.infinity,
-            padding: const EdgeInsets.all(20),
+            padding: const EdgeInsets.all(24),
             decoration: BoxDecoration(
               color: Colors.white,
-              borderRadius: BorderRadius.circular(16),
-              boxShadow: [
-                BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 10, offset: const Offset(0, 4)),
-              ],
+              borderRadius: BorderRadius.circular(20),
+              border: Border.all(color: Colors.grey.withOpacity(0.1)),
             ),
-            child: Center(
-              child: Text(
-                l10n.noAnnouncements,
-                style: const TextStyle(color: Colors.grey),
-              ),
+            child: Column(
+              children: [
+                Icon(Icons.notifications_none_rounded, size: 48, color: Colors.grey.withOpacity(0.3)),
+                const SizedBox(height: 12),
+                Text(
+                  l10n.locale.languageCode == 'ar' ? "لا توجد إعلانات حالياً" : "No announcements yet",
+                  style: TextStyle(color: Colors.grey.withOpacity(0.5)),
+                ),
+              ],
             ),
           )
         else
-          GridView.builder(
+          ListView.separated(
             shrinkWrap: true,
             physics: const NeverScrollableScrollPhysics(),
-            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-              crossAxisCount: 2,
-              crossAxisSpacing: 12,
-              mainAxisSpacing: 12,
-              childAspectRatio: 1.2,
-            ),
             itemCount: announcements.length,
+            separatorBuilder: (_, __) => const SizedBox(height: 12),
             itemBuilder: (context, index) {
-              final a = announcements[index];
+              final announcement = announcements[index];
               return Container(
-                padding: const EdgeInsets.all(12),
+                padding: const EdgeInsets.all(16),
                 decoration: BoxDecoration(
                   color: Colors.white,
                   borderRadius: BorderRadius.circular(16),
                   boxShadow: [
-                    BoxShadow(color: Colors.black.withOpacity(0.03), blurRadius: 8, offset: const Offset(0, 2)),
+                    BoxShadow(color: Colors.black.withOpacity(0.02), blurRadius: 5, offset: const Offset(0, 2)),
                   ],
                 ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  mainAxisAlignment: MainAxisAlignment.center,
+                child: Row(
                   children: [
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Expanded(
-                          child: Text(
-                            a.subject,
-                            style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14, color: Color(0xFF3F51B5)),
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                        ),
-                        IconButton(
-                          icon: const Icon(Icons.delete_outline, size: 16, color: Colors.red),
-                          onPressed: () => ref.read(announcementProvider.notifier).deleteAnnouncement(a.id),
-                          constraints: const BoxConstraints(),
-                          padding: EdgeInsets.zero,
-                        ),
-                      ],
+                    Container(
+                      width: 4,
+                      height: 40,
+                      decoration: BoxDecoration(
+                        color: const Color(0xFF3F51B5),
+                        borderRadius: BorderRadius.circular(2),
+                      ),
                     ),
-                    const SizedBox(height: 4),
-                    _infoRow(Icons.person_outline, a.doctor),
-                    _infoRow(Icons.room_outlined, a.place),
-                    _infoRow(Icons.access_time, a.time),
+                    const SizedBox(width: 16),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(announcement.title, style: const TextStyle(fontWeight: FontWeight.bold)),
+                          Text(announcement.content, style: const TextStyle(fontSize: 13, color: Colors.grey)),
+                        ],
+                      ),
+                    ),
+                    IconButton(
+                      icon: const Icon(Icons.delete_outline, color: Colors.redAccent, size: 20),
+                      onPressed: () => ref.read(announcementProvider.notifier).removeAnnouncement(announcement.id),
+                    ),
                   ],
                 ),
               );
@@ -373,81 +365,56 @@ class _AdminDashboardScreenState extends ConsumerState<AdminDashboardScreen> {
     );
   }
 
-  Widget _infoRow(IconData icon, String text) {
-    return Padding(
-      padding: const EdgeInsets.only(top: 4.0),
-      child: Row(
-        children: [
-          Icon(icon, size: 12, color: Colors.grey),
-          const SizedBox(width: 4),
-          Expanded(
-            child: Text(
-              text,
-              style: const TextStyle(fontSize: 11, color: Colors.black87),
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
   void _showAddAnnouncementDialog(BuildContext context, WidgetRef ref) {
+    final titleController = TextEditingController();
+    final contentController = TextEditingController();
     final l10n = AppLocalizations.of(context);
-    final subjectController = TextEditingController();
-    final doctorController = TextEditingController();
-    final timeController = TextEditingController();
-    final placeController = TextEditingController();
 
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        title: Text(l10n.addAnnouncement, style: const TextStyle(color: Color(0xFF3F51B5), fontWeight: FontWeight.bold)),
-        content: SingleChildScrollView(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              _dialogField(subjectController, l10n.subject, Icons.book_outlined),
-              const SizedBox(height: 12),
-              _dialogField(doctorController, l10n.doctor, Icons.person_outline),
-              const SizedBox(height: 12),
-              _dialogField(timeController, l10n.time, Icons.access_time),
-              const SizedBox(height: 12),
-              _dialogField(placeController, l10n.place, Icons.room_outlined),
-            ],
-          ),
+        title: Text(l10n.addAnnouncement),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            TextField(
+              controller: titleController,
+              decoration: InputDecoration(
+                labelText: l10n.locale.languageCode == 'ar' ? 'العنوان' : 'Title',
+                border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+              ),
+            ),
+            const SizedBox(height: 16),
+            TextField(
+              controller: contentController,
+              maxLines: 3,
+              decoration: InputDecoration(
+                labelText: l10n.locale.languageCode == 'ar' ? 'المحتوى' : 'Content',
+                border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+              ),
+            ),
+          ],
         ),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(context), child: Text(l10n.cancel)),
+          TextButton(onPressed: () => Navigator.pop(context), child: Text(l10n.locale.languageCode == 'ar' ? 'إلغاء' : 'Cancel')),
           ElevatedButton(
             onPressed: () {
-              if (subjectController.text.isEmpty) return;
-              ref.read(announcementProvider.notifier).addAnnouncement(
-                subject: subjectController.text,
-                doctor: doctorController.text,
-                time: timeController.text,
-                place: placeController.text,
-              );
-              Navigator.pop(context);
+              if (titleController.text.isNotEmpty && contentController.text.isNotEmpty) {
+                ref.read(announcementProvider.notifier).addAnnouncement(
+                      titleController.text,
+                      contentController.text,
+                    );
+                Navigator.pop(context);
+              }
             },
-            style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFF3F51B5)),
-            child: Text(l10n.save, style: const TextStyle(color: Colors.white)),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: const Color(0xFF3F51B5),
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+            ),
+            child: Text(l10n.locale.languageCode == 'ar' ? 'إضافة' : 'Add'),
           ),
         ],
-      ),
-    );
-  }
-
-  Widget _dialogField(TextEditingController controller, String label, IconData icon) {
-    return TextField(
-      controller: controller,
-      decoration: InputDecoration(
-        labelText: label,
-        prefixIcon: Icon(icon, color: const Color(0xFF3F51B5)),
-        border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       ),
     );
   }

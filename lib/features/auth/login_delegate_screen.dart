@@ -1,7 +1,8 @@
+import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
-import 'package:uuid/uuid.dart'; // Ensure this is available or use a different method for UUID
+import 'package:uuid/uuid.dart';
 
 import '../../../core/localization/app_localizations.dart';
 import '../../../core/navigation/app_routes.dart';
@@ -9,7 +10,6 @@ import '../../../core/providers/locale_provider.dart';
 import '../../../core/storage/secure_storage_service.dart';
 import '../../../core/auth/user_role.dart';
 
-// Helper to access Supabase client
 final supabase = Supabase.instance.client;
 
 class LoginDelegateScreen extends ConsumerStatefulWidget {
@@ -24,7 +24,8 @@ class _LoginDelegateScreenState extends ConsumerState<LoginDelegateScreen> {
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
   bool _isLoading = false;
-  bool _isSignUpMode = false; // Toggle between Login and Sign Up
+  bool _isSignUpMode = false;
+  bool _obscurePassword = true;
 
   @override
   void dispose() {
@@ -33,18 +34,20 @@ class _LoginDelegateScreenState extends ConsumerState<LoginDelegateScreen> {
     super.dispose();
   }
 
-  Future<void> _handleAuth() async {
-    if (!_formKey.currentState!.validate()) {
-      return;
-    }
+  String _generateJoinCode() {
+    const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+    final rnd = Random();
+    return String.fromCharCodes(Iterable.generate(
+        8, (_) => chars.codeUnitAt(rnd.nextInt(chars.length))));
+  }
 
-    setState(() {
-      _isLoading = true;
-    });
+  Future<void> _handleAuth() async {
+    if (!_formKey.currentState!.validate()) return;
+
+    setState(() => _isLoading = true);
 
     try {
       if (_isSignUpMode) {
-        // --- SIGN UP LOGIC ---
         final AuthResponse response = await supabase.auth.signUp(
           email: _emailController.text.trim(),
           password: _passwordController.text.trim(),
@@ -53,34 +56,60 @@ class _LoginDelegateScreenState extends ConsumerState<LoginDelegateScreen> {
         final user = response.user;
         if (user == null) throw const AuthException('Sign up failed.');
 
-        final now = DateTime.now().toIso8601String();
-        final defaultName = user.email?.split('@').first ?? 'Delegate';
+        // 1. Check if profile exists
+        final existingProfile = await supabase
+            .from('profiles')
+            .select()
+            .eq('id', user.id)
+            .maybeSingle();
 
-        // 1. Insert into 'profiles'
-        await supabase.from('profiles').insert({
-          'id': user.id,
-          'email': user.email,
-          'role': 'delegate',
-          'join_code': '',
-          'created_at': now,
-          'name': defaultName,
-        });
+        String joinCode = '';
 
-        // 2. Insert into 'groups'
-        // Using a simple UUID generation if uuid package is not available, 
-        // but typically it's better to let Supabase handle UUID or use the package.
-        // For this environment, we'll assume uuid package or use a random string if needed.
-        await supabase.from('groups').insert({
-          'id': const Uuid().v4(), // Generating a new UUID
-          'delegate_id': user.id,
-          'join_code': '',
-          'created_at': now,
-        });
+        if (existingProfile == null) {
+          // 2. Check if group exists for this delegate
+          final existingGroup = await supabase
+              .from('groups')
+              .select()
+              .eq('delegate_id', user.id)
+              .maybeSingle();
 
-        await _onAuthSuccess(user.id, 'delegate', defaultName);
+          if (existingGroup == null) {
+            joinCode = _generateJoinCode();
+            final now = DateTime.now().toIso8601String();
 
+            // Create Group
+            await supabase.from('groups').insert({
+              'id': const Uuid().v4(),
+              'delegate_id': user.id,
+              'join_code': joinCode,
+              'created_at': now,
+            });
+
+            // Create Profile
+            await supabase.from('profiles').insert({
+              'id': user.id,
+              'email': user.email,
+              'role': 'delegate',
+              'join_code': joinCode,
+              'created_at': now,
+            });
+          } else {
+            joinCode = existingGroup['join_code'] as String;
+            // Create Profile with existing join_code
+            await supabase.from('profiles').insert({
+              'id': user.id,
+              'email': user.email,
+              'role': 'delegate',
+              'join_code': joinCode,
+              'created_at': DateTime.now().toIso8601String(),
+            });
+          }
+        } else {
+          joinCode = existingProfile['join_code'] as String;
+        }
+
+        await _onAuthSuccess(user.id, 'delegate', joinCode);
       } else {
-        // --- SIGN IN LOGIC ---
         final AuthResponse response = await supabase.auth.signInWithPassword(
           email: _emailController.text.trim(),
           password: _passwordController.text.trim(),
@@ -89,43 +118,40 @@ class _LoginDelegateScreenState extends ConsumerState<LoginDelegateScreen> {
         final user = response.user;
         if (user == null) throw const AuthException('Sign in failed.');
 
-        final List<Map<String, dynamic>> profiles = await supabase
+        final profile = await supabase
             .from('profiles')
-            .select('role, name')
+            .select('role, join_code')
             .eq('id', user.id)
-            .limit(1);
+            .maybeSingle();
 
-        if (profiles.isEmpty) throw const AuthException('Profile not found.');
+        if (profile == null) throw const AuthException('Profile not found.');
 
-        final String role = profiles.first['role'] as String;
-        final String name = profiles.first['name'] as String;
+        final String role = profile['role'] as String;
+        final String joinCode = profile['join_code'] as String;
 
         if (role != 'delegate' && role != 'admin') {
           await supabase.auth.signOut();
           throw const AuthException('Access denied: You are not a delegate.');
         }
 
-        await _onAuthSuccess(user.id, role, name);
+        await _onAuthSuccess(user.id, role, joinCode);
       }
     } on AuthException catch (error) {
       _showErrorDialog(error.message);
     } catch (error) {
       _showErrorDialog('An error occurred: ${error.toString()}');
     } finally {
-      if (mounted) {
-        setState(() {
-          _isLoading = false;
-        });
-      }
+      if (mounted) setState(() => _isLoading = false);
     }
   }
 
-  Future<void> _onAuthSuccess(String userId, String role, String name) async {
+  Future<void> _onAuthSuccess(String userId, String role, String joinCode) async {
     final userRole = role == 'admin' ? UserRole.admin : UserRole.delegate;
     
+    // Store join_code locally
     await SecureStorageService.saveUser(
       role: userRole,
-      name: name,
+      name: joinCode, // Using name field to store joinCode as per previous structure or just for local storage
     );
 
     if (!mounted) return;
@@ -139,10 +165,7 @@ class _LoginDelegateScreenState extends ConsumerState<LoginDelegateScreen> {
 
   void _showErrorDialog(String message) {
     ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(message),
-        backgroundColor: Colors.red,
-      ),
+      SnackBar(content: Text(message), backgroundColor: Colors.red),
     );
   }
 
@@ -221,6 +244,8 @@ class _LoginDelegateScreenState extends ConsumerState<LoginDelegateScreen> {
                   label: l10n.password,
                   icon: Icons.lock_outline,
                   isPassword: true,
+                  obscureText: _obscurePassword,
+                  onToggleVisibility: () => setState(() => _obscurePassword = !_obscurePassword),
                   activeColor: _isSignUpMode ? accentColor : primaryColor,
                   validator: (value) {
                     if (value == null || value.isEmpty) return l10n.passwordRequired;
@@ -290,15 +315,23 @@ class _LoginDelegateScreenState extends ConsumerState<LoginDelegateScreen> {
     required IconData icon,
     required Color activeColor,
     bool isPassword = false,
+    bool obscureText = false,
+    VoidCallback? onToggleVisibility,
     String? Function(String?)? validator,
   }) {
     return TextFormField(
       controller: controller,
-      obscureText: isPassword,
+      obscureText: isPassword ? obscureText : false,
       validator: validator,
       cursorColor: activeColor,
       decoration: InputDecoration(
         prefixIcon: Icon(icon, size: 22, color: activeColor),
+        suffixIcon: isPassword 
+          ? IconButton(
+              icon: Icon(obscureText ? Icons.visibility_off : Icons.visibility, color: activeColor),
+              onPressed: onToggleVisibility,
+            )
+          : null,
         labelText: label,
         labelStyle: TextStyle(color: Colors.grey[600]),
         floatingLabelStyle: TextStyle(color: activeColor),
