@@ -45,7 +45,10 @@ class GradeNotifier extends StateNotifier<List<Grade>> {
     try {
       if (file != null) {
         // 1. Upload to 'grades' bucket
-        final fileName = '$userId/$gradeId/${file.path.split('/').last}';
+        // Sanitize file name to handle non-ASCII, spaces, and symbols
+        final originalFileName = file.path.split('/').last;
+        final safeFileName = originalFileName.replaceAll(RegExp(r'[^\w\-. ]'), '_');
+        final fileName = '$userId/$gradeId/$safeFileName';
         
         await _supabase.storage.from('grades').upload(
           fileName, 
@@ -85,7 +88,10 @@ class GradeNotifier extends StateNotifier<List<Grade>> {
       // Optional: Attempt to delete the file if the DB insert failed
       if (fileUrl != null) {
         try {
-          final pathToRemove = '$userId/$gradeId/${file!.path.split('/').last}';
+          // Re-sanitize the file name for cleanup
+          final originalFileName = file!.path.split('/').last;
+          final safeFileName = originalFileName.replaceAll(RegExp(r'[^\w\-. ]'), '_');
+          final pathToRemove = '$userId/$gradeId/$safeFileName';
           await _supabase.storage.from('grades').remove([pathToRemove]);
           print('Cleaned up uploaded file due to DB insert failure.');
         } catch (e) {
