@@ -16,6 +16,8 @@ class GradesListScreen extends ConsumerStatefulWidget {
 }
 
 class _GradesListScreenState extends ConsumerState<GradesListScreen> {
+  final currentUserId = Supabase.instance.client.auth.currentUser?.id;
+
   @override
   void initState() {
     super.initState();
@@ -27,7 +29,6 @@ class _GradesListScreenState extends ConsumerState<GradesListScreen> {
     final user = supabase.auth.currentUser;
     if (user == null) return;
 
-    String? studentId;
     String? groupId;
 
     if (widget.userRole == UserRole.student) {
@@ -38,7 +39,6 @@ class _GradesListScreenState extends ConsumerState<GradesListScreen> {
           .eq('student_id', user.id)
           .maybeSingle();
       groupId = memberData?['group_id'];
-      // No need to fetch by studentId unless direct assignment is implemented
     } else {
       // For delegates/admins, fetch their group ID
       final groupData = await supabase
@@ -59,6 +59,32 @@ class _GradesListScreenState extends ConsumerState<GradesListScreen> {
     showDialog(
       context: context,
       builder: (_) => const AddGradeDialog(),
+    );
+  }
+
+  void _confirmDelete(BuildContext context, String gradeId, String createdBy) {
+    final l10n = AppLocalizations.of(context);
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text(l10n.delete),
+        content: Text(l10n.confirmDelete),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(context), child: Text(l10n.cancel)),
+          TextButton(
+            onPressed: () async {
+              Navigator.pop(context);
+              final success = await ref.read(gradeProvider.notifier).deleteGrade(gradeId, createdBy);
+              if (mounted) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(content: Text(success ? l10n.success : l10n.error)),
+                );
+              }
+            },
+            child: Text(l10n.delete, style: const TextStyle(color: Colors.red)),
+          ),
+        ],
+      ),
     );
   }
 
@@ -88,6 +114,8 @@ class _GradesListScreenState extends ConsumerState<GradesListScreen> {
               itemCount: grades.length,
               itemBuilder: (context, index) {
                 final grade = grades[index];
+                final canDelete = isDelegate && grade.createdBy == currentUserId;
+
                 return Card(
                   margin: const EdgeInsets.only(bottom: 16),
                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
@@ -107,16 +135,26 @@ class _GradesListScreenState extends ConsumerState<GradesListScreen> {
                                 overflow: TextOverflow.ellipsis,
                               ),
                             ),
-                            if (grade.fileUrl != null && grade.fileUrl!.isNotEmpty)
-                              IconButton(
-                                icon: const Icon(Icons.open_in_new, color: Color(0xFF3F51B5)),
-                                onPressed: () async {
-                                  final url = Uri.parse(grade.fileUrl!);
-                                  if (await canLaunchUrl(url)) {
-                                    await launchUrl(url, mode: LaunchMode.externalApplication);
-                                  }
-                                },
-                              ),
+                            Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                if (canDelete)
+                                  IconButton(
+                                    icon: const Icon(Icons.delete_outline, color: Colors.red, size: 20),
+                                    onPressed: () => _confirmDelete(context, grade.id, grade.createdBy!),
+                                  ),
+                                if (grade.fileUrl != null && grade.fileUrl!.isNotEmpty)
+                                  IconButton(
+                                    icon: const Icon(Icons.open_in_new, color: Color(0xFF3F51B5), size: 20),
+                                    onPressed: () async {
+                                      final url = Uri.parse(grade.fileUrl!);
+                                      if (await canLaunchUrl(url)) {
+                                        await launchUrl(url, mode: LaunchMode.externalApplication);
+                                      }
+                                    },
+                                  ),
+                              ],
+                            ),
                           ],
                         ),
                         const SizedBox(height: 4),
