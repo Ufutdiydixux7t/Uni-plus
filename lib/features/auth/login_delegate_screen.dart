@@ -56,51 +56,51 @@ class _LoginDelegateScreenState extends ConsumerState<LoginDelegateScreen> {
         final user = response.user;
         if (user == null) throw const AuthException('Sign up failed.');
 
+        String joinCode = _generateJoinCode();
+        final now = DateTime.now().toIso8601String();
+
+        // 1. Ensure Group exists and has join_code
+        final existingGroup = await supabase
+            .from('groups')
+            .select()
+            .eq('delegate_id', user.id)
+            .maybeSingle();
+
+        if (existingGroup == null) {
+          await supabase.from('groups').insert({
+            'id': const Uuid().v4(),
+            'delegate_id': user.id,
+            'join_code': joinCode,
+            'created_at': now,
+          });
+        } else if (existingGroup['join_code'] == null) {
+          await supabase.from('groups').update({
+            'join_code': joinCode,
+          }).eq('delegate_id', user.id);
+        } else {
+          joinCode = existingGroup['join_code'] as String;
+        }
+
+        // 2. Ensure Profile exists and has join_code
         final existingProfile = await supabase
             .from('profiles')
             .select()
             .eq('id', user.id)
             .maybeSingle();
 
-        String joinCode = '';
-
         if (existingProfile == null) {
-          final existingGroup = await supabase
-              .from('groups')
-              .select()
-              .eq('delegate_id', user.id)
-              .maybeSingle();
-
-          if (existingGroup == null) {
-            joinCode = _generateJoinCode();
-            final now = DateTime.now().toIso8601String();
-
-            await supabase.from('groups').insert({
-              'id': const Uuid().v4(),
-              'delegate_id': user.id,
-              'join_code': joinCode,
-              'created_at': now,
-            });
-
-            await supabase.from('profiles').insert({
-              'id': user.id,
-              'email': user.email,
-              'role': 'delegate',
-              'join_code': joinCode,
-              'created_at': now,
-            });
-          } else {
-            joinCode = existingGroup['join_code'] as String;
-            await supabase.from('profiles').insert({
-              'id': user.id,
-              'email': user.email,
-              'role': 'delegate',
-              'join_code': joinCode,
-              'created_at': DateTime.now().toIso8601String(),
-            });
-          }
+          await supabase.from('profiles').insert({
+            'id': user.id,
+            'email': user.email,
+            'role': 'delegate',
+            'join_code': joinCode,
+            'created_at': now,
+          });
         } else {
-          joinCode = existingProfile['join_code'] as String;
+          await supabase.from('profiles').update({
+            'join_code': joinCode,
+            'role': 'delegate',
+          }).eq('id', user.id);
         }
 
         await _onAuthSuccess(user.id, 'delegate', joinCode);
@@ -113,23 +113,63 @@ class _LoginDelegateScreenState extends ConsumerState<LoginDelegateScreen> {
         final user = response.user;
         if (user == null) throw const AuthException('Sign in failed.');
 
+        // 1. Check/Update Group join_code
+        final existingGroup = await supabase
+            .from('groups')
+            .select()
+            .eq('delegate_id', user.id)
+            .maybeSingle();
+
+        String joinCode = '';
+
+        if (existingGroup == null) {
+          joinCode = _generateJoinCode();
+          await supabase.from('groups').insert({
+            'id': const Uuid().v4(),
+            'delegate_id': user.id,
+            'join_code': joinCode,
+            'created_at': DateTime.now().toIso8601String(),
+          });
+        } else if (existingGroup['join_code'] == null) {
+          joinCode = _generateJoinCode();
+          await supabase.from('groups').update({
+            'join_code': joinCode,
+          }).eq('delegate_id', user.id);
+        } else {
+          joinCode = existingGroup['join_code'] as String;
+        }
+
+        // 2. Check/Update Profile role and join_code
         final profile = await supabase
             .from('profiles')
             .select('role, join_code')
             .eq('id', user.id)
             .maybeSingle();
 
-        if (profile == null) throw const AuthException('Profile not found.');
-
-        final String role = profile['role'] as String;
-        final String joinCode = profile['join_code'] as String;
-
-        if (role != 'delegate' && role != 'admin') {
-          await supabase.auth.signOut();
-          throw const AuthException('Access denied: You are not a delegate.');
+        if (profile == null) {
+          await supabase.from('profiles').insert({
+            'id': user.id,
+            'email': user.email,
+            'role': 'delegate',
+            'join_code': joinCode,
+            'created_at': DateTime.now().toIso8601String(),
+          });
+        } else {
+          final String role = profile['role'] as String;
+          if (role != 'delegate' && role != 'admin') {
+            await supabase.auth.signOut();
+            throw const AuthException('Access denied: You are not a delegate.');
+          }
+          
+          // Update join_code in profile if it's missing
+          if (profile['join_code'] == null || profile['join_code'] != joinCode) {
+            await supabase.from('profiles').update({
+              'join_code': joinCode,
+            }).eq('id', user.id);
+          }
         }
 
-        await _onAuthSuccess(user.id, role, joinCode);
+        await _onAuthSuccess(user.id, profile?['role'] ?? 'delegate', joinCode);
       }
     } on AuthException catch (error) {
       _showErrorDialog(error.message);
