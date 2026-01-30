@@ -5,7 +5,7 @@ import 'package:url_launcher/url_launcher.dart';
 import '../../core/auth/user_role.dart';
 import '../../core/providers/grade_provider.dart';
 import '../../core/localization/app_localizations.dart';
-import 'grades_management_sheet.dart'; // New file for the modal sheet
+import 'add_grade_dialog.dart'; // Import the new AddGradeDialog
 
 class GradesListScreen extends ConsumerStatefulWidget {
   final UserRole userRole;
@@ -38,7 +38,7 @@ class _GradesListScreenState extends ConsumerState<GradesListScreen> {
           .eq('student_id', user.id)
           .maybeSingle();
       groupId = memberData?['group_id'];
-      studentId = user.id; // Also fetch grades assigned directly to the student
+      // No need to fetch by studentId unless direct assignment is implemented
     } else {
       // For delegates/admins, fetch their group ID
       final groupData = await supabase
@@ -51,17 +51,14 @@ class _GradesListScreenState extends ConsumerState<GradesListScreen> {
 
     // Fetch grades for this user/group
     ref.read(gradeProvider.notifier).fetchGrades(
-      studentId: studentId,
       groupId: groupId,
     );
   }
 
-  void _showGradesManagement() {
-    showModalBottomSheet(
+  void _showAddGradeDialog() {
+    showDialog(
       context: context,
-      isScrollControlled: true,
-      shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(20))),
-      builder: (context) => const GradesManagementSheet(),
+      builder: (_) => const AddGradeDialog(),
     );
   }
 
@@ -85,7 +82,7 @@ class _GradesListScreenState extends ConsumerState<GradesListScreen> {
         ],
       ),
       body: grades.isEmpty
-          ? const Center(child: Text('No grades available yet.'))
+          ? Center(child: Text(l10n.noContent))
           : ListView.builder(
               padding: const EdgeInsets.all(16),
               itemCount: grades.length,
@@ -124,10 +121,10 @@ class _GradesListScreenState extends ConsumerState<GradesListScreen> {
                         ),
                         const SizedBox(height: 4),
                         if (grade.doctor != null && grade.doctor!.isNotEmpty)
-                          Text('Doctor: ${grade.doctor}', style: TextStyle(color: Colors.grey.shade600, fontSize: 14)),
+                          Text('${l10n.doctor}: ${grade.doctor}', style: TextStyle(color: Colors.grey.shade600, fontSize: 14)),
                         const Divider(height: 24),
                         if (grade.note != null && grade.note!.isNotEmpty)
-                          Text(grade.note!, style: const TextStyle(fontSize: 14, height: 1.4)),
+                          Text('${l10n.note}: ${grade.note!}', style: const TextStyle(fontSize: 14, height: 1.4)),
                         const SizedBox(height: 16),
                         Row(
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -147,10 +144,11 @@ class _GradesListScreenState extends ConsumerState<GradesListScreen> {
               },
             ),
       floatingActionButton: isDelegate
-          ? FloatingActionButton(
-              onPressed: _showGradesManagement,
+          ? FloatingActionButton.extended(
+              onPressed: _showAddGradeDialog,
               backgroundColor: const Color(0xFF3F51B5),
-              child: const Icon(Icons.add, color: Colors.white),
+              icon: const Icon(Icons.add, color: Colors.white),
+              label: Text(l10n.addContent, style: const TextStyle(color: Colors.white)),
             )
           : null,
     );
