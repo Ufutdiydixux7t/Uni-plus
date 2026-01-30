@@ -27,7 +27,6 @@ class _AdminDashboardScreenState extends ConsumerState<AdminDashboardScreen> {
   }
 
   Future<void> _loadUser() async {
-    // We stored join_code in the 'name' field in SecureStorage during login
     final code = await SecureStorageService.getName();
     if (!mounted) return;
     setState(() {
@@ -347,14 +346,14 @@ class _AdminDashboardScreenState extends ConsumerState<AdminDashboardScreen> {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text(announcement.title, style: const TextStyle(fontWeight: FontWeight.bold)),
-                          Text(announcement.content, style: const TextStyle(fontSize: 13, color: Colors.grey)),
+                          Text(announcement.subject, style: const TextStyle(fontWeight: FontWeight.bold)),
+                          Text('${announcement.doctor} - ${announcement.time}', style: const TextStyle(fontSize: 13, color: Colors.grey)),
                         ],
                       ),
                     ),
                     IconButton(
                       icon: const Icon(Icons.delete_outline, color: Colors.redAccent, size: 20),
-                      onPressed: () => ref.read(announcementProvider.notifier).removeAnnouncement(announcement.id),
+                      onPressed: () => ref.read(announcementProvider.notifier).deleteAnnouncement(announcement.id),
                     ),
                   ],
                 ),
@@ -366,8 +365,11 @@ class _AdminDashboardScreenState extends ConsumerState<AdminDashboardScreen> {
   }
 
   void _showAddAnnouncementDialog(BuildContext context, WidgetRef ref) {
-    final titleController = TextEditingController();
-    final contentController = TextEditingController();
+    final subjectController = TextEditingController();
+    final doctorController = TextEditingController();
+    final timeController = TextEditingController();
+    final placeController = TextEditingController();
+    final noteController = TextEditingController();
     final l10n = AppLocalizations.of(context);
 
     showDialog(
@@ -375,35 +377,63 @@ class _AdminDashboardScreenState extends ConsumerState<AdminDashboardScreen> {
       builder: (context) => AlertDialog(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
         title: Text(l10n.addAnnouncement),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            TextField(
-              controller: titleController,
-              decoration: InputDecoration(
-                labelText: l10n.locale.languageCode == 'ar' ? 'العنوان' : 'Title',
-                border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+        content: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              TextField(
+                controller: subjectController,
+                decoration: InputDecoration(
+                  labelText: l10n.locale.languageCode == 'ar' ? 'المادة' : 'Subject',
+                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                ),
               ),
-            ),
-            const SizedBox(height: 16),
-            TextField(
-              controller: contentController,
-              maxLines: 3,
-              decoration: InputDecoration(
-                labelText: l10n.locale.languageCode == 'ar' ? 'المحتوى' : 'Content',
-                border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+              const SizedBox(height: 12),
+              TextField(
+                controller: doctorController,
+                decoration: InputDecoration(
+                  labelText: l10n.locale.languageCode == 'ar' ? 'الدكتور' : 'Doctor',
+                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                ),
               ),
-            ),
-          ],
+              const SizedBox(height: 12),
+              TextField(
+                controller: timeController,
+                decoration: InputDecoration(
+                  labelText: l10n.locale.languageCode == 'ar' ? 'الوقت' : 'Time',
+                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                ),
+              ),
+              const SizedBox(height: 12),
+              TextField(
+                controller: placeController,
+                decoration: InputDecoration(
+                  labelText: l10n.locale.languageCode == 'ar' ? 'المكان' : 'Place',
+                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                ),
+              ),
+              const SizedBox(height: 12),
+              TextField(
+                controller: noteController,
+                decoration: InputDecoration(
+                  labelText: l10n.locale.languageCode == 'ar' ? 'ملاحظة' : 'Note',
+                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                ),
+              ),
+            ],
+          ),
         ),
         actions: [
           TextButton(onPressed: () => Navigator.pop(context), child: Text(l10n.locale.languageCode == 'ar' ? 'إلغاء' : 'Cancel')),
           ElevatedButton(
             onPressed: () {
-              if (titleController.text.isNotEmpty && contentController.text.isNotEmpty) {
+              if (subjectController.text.isNotEmpty) {
                 ref.read(announcementProvider.notifier).addAnnouncement(
-                      titleController.text,
-                      contentController.text,
+                      subject: subjectController.text,
+                      doctor: doctorController.text,
+                      time: timeController.text,
+                      place: placeController.text,
+                      note: noteController.text,
                     );
                 Navigator.pop(context);
               }
