@@ -1,6 +1,9 @@
+import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:uuid/uuid.dart';
 import '../../core/localization/app_localizations.dart';
 import '../../core/storage/secure_storage_service.dart';
 import '../../core/providers/announcement_provider.dart';
@@ -19,19 +22,95 @@ class AdminDashboardScreen extends ConsumerStatefulWidget {
 class _AdminDashboardScreenState extends ConsumerState<AdminDashboardScreen> {
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
   String joinCode = '';
+  bool _isCodeLoading = true;
 
   @override
   void initState() {
     super.initState();
-    _loadUser();
+    _loadJoinCode();
   }
 
-  Future<void> _loadUser() async {
-    final code = await SecureStorageService.getName();
-    if (!mounted) return;
-    setState(() {
-      joinCode = code ?? '';
-    });
+  String _generateJoinCode() {
+    const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+    final rnd = Random();
+    return String.fromCharCodes(Iterable.generate(
+        8, (_) => chars.codeUnitAt(rnd.nextInt(chars.length))));
+  }
+
+  Future<void> _loadJoinCode() async {
+    setState(() => _isCodeLoading = true);
+    try {
+      final supabase = Supabase.instance.client;
+      final user = supabase.auth.currentUser;
+      
+      if (user == null) return;
+
+      // 1. Try to fetch from profiles
+      final profile = await supabase
+          .from('profiles')
+          .select('join_code')
+          .eq('id', user.id)
+          .maybeSingle();
+
+      String? code = profile?['join_code'];
+
+      // 2. If not in profile, try groups
+      if (code == null || code.isEmpty) {
+        final group = await supabase
+            .from('groups')
+            .select('join_code')
+            .eq('delegate_id', user.id)
+            .maybeSingle();
+        code = group?['join_code'];
+      }
+
+      // 3. If still null, generate and update both
+      if (code == null || code.isEmpty) {
+        code = _generateJoinCode();
+        final now = DateTime.now().toIso8601String();
+
+        // Update/Insert Group
+        final existingGroup = await supabase
+            .from('groups')
+            .select()
+            .eq('delegate_id', user.id)
+            .maybeSingle();
+
+        if (existingGroup == null) {
+          await supabase.from('groups').insert({
+            'id': const Uuid().v4(),
+            'delegate_id': user.id,
+            'join_code': code,
+            'created_at': now,
+          });
+        } else {
+          await supabase.from('groups').update({
+            'join_code': code,
+          }).eq('delegate_id', user.id);
+        }
+
+        // Update Profile
+        await supabase.from('profiles').update({
+          'join_code': code,
+        }).eq('id', user.id);
+      }
+
+      // 4. Save locally and update UI
+      await SecureStorageService.saveUser(
+        role: (profile?['role'] == 'admin') ? UserRole.admin : UserRole.delegate,
+        name: code,
+      );
+
+      if (mounted) {
+        setState(() {
+          joinCode = code!;
+          _isCodeLoading = false;
+        });
+      }
+    } catch (e) {
+      debugPrint('Error loading join code: $e');
+      if (mounted) setState(() => _isCodeLoading = false);
+    }
   }
 
   void _navigateToContent(String title, String category) {
@@ -72,6 +151,12 @@ class _AdminDashboardScreenState extends ConsumerState<AdminDashboardScreen> {
           icon: const Icon(Icons.menu, color: Colors.black),
           onPressed: () => _scaffoldKey.currentState?.openDrawer(),
         ),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.refresh, color: Colors.black),
+            onPressed: _loadJoinCode,
+          )
+        ],
       ),
       body: SafeArea(
         child: SingleChildScrollView(
@@ -156,19 +241,22 @@ class _AdminDashboardScreenState extends ConsumerState<AdminDashboardScreen> {
               children: [
                 const Icon(Icons.key, color: Colors.white70, size: 18),
                 const SizedBox(width: 12),
-                Text(
-                  joinCode,
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontWeight: FontWeight.bold,
-                    fontSize: 18,
-                    letterSpacing: 2,
-                  ),
+                Expanded(
+                  child: _isCodeLoading 
+                    ? const SizedBox(height: 20, width: 20, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
+                    : Text(
+                        joinCode,
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontWeight: FontWeight.bold,
+                          fontSize: 18,
+                          letterSpacing: 2,
+                        ),
+                      ),
                 ),
-                const Spacer(),
                 IconButton(
                   icon: const Icon(Icons.copy, color: Colors.white),
-                  onPressed: () {
+                  onPressed: joinCode.isEmpty ? null : () {
                     Clipboard.setData(ClipboardData(text: joinCode));
                     ScaffoldMessenger.of(context).showSnackBar(
                       SnackBar(content: Text(l10n.locale.languageCode == 'ar' ? 'تم نسخ الرمز!' : 'Code Copied!')),
