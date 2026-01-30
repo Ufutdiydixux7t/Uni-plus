@@ -39,7 +39,7 @@ class _AddGradeDialogState extends ConsumerState<AddGradeDialog> {
     if (!_formKey.currentState!.validate()) return;
     setState(() => _isSubmitting = true);
 
-    final success = await ref.read(gradeProvider.notifier).addGrade(
+    final errorMessage = await ref.read(gradeProvider.notifier).addGrade(
       subject: _subjectController.text,
       doctor: _doctorController.text,
       note: _noteController.text,
@@ -49,11 +49,17 @@ class _AddGradeDialogState extends ConsumerState<AddGradeDialog> {
     if (mounted) {
       setState(() => _isSubmitting = false);
       final l10n = AppLocalizations.of(context);
-      if (success) {
+      if (errorMessage == null) {
         Navigator.pop(context); // Close dialog on success
         ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(l10n.success)));
       } else {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(l10n.error)));
+        // Show detailed error message to the user
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('${l10n.error}: $errorMessage'),
+            backgroundColor: Colors.red,
+          ),
+        );
       }
     }
   }

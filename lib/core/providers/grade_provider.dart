@@ -27,7 +27,8 @@ class GradeNotifier extends StateNotifier<List<Grade>> {
     }
   }
 
-  Future<bool> addGrade({
+  // Returns null on success, or an error message string on failure
+  Future<String?> addGrade({
     required String subject,
     String? doctor,
     String? note,
@@ -38,14 +39,12 @@ class GradeNotifier extends StateNotifier<List<Grade>> {
     final userId = _supabase.auth.currentUser?.id;
 
     if (userId == null) {
-      print('Error: User not authenticated for file upload/insert.');
-      return false;
+      return 'User not authenticated. Please log in.';
     }
 
     try {
       if (file != null) {
         // 1. Upload to 'grades' bucket
-        // Use a path that includes user ID and grade ID for better organization: user_id/grade_id/filename
         final fileName = '$userId/$gradeId/${file.path.split('/').last}';
         
         await _supabase.storage.from('grades').upload(
@@ -60,13 +59,12 @@ class GradeNotifier extends StateNotifier<List<Grade>> {
       }
 
       final newGrade = {
-        'id': gradeId, // Use the generated ID
+        'id': gradeId,
         'subject': subject,
         'doctor': doctor,
         'note': note,
         'file_url': fileUrl,
-        'created_by': userId, // CRITICAL: Add created_by
-        // 'created_at' will be set by the database default
+        'created_by': userId,
       };
 
       // 3. Insert into 'grades' table
@@ -76,18 +74,17 @@ class GradeNotifier extends StateNotifier<List<Grade>> {
 
       // Refresh state
       await fetchGrades();
-      return true;
+      return null; // Success
     } on StorageException catch (e, stackTrace) {
       print('StorageException during file upload: ${e.message}');
       print('Stack Trace: $stackTrace');
-      return false;
+      return 'File upload failed: ${e.message}';
     } on PostgrestException catch (e, stackTrace) {
       print('PostgrestException during database insert: ${e.message}');
       print('Stack Trace: $stackTrace');
       // Optional: Attempt to delete the file if the DB insert failed
       if (fileUrl != null) {
         try {
-          // The path for removal is the path used for upload
           final pathToRemove = '$userId/$gradeId/${file!.path.split('/').last}';
           await _supabase.storage.from('grades').remove([pathToRemove]);
           print('Cleaned up uploaded file due to DB insert failure.');
@@ -95,26 +92,29 @@ class GradeNotifier extends StateNotifier<List<Grade>> {
           print('Failed to clean up file: $e');
         }
       }
-      return false;
+      return 'Database insertion failed: ${e.message}';
     } catch (e, stackTrace) {
       print('General Error adding grade: $e');
       print('Stack Trace: $stackTrace');
-      return false;
+      return 'An unexpected error occurred: $e';
     }
   }
 
-  Future<bool> deleteGrade(String gradeId, String createdBy) async {
+  // Returns null on success, or an error message string on failure
+  Future<String?> deleteGrade(String gradeId, String createdBy) async {
     final currentUserId = _supabase.auth.currentUser?.id;
-    if (currentUserId == null || currentUserId != createdBy) {
-      print('Error: User not authorized to delete this grade.');
-      return false;
+    if (currentUserId == null) {
+      return 'User not authenticated. Please log in.';
+    }
+    if (currentUserId != createdBy) {
+      return 'You are not authorized to delete this grade.';
     }
 
     try {
       // 1. Get grade details to find file_url
       final grade = await _supabase
           .from('grades')
-          .select('file_url') // Only need file_url now
+          .select('file_url')
           .eq('id', gradeId)
           .maybeSingle();
 
@@ -132,7 +132,6 @@ class GradeNotifier extends StateNotifier<List<Grade>> {
       if (fileUrl != null && fileUrl.isNotEmpty) {
         try {
           // Extract the path from the public URL
-          // The path is expected to be: user_id/grade_id/filename
           final fileName = fileUrl.split('/').last;
           final pathToRemove = '$currentUserId/$gradeId/$fileName';
           
@@ -145,15 +144,15 @@ class GradeNotifier extends StateNotifier<List<Grade>> {
 
       // Refresh state
       await fetchGrades();
-      return true;
+      return null; // Success
     } on PostgrestException catch (e, stackTrace) {
       print('PostgrestException during grade deletion: ${e.message}');
       print('Stack Trace: $stackTrace');
-      return false;
+      return 'Database deletion failed: ${e.message}';
     } catch (e, stackTrace) {
       print('General Error deleting grade: $e');
       print('Stack Trace: $stackTrace');
-      return false;
+      return 'An unexpected error occurred: $e';
     }
   }
 }

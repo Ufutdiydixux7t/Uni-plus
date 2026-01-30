@@ -48,11 +48,18 @@ class _GradesListScreenState extends ConsumerState<GradesListScreen> {
           TextButton(
             onPressed: () async {
               Navigator.pop(context);
-              final success = await ref.read(gradeProvider.notifier).deleteGrade(gradeId, createdBy);
+              final errorMessage = await ref.read(gradeProvider.notifier).deleteGrade(gradeId, createdBy);
               if (mounted) {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(content: Text(success ? l10n.success : l10n.error)),
-                );
+                if (errorMessage == null) {
+                  ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(l10n.success)));
+                } else {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text('${l10n.error}: $errorMessage'),
+                      backgroundColor: Colors.red,
+                    ),
+                  );
+                }
               }
             },
             child: Text(l10n.delete, style: const TextStyle(color: Colors.red)),
