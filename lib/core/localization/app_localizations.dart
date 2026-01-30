@@ -63,6 +63,7 @@ class AppLocalizations {
       'next': 'Next',
       'joinClass': 'Join Class',
       'announcement': 'Announcement',
+      'announcements': 'Announcements',
       'optional': 'Optional',
       'noAnnouncements': 'No announcements for tomorrow',
       'about': 'About',
@@ -137,6 +138,7 @@ class AppLocalizations {
       'next': 'التالي',
       'joinClass': 'انضمام للفصل',
       'announcement': 'إعلان',
+      'announcements': 'الإعلانات',
       'optional': 'اختياري',
       'noAnnouncements': 'لا توجد إعلانات لغد',
       'about': 'نظرة عنا',
@@ -212,6 +214,7 @@ class AppLocalizations {
   String get next => _localizedValues[locale.languageCode]!['next']!;
   String get joinClass => _localizedValues[locale.languageCode]!['joinClass']!;
   String get announcement => _localizedValues[locale.languageCode]!['announcement']!;
+  String get announcements => _localizedValues[locale.languageCode]!['announcements']!;
   String get optional => _localizedValues[locale.languageCode]!['optional']!;
   String get noAnnouncements => _localizedValues[locale.languageCode]!['noAnnouncements']!;
   String get about => _localizedValues[locale.languageCode]!['about']!;
