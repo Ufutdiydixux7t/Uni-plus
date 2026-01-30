@@ -18,9 +18,11 @@ class GradeNotifier extends StateNotifier<List<Grade>> {
       var query = _supabase.from('grades').select();
       
       if (studentId != null) {
+        // Fetch grades specifically for this student (if direct assignment is used)
         query = query.eq('student_id', studentId);
       }
       if (groupId != null) {
+        // Fetch grades for the group the student belongs to
         query = query.eq('group_id', groupId);
       }
 
@@ -42,17 +44,24 @@ class GradeNotifier extends StateNotifier<List<Grade>> {
     try {
       String? fileUrl;
       if (file != null) {
-        final fileName = '${DateTime.now().millisecondsSinceEpoch}_${file.path.split('/').last}';
+        final fileName = '${DateTime.now().millisecondsSinceEpoch}_${const Uuid().v4()}_${file.path.split('/').last}';
         
-        // Upload to 'grades' bucket
-        await _supabase.storage.from('grades').upload(
+        // 1. Upload to 'grades' bucket
+        final uploadResponse = await _supabase.storage.from('grades').upload(
           fileName, 
           file,
           fileOptions: const FileOptions(cacheControl: '3600', upsert: false),
         );
-        
-        // Get public URL
-        fileUrl = _supabase.storage.from('grades').getPublicUrl(fileName);
+
+        // Check for upload success
+        if (uploadResponse.isNotEmpty) {
+          // 2. Get public URL
+          fileUrl = _supabase.storage.from('grades').getPublicUrl(fileName);
+          print('File uploaded successfully. Public URL: $fileUrl');
+        } else {
+          print('File upload failed: Upload response was empty.');
+          return false;
+        }
       }
 
       final newGrade = {
@@ -66,13 +75,22 @@ class GradeNotifier extends StateNotifier<List<Grade>> {
         'created_at': DateTime.now().toIso8601String(),
       };
 
-      await _supabase.from('grades').insert(newGrade);
+      // 3. Insert into 'grades' table
+      final insertResponse = await _supabase.from('grades').insert(newGrade).select();
       
+      if (insertResponse.isEmpty) {
+        print('Database insertion failed: Insert response was empty.');
+        return false;
+      }
+      
+      print('Grade inserted successfully into database.');
+
       // Refresh state
       await fetchGrades(studentId: studentId, groupId: groupId);
       return true;
-    } catch (e) {
+    } catch (e, stackTrace) {
       print('Error adding grade: $e');
+      print('Stack Trace: $stackTrace');
       return false;
     }
   }
