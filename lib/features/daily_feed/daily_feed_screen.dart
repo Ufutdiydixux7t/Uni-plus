@@ -10,6 +10,7 @@ import '../shared/content_list_screen.dart';
 import '../lectures/lectures_screen.dart';
 import '../summaries/summaries_screen.dart';
 import '../summaries/send_summary_screen.dart';
+import '../student_grades/student_grades_screen.dart';
 import './models/home_grid_item.dart';
 
 class DailyFeedScreen extends ConsumerStatefulWidget {
@@ -52,6 +53,10 @@ class _DailyFeedScreenState extends ConsumerState<DailyFeedScreen> {
   }
 
   void _handleItemTap(HomeGridItem item) {
+    if (item.category == 'grades') {
+      Navigator.push(context, MaterialPageRoute(builder: (_) => const StudentGradesScreen()));
+      return;
+    }
     if (item.category == 'lectures') {
       Navigator.push(context, MaterialPageRoute(builder: (_) => const LecturesScreen()));
     } else if (item.category == 'summaries') {
@@ -86,7 +91,6 @@ class _DailyFeedScreenState extends ConsumerState<DailyFeedScreen> {
           slivers: [
             SliverToBoxAdapter(child: _header(l10n, isDelegate)),
             
-            // Tomorrow Lectures Section - Student and Delegate (Read Only)
             SliverPadding(
               padding: const EdgeInsets.fromLTRB(20, 24, 20, 0),
               sliver: SliverToBoxAdapter(
@@ -169,7 +173,6 @@ class _DailyFeedScreenState extends ConsumerState<DailyFeedScreen> {
               ),
             ),
 
-            // Received Summaries (Delegate) / Send Summary (Student)
             SliverPadding(
               padding: const EdgeInsets.fromLTRB(20, 24, 20, 40),
               sliver: SliverToBoxAdapter(
@@ -276,65 +279,9 @@ class _DailyFeedScreenState extends ConsumerState<DailyFeedScreen> {
           children: [
             Icon(icon, size: 32, color: const Color(0xFF3F51B5)),
             const SizedBox(height: 12),
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 8.0),
-              child: Text(
-                title,
-                textAlign: TextAlign.center,
-                style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 14),
-              ),
-            ),
+            Text(title, style: const TextStyle(fontWeight: FontWeight.bold)),
           ],
         ),
-      ),
-    );
-  }
-
-  Widget _announcementCard(Announcement announcement, AppLocalizations l10n) {
-    return Container(
-      padding: const EdgeInsets.all(12),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        boxShadow: [
-          BoxShadow(color: Colors.black.withOpacity(0.03), blurRadius: 8, offset: const Offset(0, 2)),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Text(
-            announcement.subject,
-            style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14, color: Color(0xFF3F51B5)),
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-          ),
-          const SizedBox(height: 6),
-          _infoRow(Icons.person_outline, announcement.doctor),
-          _infoRow(Icons.room_outlined, announcement.place),
-          _infoRow(Icons.access_time, announcement.time),
-        ],
-      ),
-    );
-  }
-
-  Widget _infoRow(IconData icon, String text) {
-    return Padding(
-      padding: const EdgeInsets.only(top: 4.0),
-      child: Row(
-        children: [
-          Icon(icon, size: 12, color: Colors.grey),
-          const SizedBox(width: 4),
-          Expanded(
-            child: Text(
-              text,
-              style: const TextStyle(fontSize: 11, color: Colors.black87),
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-            ),
-          ),
-        ],
       ),
     );
   }
@@ -342,12 +289,12 @@ class _DailyFeedScreenState extends ConsumerState<DailyFeedScreen> {
   Widget _horizontalActionCard({required IconData icon, required String title, required String subtitle, required VoidCallback onTap}) {
     return InkWell(
       onTap: onTap,
-      borderRadius: BorderRadius.circular(16),
+      borderRadius: BorderRadius.circular(20),
       child: Container(
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
           color: Colors.white,
-          borderRadius: BorderRadius.circular(16),
+          borderRadius: BorderRadius.circular(20),
           boxShadow: [
             BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 10, offset: const Offset(0, 4)),
           ],
@@ -356,10 +303,7 @@ class _DailyFeedScreenState extends ConsumerState<DailyFeedScreen> {
           children: [
             Container(
               padding: const EdgeInsets.all(12),
-              decoration: BoxDecoration(
-                color: const Color(0xFF3F51B5).withOpacity(0.1),
-                borderRadius: BorderRadius.circular(12),
-              ),
+              decoration: BoxDecoration(color: const Color(0xFF3F51B5).withOpacity(0.1), borderRadius: BorderRadius.circular(12)),
               child: Icon(icon, color: const Color(0xFF3F51B5)),
             ),
             const SizedBox(width: 16),
@@ -368,116 +312,39 @@ class _DailyFeedScreenState extends ConsumerState<DailyFeedScreen> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(title, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
-                  const SizedBox(height: 4),
-                  Text(subtitle, style: const TextStyle(color: Colors.grey, fontSize: 12)),
+                  Text(subtitle, style: TextStyle(color: Colors.grey.shade600, fontSize: 12)),
                 ],
               ),
             ),
-            const Icon(Icons.chevron_right, color: Colors.grey),
+            const Icon(Icons.arrow_forward_ios, size: 16, color: Colors.grey),
           ],
         ),
+      ),
+    );
+  }
+
+  Widget _announcementCard(dynamic ann, AppLocalizations l10n) {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 10, offset: const Offset(0, 4)),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(ann.subject, style: const TextStyle(fontWeight: FontWeight.bold), maxLines: 1, overflow: TextOverflow.ellipsis),
+          const SizedBox(height: 8),
+          Text(ann.note ?? '', style: TextStyle(color: Colors.grey.shade600, fontSize: 12), maxLines: 2, overflow: TextOverflow.ellipsis),
+        ],
       ),
     );
   }
 
   void _showSendSummaryDialog(BuildContext context, AppLocalizations l10n) {
-    showDialog(
-      context: context,
-      builder: (context) => const SendSummaryDialog(),
-    );
-  }
-}
-
-class SendSummaryDialog extends ConsumerStatefulWidget {
-  const SendSummaryDialog({super.key});
-
-  @override
-  ConsumerState<SendSummaryDialog> createState() => _SendSummaryDialogState();
-}
-
-class _SendSummaryDialogState extends ConsumerState<SendSummaryDialog> {
-  final _subjectController = TextEditingController();
-  final _doctorController = TextEditingController();
-  final _noteController = TextEditingController();
-  String _fileName = '';
-  String? _filePath;
-
-  @override
-  Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context);
-    return AlertDialog(
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-      title: Text(l10n.sendSummary, style: const TextStyle(color: Color(0xFF3F51B5), fontWeight: FontWeight.bold)),
-      content: SingleChildScrollView(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            _field(_subjectController, l10n.subject, Icons.book_outlined),
-            const SizedBox(height: 12),
-            _field(_doctorController, l10n.doctor, Icons.person_outline),
-            const SizedBox(height: 12),
-            _field(_noteController, l10n.optionalNote, Icons.notes, maxLines: 2),
-            const SizedBox(height: 16),
-            InkWell(
-              onTap: () async {
-                // In a real app, use FilePicker. Here we simulate.
-                setState(() {
-                  _fileName = "summary_file.pdf";
-                  _filePath = "/dummy/path/summary_file.pdf";
-                });
-              },
-              child: Container(
-                padding: const EdgeInsets.all(12),
-                decoration: BoxDecoration(
-                  border: Border.all(color: Colors.grey[300]!),
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: Row(
-                  children: [
-                    const Icon(Icons.attach_file, size: 20, color: Color(0xFF3F51B5)),
-                    const SizedBox(width: 8),
-                    Expanded(child: Text(_fileName.isEmpty ? l10n.attachFile : _fileName, style: TextStyle(color: _fileName.isEmpty ? Colors.grey : Colors.black))),
-                  ],
-                ),
-              ),
-            ),
-          ],
-        ),
-      ),
-      actions: [
-        TextButton(onPressed: () => Navigator.pop(context), child: Text(l10n.cancel)),
-        ElevatedButton(
-          onPressed: () async {
-            if (_subjectController.text.isEmpty) return;
-            final uploader = await SecureStorageService.getName() ?? 'Student';
-            final desc = '${l10n.doctor}: ${_doctorController.text}\n${l10n.note}: ${_noteController.text}';
-            await ref.read(contentProvider.notifier).addContent(
-              title: _subjectController.text.trim(),
-              description: desc.trim(),
-              category: 'student_summaries',
-              uploaderName: uploader,
-              fileName: _fileName,
-              filePath: _filePath,
-            );
-            if (context.mounted) Navigator.pop(context);
-          },
-          style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFF3F51B5)),
-          child: Text(l10n.submit, style: const TextStyle(color: Colors.white)),
-        ),
-      ],
-    );
-  }
-
-  Widget _field(TextEditingController controller, String label, IconData icon, {int maxLines = 1}) {
-    return TextField(
-      controller: controller,
-      maxLines: maxLines,
-      decoration: InputDecoration(
-        labelText: label,
-        prefixIcon: Icon(icon, color: const Color(0xFF3F51B5)),
-        border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-      ),
-    );
+    Navigator.push(context, MaterialPageRoute(builder: (_) => const SendSummaryScreen()));
   }
 }
