@@ -25,34 +25,8 @@ class _GradesListScreenState extends ConsumerState<GradesListScreen> {
   }
 
   Future<void> _fetchGrades() async {
-    final supabase = Supabase.instance.client;
-    final user = supabase.auth.currentUser;
-    if (user == null) return;
-
-    String? groupId;
-
-    if (widget.userRole == UserRole.student) {
-      // For students, fetch their group ID
-      final memberData = await supabase
-          .from('group_members')
-          .select('group_id')
-          .eq('student_id', user.id)
-          .maybeSingle();
-      groupId = memberData?['group_id'];
-    } else {
-      // For delegates/admins, fetch their group ID
-      final groupData = await supabase
-          .from('groups')
-          .select('id')
-          .eq('delegate_id', user.id)
-          .maybeSingle();
-      groupId = groupData?['id'];
-    }
-
-    // Fetch grades for this user/group
-    ref.read(gradeProvider.notifier).fetchGrades(
-      groupId: groupId,
-    );
+    // Fetch all grades globally as there is no group_id filter
+    ref.read(gradeProvider.notifier).fetchGrades();
   }
 
   void _showAddGradeDialog() {
