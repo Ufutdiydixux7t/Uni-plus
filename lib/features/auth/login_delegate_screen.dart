@@ -35,6 +35,7 @@ class _LoginDelegateScreenState extends ConsumerState<LoginDelegateScreen> {
   }
 
   String _generateJoinCode() {
+    // Uppercase letters (A-Z) excluding I, O + digits 2-9
     const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
     final rnd = Random();
     return String.fromCharCodes(Iterable.generate(
@@ -48,6 +49,7 @@ class _LoginDelegateScreenState extends ConsumerState<LoginDelegateScreen> {
 
     try {
       if (_isSignUpMode) {
+        // 1. Sign Up
         final AuthResponse response = await supabase.auth.signUp(
           email: _emailController.text.trim(),
           password: _passwordController.text.trim(),
@@ -59,7 +61,7 @@ class _LoginDelegateScreenState extends ConsumerState<LoginDelegateScreen> {
         String joinCode = _generateJoinCode();
         final now = DateTime.now().toIso8601String();
 
-        // 1. Ensure Group exists and has join_code
+        // 2. Check/Create Group
         final existingGroup = await supabase
             .from('groups')
             .select()
@@ -81,7 +83,7 @@ class _LoginDelegateScreenState extends ConsumerState<LoginDelegateScreen> {
           joinCode = existingGroup['join_code'] as String;
         }
 
-        // 2. Ensure Profile exists and has join_code
+        // 3. Check/Create Profile
         final existingProfile = await supabase
             .from('profiles')
             .select()
@@ -105,6 +107,7 @@ class _LoginDelegateScreenState extends ConsumerState<LoginDelegateScreen> {
 
         await _onAuthSuccess(user.id, 'delegate', joinCode);
       } else {
+        // 1. Sign In
         final AuthResponse response = await supabase.auth.signInWithPassword(
           email: _emailController.text.trim(),
           password: _passwordController.text.trim(),
@@ -113,7 +116,22 @@ class _LoginDelegateScreenState extends ConsumerState<LoginDelegateScreen> {
         final user = response.user;
         if (user == null) throw const AuthException('Sign in failed.');
 
-        // 1. Check/Update Group join_code
+        // 2. Fetch Profile
+        final profile = await supabase
+            .from('profiles')
+            .select('role, join_code')
+            .eq('id', user.id)
+            .maybeSingle();
+
+        if (profile == null) throw const AuthException('Profile not found.');
+
+        final String role = profile['role'] as String;
+        if (role != 'delegate' && role != 'admin') {
+          await supabase.auth.signOut();
+          throw const AuthException('Access denied: You are not a delegate.');
+        }
+
+        // 3. Fetch/Update Group join_code
         final existingGroup = await supabase
             .from('groups')
             .select()
@@ -139,37 +157,14 @@ class _LoginDelegateScreenState extends ConsumerState<LoginDelegateScreen> {
           joinCode = existingGroup['join_code'] as String;
         }
 
-        // 2. Check/Update Profile role and join_code
-        final profile = await supabase
-            .from('profiles')
-            .select('role, join_code')
-            .eq('id', user.id)
-            .maybeSingle();
-
-        if (profile == null) {
-          await supabase.from('profiles').insert({
-            'id': user.id,
-            'email': user.email,
-            'role': 'delegate',
+        // 4. Sync Profile join_code if missing
+        if (profile['join_code'] == null || profile['join_code'] != joinCode) {
+          await supabase.from('profiles').update({
             'join_code': joinCode,
-            'created_at': DateTime.now().toIso8601String(),
-          });
-        } else {
-          final String role = profile['role'] as String;
-          if (role != 'delegate' && role != 'admin') {
-            await supabase.auth.signOut();
-            throw const AuthException('Access denied: You are not a delegate.');
-          }
-          
-          // Update join_code in profile if it's missing
-          if (profile['join_code'] == null || profile['join_code'] != joinCode) {
-            await supabase.from('profiles').update({
-              'join_code': joinCode,
-            }).eq('id', user.id);
-          }
+          }).eq('id', user.id);
         }
 
-        await _onAuthSuccess(user.id, profile?['role'] ?? 'delegate', joinCode);
+        await _onAuthSuccess(user.id, role, joinCode);
       }
     } on AuthException catch (error) {
       _showErrorDialog(error.message);
