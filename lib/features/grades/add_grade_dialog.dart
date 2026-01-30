@@ -64,56 +64,153 @@ class _AddGradeDialogState extends ConsumerState<AddGradeDialog> {
     }
   }
 
+  Widget _buildTextField({
+    required TextEditingController controller,
+    required String label,
+    required IconData icon,
+    int maxLines = 1,
+    String? Function(String?)? validator,
+  }) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 16.0),
+      child: TextFormField(
+        controller: controller,
+        maxLines: maxLines,
+        validator: validator,
+        decoration: InputDecoration(
+          labelText: label,
+          suffixIcon: Icon(icon, color: const Color(0xFF3F51B5)),
+          border: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(12.0),
+            borderSide: BorderSide.none,
+          ),
+          filled: true,
+          fillColor: Colors.grey.shade100,
+          contentPadding: const EdgeInsets.symmetric(vertical: 16.0, horizontal: 16.0),
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
+    final theme = Theme.of(context);
 
-    return AlertDialog(
-      title: Text(l10n.grades),
-      content: SingleChildScrollView(
-        child: Form(
-          key: _formKey,
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              TextFormField(
-                controller: _subjectController,
-                decoration: InputDecoration(labelText: l10n.subject),
-                validator: (value) => value!.isEmpty ? l10n.subject : null,
-              ),
-              TextFormField(
-                controller: _doctorController,
-                decoration: InputDecoration(labelText: l10n.doctor),
-              ),
-              TextFormField(
-                controller: _noteController,
-                decoration: InputDecoration(labelText: l10n.note),
-                maxLines: 3,
-              ),
-              const SizedBox(height: 16),
-              ListTile(
-                leading: const Icon(Icons.attach_file),
-                title: Text(_selectedFile == null ? l10n.attachFile : _selectedFile!.path.split('/').last),
-                onTap: _pickFile,
-                tileColor: Colors.grey.shade100,
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-              ),
-            ],
+    return Dialog(
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20.0)),
+      child: SingleChildScrollView(
+        child: Padding(
+          padding: const EdgeInsets.all(24.0),
+          child: Form(
+            key: _formKey,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // Title
+                Text(
+                  '${l10n.addContent}: ${l10n.grades}',
+                  style: theme.textTheme.headlineSmall?.copyWith(
+                    color: const Color(0xFF3F51B5),
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                const SizedBox(height: 24),
+
+                // Subject Field
+                _buildTextField(
+                  controller: _subjectController,
+                  label: l10n.subject,
+                  icon: Icons.book_outlined,
+                  validator: (value) => value!.isEmpty ? l10n.requiredField : null,
+                ),
+
+                // Doctor Field
+                _buildTextField(
+                  controller: _doctorController,
+                  label: l10n.doctor,
+                  icon: Icons.person_outline,
+                ),
+
+                // Note Field
+                _buildTextField(
+                  controller: _noteController,
+                  label: l10n.note,
+                  icon: Icons.notes_outlined,
+                  maxLines: 3,
+                ),
+
+                // File Picker Button (Designed as a field)
+                GestureDetector(
+                  onTap: _pickFile,
+                  child: Container(
+                    height: 56,
+                    decoration: BoxDecoration(
+                      color: Colors.grey.shade100,
+                      borderRadius: BorderRadius.circular(12.0),
+                    ),
+                    padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Expanded(
+                          child: Text(
+                            _selectedFile == null
+                                ? l10n.attachFile
+                                : _selectedFile!.path.split('/').last,
+                            style: TextStyle(
+                              color: _selectedFile == null ? Colors.grey.shade600 : Colors.black,
+                              fontSize: 16,
+                            ),
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
+                        Icon(Icons.attachment, color: const Color(0xFF3F51B5)),
+                      ],
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 24),
+
+                // Action Buttons
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.end,
+                  children: [
+                    // Cancel Button
+                    TextButton(
+                      onPressed: _isSubmitting ? null : () => Navigator.pop(context),
+                      child: Text(
+                        l10n.cancel,
+                        style: TextStyle(color: Colors.grey.shade600, fontSize: 16),
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+
+                    // Save Button
+                    ElevatedButton(
+                      onPressed: _isSubmitting ? null : _submit,
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: const Color(0xFF3F51B5),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12.0),
+                        ),
+                        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                      ),
+                      child: _isSubmitting
+                          ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
+                          : Text(
+                              l10n.save,
+                              style: const TextStyle(color: Colors.white, fontSize: 16),
+                            ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
           ),
         ),
       ),
-      actions: [
-        TextButton(
-          onPressed: _isSubmitting ? null : () => Navigator.pop(context),
-          child: Text(l10n.cancel),
-        ),
-        ElevatedButton(
-          onPressed: _isSubmitting ? null : _submit,
-          child: _isSubmitting
-              ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2))
-              : Text(l10n.save),
-        ),
-      ],
     );
   }
 }
