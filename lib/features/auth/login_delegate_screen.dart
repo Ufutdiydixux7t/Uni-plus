@@ -1,280 +1,231 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
-import 'package:uuid/uuid.dart'; // Ensure this is available or use a different method for UUID
+import 'package:uuid/uuid.dart';
 
-import '../../../core/localization/app_localizations.dart';
 import '../../../core/navigation/app_routes.dart';
 import '../../../core/providers/locale_provider.dart';
 import '../../../core/storage/secure_storage_service.dart';
 import '../../../core/auth/user_role.dart';
+import '../../../core/localization/app_localizations.dart';
 
-// Helper to access Supabase client
 final supabase = Supabase.instance.client;
 
 class LoginDelegateScreen extends ConsumerStatefulWidget {
   const LoginDelegateScreen({super.key});
 
   @override
-  ConsumerState<LoginDelegateScreen> createState() => _LoginDelegateScreenState();
+  ConsumerState<LoginDelegateScreen> createState() =>
+      _LoginDelegateScreenState();
 }
 
-class _LoginDelegateScreenState extends ConsumerState<LoginDelegateScreen> {
+class _LoginDelegateScreenState
+    extends ConsumerState<LoginDelegateScreen> {
   final _formKey = GlobalKey<FormState>();
-  final _emailController = TextEditingController();
-  final _passwordController = TextEditingController();
-  bool _isLoading = false;
-  bool _isSignUpMode = false; // Toggle between Login and Sign Up
+  final _email = TextEditingController();
+  final _password = TextEditingController();
+
+  bool _loading = false;
+  bool _signUpMode = false;
+  bool _obscure = true;
 
   @override
   void dispose() {
-    _emailController.dispose();
-    _passwordController.dispose();
+    _email.dispose();
+    _password.dispose();
     super.dispose();
   }
 
-  Future<void> _handleAuth() async {
-    if (!_formKey.currentState!.validate()) {
-      return;
-    }
+  Future<void> _submit() async {
+    if (!_formKey.currentState!.validate()) return;
 
-    setState(() {
-      _isLoading = true;
-    });
+    setState(() => _loading = true);
 
     try {
-      if (_isSignUpMode) {
-        // --- SIGN UP LOGIC ---
-        final AuthResponse response = await supabase.auth.signUp(
-          email: _emailController.text.trim(),
-          password: _passwordController.text.trim(),
+      if (_signUpMode) {
+        // =========================
+        // SIGN UP (DELEGATE)
+        // =========================
+        final res = await supabase.auth.signUp(
+          email: _email.text.trim(),
+          password: _password.text.trim(),
         );
 
-        final user = response.user;
-        if (user == null) throw const AuthException('Sign up failed.');
-
-        final now = DateTime.now().toIso8601String();
-        final defaultName = user.email?.split('@').first ?? 'Delegate';
-
-        // 1. Insert into 'profiles'
-        await supabase.from('profiles').insert({
-          'id': user.id,
-          'email': user.email,
-          'role': 'delegate',
-          'join_code': '',
-          'created_at': now,
-          'name': defaultName,
-        });
-
-        // 2. Insert into 'groups'
-        // Using a simple UUID generation if uuid package is not available, 
-        // but typically it's better to let Supabase handle UUID or use the package.
-        // For this environment, we'll assume uuid package or use a random string if needed.
-        await supabase.from('groups').insert({
-          'id': const Uuid().v4(), // Generating a new UUID
-          'delegate_id': user.id,
-          'join_code': '',
-          'created_at': now,
-        });
-
-        await _onAuthSuccess(user.id, 'delegate', defaultName);
-
-      } else {
-        // --- SIGN IN LOGIC ---
-        final AuthResponse response = await supabase.auth.signInWithPassword(
-          email: _emailController.text.trim(),
-          password: _passwordController.text.trim(),
-        );
-
-        final user = response.user;
-        if (user == null) throw const AuthException('Sign in failed.');
-
-        final List<Map<String, dynamic>> profiles = await supabase
-            .from('profiles')
-            .select('role, name')
-            .eq('id', user.id)
-            .limit(1);
-
-        if (profiles.isEmpty) throw const AuthException('Profile not found.');
-
-        final String role = profiles.first['role'] as String;
-        final String name = profiles.first['name'] as String;
-
-        if (role != 'delegate' && role != 'admin') {
-          await supabase.auth.signOut();
-          throw const AuthException('Access denied: You are not a delegate.');
+        final user = res.user;
+        if (user == null) {
+          throw const AuthException('Failed to create account');
         }
 
-        await _onAuthSuccess(user.id, role, name);
+        // check profile
+        final profile = await supabase
+            .from('profiles')
+            .select()
+            .eq('id', user.id)
+            .maybeSingle();
+
+        if (profile == null) {
+          final joinCode =
+          const Uuid().v4().substring(0, 6).toUpperCase();
+
+          // create profile
+          await supabase.from('profiles').insert({
+            'id': user.id,
+            'email': user.email,
+            'role': 'delegate',
+            'join_code': joinCode,
+            'created_at': DateTime.now().toIso8601String(),
+          });
+
+          // create group automatically
+          await supabase.from('groups').insert({
+            'id': const Uuid().v4(),
+            'delegate_id': user.id,
+            'join_code': joinCode,
+            'created_at': DateTime.now().toIso8601String(),
+          });
+        }
+      } else {
+        // =========================
+        // SIGN IN
+        // =========================
+        final res = await supabase.auth.signInWithPassword(
+          email: _email.text.trim(),
+          password: _password.text.trim(),
+        );
+
+        final user = res.user;
+        if (user == null) {
+          throw const AuthException('Invalid email or password');
+        }
+
+        final profile = await supabase
+            .from('profiles')
+            .select('role')
+            .eq('id', user.id)
+            .maybeSingle();
+
+        if (profile == null) {
+          throw const AuthException('Profile not found');
+        }
+
+        if (profile['role'] != 'delegate') {
+          await supabase.auth.signOut();
+          throw const AuthException('Access denied');
+        }
       }
-    } on AuthException catch (error) {
-      _showErrorDialog(error.message);
-    } catch (error) {
-      _showErrorDialog('An error occurred: ${error.toString()}');
+
+      // =========================
+      // SUCCESS
+      // =========================
+      await SecureStorageService.saveUser(
+        role: UserRole.delegate,
+        name: _email.text.split('@').first,
+      );
+
+      if (!mounted) return;
+      Navigator.pushNamedAndRemoveUntil(
+        context,
+        AppRoutes.homeDelegate,
+            (_) => false,
+      );
+    } on AuthException catch (e) {
+      _error(e.message);
+    } catch (e) {
+      _error(e.toString());
     } finally {
-      if (mounted) {
-        setState(() {
-          _isLoading = false;
-        });
-      }
+      if (mounted) setState(() => _loading = false);
     }
   }
 
-  Future<void> _onAuthSuccess(String userId, String role, String name) async {
-    final userRole = role == 'admin' ? UserRole.admin : UserRole.delegate;
-    
-    await SecureStorageService.saveUser(
-      role: userRole,
-      name: name,
-    );
-
-    if (!mounted) return;
-
-    Navigator.pushNamedAndRemoveUntil(
-      context,
-      AppRoutes.homeDelegate,
-      (route) => false,
-    );
-  }
-
-  void _showErrorDialog(String message) {
+  void _error(String msg) {
     ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(message),
-        backgroundColor: Colors.red,
-      ),
+      SnackBar(backgroundColor: Colors.red, content: Text(msg)),
     );
   }
 
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
-    const primaryColor = Color(0xFF3F51B5);
-    const accentColor = Color(0xFF5C6BC0);
+    const primary = Color(0xFF3F51B5);
+    const accent = Color(0xFF5C6BC0);
 
     return Scaffold(
-      backgroundColor: Colors.white,
-      appBar: AppBar(
-        elevation: 0,
-        backgroundColor: Colors.transparent,
-        foregroundColor: _isSignUpMode ? accentColor : primaryColor,
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.language),
-            onPressed: () => ref.read(localeProvider.notifier).toggleLocale(),
-          ),
-        ],
-      ),
       body: SafeArea(
         child: SingleChildScrollView(
-          physics: const BouncingScrollPhysics(),
-          padding: const EdgeInsets.symmetric(horizontal: 30),
+          padding: const EdgeInsets.all(24),
           child: Form(
             key: _formKey,
             child: Column(
               children: [
-                const SizedBox(height: 10),
-                AnimatedSwitcher(
-                  duration: const Duration(milliseconds: 500),
-                  child: Column(
-                    key: ValueKey<bool>(_isSignUpMode),
-                    children: [
-                      Container(
-                        padding: const EdgeInsets.all(16),
-                        decoration: BoxDecoration(
-                          color: (_isSignUpMode ? accentColor : primaryColor).withOpacity(0.1),
-                          shape: BoxShape.circle,
-                        ),
-                        child: Icon(
-                          _isSignUpMode ? Icons.person_add_outlined : Icons.login_outlined,
-                          size: 60,
-                          color: _isSignUpMode ? accentColor : primaryColor,
-                        ),
-                      ),
-                      const SizedBox(height: 20),
-                      Text(
-                        _isSignUpMode ? l10n.createAccount : l10n.signIn,
-                        textAlign: TextAlign.center,
-                        style: TextStyle(
-                          fontSize: 26, 
-                          fontWeight: FontWeight.bold, 
-                          color: _isSignUpMode ? accentColor : primaryColor
-                        ),
-                      ),
-                    ],
+                const SizedBox(height: 60),
+                Icon(
+                  _signUpMode ? Icons.person_add : Icons.login,
+                  size: 80,
+                  color: _signUpMode ? accent : primary,
+                ),
+                const SizedBox(height: 24),
+                Text(
+                  _signUpMode ? l10n.createAccount : l10n.signIn,
+                  style: TextStyle(
+                    fontSize: 26,
+                    fontWeight: FontWeight.bold,
+                    color: _signUpMode ? accent : primary,
                   ),
                 ),
                 const SizedBox(height: 40),
-                _inputField(
-                  controller: _emailController,
+                _field(
+                  controller: _email,
                   label: l10n.email,
-                  icon: Icons.email_outlined,
-                  activeColor: _isSignUpMode ? accentColor : primaryColor,
-                  validator: (value) {
-                    if (value == null || value.isEmpty) return l10n.emailRequired;
-                    return null;
-                  },
+                  icon: Icons.email,
                 ),
                 const SizedBox(height: 20),
-                _inputField(
-                  controller: _passwordController,
+                _field(
+                  controller: _password,
                   label: l10n.password,
-                  icon: Icons.lock_outline,
-                  isPassword: true,
-                  activeColor: _isSignUpMode ? accentColor : primaryColor,
-                  validator: (value) {
-                    if (value == null || value.isEmpty) return l10n.passwordRequired;
-                    if (_isSignUpMode && value.length < 6) return 'Password must be at least 6 characters';
-                    return null;
-                  },
+                  icon: Icons.lock,
+                  password: true,
                 ),
                 const SizedBox(height: 40),
                 SizedBox(
                   width: double.infinity,
-                  height: 55,
+                  height: 50,
                   child: ElevatedButton(
+                    onPressed: _loading ? null : _submit,
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: _isSignUpMode ? accentColor : primaryColor,
-                      foregroundColor: Colors.white,
-                      elevation: 2,
-                      shadowColor: (_isSignUpMode ? accentColor : primaryColor).withOpacity(0.5),
+                      backgroundColor:
+                      _signUpMode ? accent : primary,
                       shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(16),
+                        borderRadius: BorderRadius.circular(14),
                       ),
                     ),
-                    onPressed: _isLoading ? null : _handleAuth,
-                    child: _isLoading
-                        ? const CircularProgressIndicator(color: Colors.white)
+                    child: _loading
+                        ? const CircularProgressIndicator(
+                      color: Colors.white,
+                    )
                         : Text(
-                            _isSignUpMode ? l10n.createAccount : l10n.signIn,
-                            style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-                          ),
+                      _signUpMode
+                          ? l10n.createAccount
+                          : l10n.signIn,
+                      style: const TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
                   ),
                 ),
-                const SizedBox(height: 24),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Text(
-                      _isSignUpMode ? 'Already have an account?' : "Don't have an account?",
-                      style: TextStyle(color: Colors.grey[600]),
+                const SizedBox(height: 20),
+                TextButton(
+                  onPressed: () =>
+                      setState(() => _signUpMode = !_signUpMode),
+                  child: Text(
+                    _signUpMode
+                        ? l10n.signIn
+                        : l10n.createAccount,
+                    style: TextStyle(
+                      color: _signUpMode ? accent : primary,
+                      fontWeight: FontWeight.bold,
                     ),
-                    TextButton(
-                      onPressed: () {
-                        setState(() {
-                          _isSignUpMode = !_isSignUpMode;
-                        });
-                      },
-                      child: Text(
-                        _isSignUpMode ? l10n.signIn : l10n.createAccount,
-                        style: TextStyle(
-                          color: _isSignUpMode ? accentColor : primaryColor, 
-                          fontWeight: FontWeight.bold,
-                          fontSize: 16
-                        ),
-                      ),
-                    ),
-                  ],
+                  ),
                 ),
               ],
             ),
@@ -284,43 +235,31 @@ class _LoginDelegateScreenState extends ConsumerState<LoginDelegateScreen> {
     );
   }
 
-  Widget _inputField({
+  Widget _field({
     required TextEditingController controller,
     required String label,
     required IconData icon,
-    required Color activeColor,
-    bool isPassword = false,
-    String? Function(String?)? validator,
+    bool password = false,
   }) {
     return TextFormField(
       controller: controller,
-      obscureText: isPassword,
-      validator: validator,
-      cursorColor: activeColor,
+      obscureText: password ? _obscure : false,
+      validator: (v) =>
+      v == null || v.isEmpty ? '$label required' : null,
       decoration: InputDecoration(
-        prefixIcon: Icon(icon, size: 22, color: activeColor),
         labelText: label,
-        labelStyle: TextStyle(color: Colors.grey[600]),
-        floatingLabelStyle: TextStyle(color: activeColor),
-        enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(16),
-          borderSide: BorderSide(color: Colors.grey[300]!),
+        prefixIcon: Icon(icon),
+        suffixIcon: password
+            ? IconButton(
+          icon: Icon(
+              _obscure ? Icons.visibility_off : Icons.visibility),
+          onPressed: () =>
+              setState(() => _obscure = !_obscure),
+        )
+            : null,
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(14),
         ),
-        focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(16),
-          borderSide: BorderSide(color: activeColor, width: 2),
-        ),
-        errorBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(16),
-          borderSide: const BorderSide(color: Colors.red, width: 1),
-        ),
-        focusedErrorBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(16),
-          borderSide: const BorderSide(color: Colors.red, width: 2),
-        ),
-        filled: true,
-        fillColor: Colors.grey[50],
-        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
       ),
     );
   }
