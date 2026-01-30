@@ -8,7 +8,8 @@ import '../../features/auth/role_selection/role_selection_screen.dart';
 import '../../features/lectures/lectures_screen.dart';
 import '../../features/summaries/summaries_screen.dart';
 import '../../features/shared/content_list_screen.dart';
-import '../../features/daily_feed/daily_feed_screen.dart';
+import '../../features/student_grades/student_grades_screen.dart';
+import '../../features/summaries/send_summary_screen.dart';
 
 class AppDrawer extends ConsumerWidget {
   const AppDrawer({super.key});
@@ -77,14 +78,6 @@ class AppDrawer extends ConsumerWidget {
                       Navigator.push(context, MaterialPageRoute(builder: (_) => ContentListScreen(category: 'forms', title: l10n.forms)));
                     },
                   ),
-                  _drawerItem(
-                    icon: Icons.grade_outlined,
-                    title: l10n.grades,
-                    onTap: () {
-                      Navigator.pop(context);
-                      Navigator.push(context, MaterialPageRoute(builder: (_) => ContentListScreen(category: 'grades', title: l10n.grades)));
-                    },
-                  ),
                   
                   FutureBuilder<UserRole>(
                     future: SecureStorageService.getUserRole(),
@@ -92,36 +85,53 @@ class AppDrawer extends ConsumerWidget {
                       final role = snapshot.data ?? UserRole.student;
                       final isDelegate = role == UserRole.delegate || role == UserRole.admin;
                       
-                      if (isDelegate) {
-                        return _drawerItem(
-                          icon: Icons.inbox_outlined,
-                          title: l10n.receivedSummaries,
-                          onTap: () {
-                            Navigator.pop(context);
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder: (_) => ContentListScreen(
-                                  category: 'student_summaries',
-                                  title: l10n.receivedSummaries,
-                                ),
-                              ),
-                            );
-                          },
-                        );
-                      } else {
-                        return _drawerItem(
-                          icon: Icons.send_outlined,
-                          title: l10n.sendSummary,
-                          onTap: () {
-                            Navigator.pop(context);
-                            showDialog(
-                              context: context,
-                              builder: (context) => const SendSummaryDialog(),
-                            );
-                          },
-                        );
-                      }
+                      return Column(
+                        children: [
+                          _drawerItem(
+                            icon: Icons.grade_outlined,
+                            title: l10n.grades,
+                            onTap: () {
+                              Navigator.pop(context);
+                              if (isDelegate) {
+                                // For delegates, grades are managed in AdminDashboard, 
+                                // but we can show the list view or a specific management screen if needed.
+                                Navigator.push(context, MaterialPageRoute(builder: (_) => ContentListScreen(category: 'grades', title: l10n.grades)));
+                              } else {
+                                Navigator.push(context, MaterialPageRoute(builder: (_) => const StudentGradesScreen()));
+                              }
+                            },
+                          ),
+                          if (isDelegate)
+                            _drawerItem(
+                              icon: Icons.inbox_outlined,
+                              title: l10n.receivedSummaries,
+                              onTap: () {
+                                Navigator.pop(context);
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (_) => ContentListScreen(
+                                      category: 'student_summaries',
+                                      title: l10n.receivedSummaries,
+                                    ),
+                                  ),
+                                );
+                              },
+                            )
+                          else
+                            _drawerItem(
+                              icon: Icons.send_outlined,
+                              title: l10n.sendSummary,
+                              onTap: () {
+                                Navigator.pop(context);
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(builder: (_) => const SendSummaryScreen()),
+                                );
+                              },
+                            ),
+                        ],
+                      );
                     },
                   ),
                   
