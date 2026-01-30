@@ -18,6 +18,8 @@ import '../summaries/summaries_screen.dart';
 import '../../core/auth/user_role.dart';
 
 import '../summaries/send_summary_screen.dart';
+import '../../core/auth/user_role.dart'; // Import UserRole
+import '../grades/grades_list_screen.dart'; // Import the new GradesListScreen
 
 class AdminDashboardScreen extends ConsumerStatefulWidget {
   const AdminDashboardScreen({super.key});
@@ -114,10 +116,10 @@ class _AdminDashboardScreenState extends ConsumerState<AdminDashboardScreen> {
     }
   }
 
-  // Modified to show GradesManagementSheet directly for 'grades'
   void _navigateToContent(String title, String category) {
     if (category == 'grades') {
-      _showGradesManagement();
+      // Navigate to the new GradesListScreen for the delegate role
+      Navigator.push(context, MaterialPageRoute(builder: (_) => const GradesListScreen(userRole: UserRole.delegate)));
       return;
     }
     if (category == 'lectures') {
@@ -135,15 +137,6 @@ class _AdminDashboardScreenState extends ConsumerState<AdminDashboardScreen> {
         ),
       );
     }
-  }
-
-  void _showGradesManagement() {
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(20))),
-      builder: (context) => const GradesManagementSheet(),
-    );
   }
 
   @override
@@ -300,7 +293,7 @@ class _AdminDashboardScreenState extends ConsumerState<AdminDashboardScreen> {
         _actionCard(Icons.description, l10n.summaries, () => _navigateToContent(l10n.summaries, 'summaries')),
         _actionCard(Icons.task_alt, l10n.tasks, () => _navigateToContent(l10n.tasks, 'tasks')),
         _actionCard(Icons.assignment, l10n.forms, () => _navigateToContent(l10n.forms, 'forms')),
-        // This card now directly calls _showGradesManagement via _navigateToContent
+        // Navigate to GradesListScreen instead of showing a modal sheet directly
         _actionCard(Icons.grade, l10n.grades, () => _navigateToContent(l10n.grades, 'grades')),
       ],
     );
@@ -409,101 +402,6 @@ class _AdminDashboardScreenState extends ConsumerState<AdminDashboardScreen> {
             ),
           ),
       ],
-    );
-  }
-}
-
-class GradesManagementSheet extends ConsumerStatefulWidget {
-  const GradesManagementSheet({super.key});
-
-  @override
-  ConsumerState<GradesManagementSheet> createState() => _GradesManagementSheetState();
-}
-
-class _GradesManagementSheetState extends ConsumerState<GradesManagementSheet> {
-  final _subjectController = TextEditingController();
-  final _doctorController = TextEditingController();
-  final _noteController = TextEditingController();
-  File? _selectedFile;
-  bool _isUploading = false;
-
-  Future<void> _pickFile() async {
-    final result = await FilePicker.platform.pickFiles();
-    if (result != null) {
-      setState(() => _selectedFile = File(result.files.single.path!));
-    }
-  }
-
-  Future<void> _submit() async {
-    if (_subjectController.text.isEmpty) return;
-    setState(() => _isUploading = true);
-
-    final user = Supabase.instance.client.auth.currentUser;
-    
-    // Get group_id for this delegate
-    final groupData = await Supabase.instance.client
-        .from('groups')
-        .select('id')
-        .eq('delegate_id', user?.id ?? '')
-        .maybeSingle();
-    
-    final groupId = groupData?['id'];
-
-    final success = await ref.read(gradeProvider.notifier).addGrade(
-      subject: _subjectController.text,
-      doctor: _doctorController.text,
-      note: _noteController.text,
-      groupId: groupId,
-      file: _selectedFile,
-    );
-
-    if (mounted) {
-      setState(() => _isUploading = false);
-      if (success) {
-        Navigator.pop(context);
-        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Grade added successfully!')));
-      } else {
-        // Updated message to guide the user about the RLS requirement
-        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Failed to add grade. Please ensure RLS policies are correctly configured on Supabase for INSERT and UPLOAD operations.')));
-      }
-    }
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: EdgeInsets.only(bottom: MediaQuery.of(context).viewInsets.bottom, left: 20, right: 20, top: 20),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          const Text('Add New Grade', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
-          const SizedBox(height: 20),
-          TextField(controller: _subjectController, decoration: const InputDecoration(labelText: 'Subject', border: OutlineInputBorder())),
-          const SizedBox(height: 12),
-          TextField(controller: _doctorController, decoration: const InputDecoration(labelText: 'Doctor', border: OutlineInputBorder())),
-          const SizedBox(height: 12),
-          TextField(controller: _noteController, decoration: const InputDecoration(labelText: 'Note', border: OutlineInputBorder())),
-          const SizedBox(height: 20),
-          ListTile(
-            leading: const Icon(Icons.attach_file),
-            title: Text(_selectedFile == null ? 'Attach File (Optional)' : _selectedFile!.path.split('/').last),
-            onTap: _pickFile,
-            tileColor: Colors.grey.shade100,
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-          ),
-          const SizedBox(height: 24),
-          SizedBox(
-            width: double.infinity,
-            height: 50,
-            child: ElevatedButton(
-              onPressed: _isUploading ? null : _submit,
-              style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFF3F51B5), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12))),
-              child: _isUploading ? const CircularProgressIndicator(color: Colors.white) : const Text('Submit Grade'),
-            ),
-          ),
-          const SizedBox(height: 20),
-        ],
-      ),
     );
   }
 }
