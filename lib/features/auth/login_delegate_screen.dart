@@ -23,6 +23,7 @@ class _LoginDelegateScreenState extends ConsumerState<LoginDelegateScreen> {
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
   bool _isLoading = false;
+  bool _isSignUpMode = false; // Toggle between Login and Sign Up
 
   @override
   void dispose() {
@@ -31,7 +32,7 @@ class _LoginDelegateScreenState extends ConsumerState<LoginDelegateScreen> {
     super.dispose();
   }
 
-  Future<void> _signIn() async {
+  Future<void> _handleAuth() async {
     if (!_formKey.currentState!.validate()) {
       return;
     }
@@ -41,65 +42,87 @@ class _LoginDelegateScreenState extends ConsumerState<LoginDelegateScreen> {
     });
 
     try {
-      // 1. Supabase Auth Sign In
-      final AuthResponse response = await supabase.auth.signInWithPassword(
-        email: _emailController.text.trim(),
-        password: _passwordController.text.trim(),
-      );
+      if (_isSignUpMode) {
+        // --- SIGN UP LOGIC ---
+        final AuthResponse response = await supabase.auth.signUp(
+          email: _emailController.text.trim(),
+          password: _passwordController.text.trim(),
+        );
 
-      final user = response.user;
+        final user = response.user;
+        if (user == null) throw const AuthException('Sign up failed.');
 
-      if (user == null) {
-        throw const AuthException('User is null after sign in.');
+        // Create profile row in 'profiles' table
+        await supabase.from('profiles').insert({
+          'id': user.id,
+          'email': user.email,
+          'role': 'delegate',
+          'join_code': '',
+          'created_at': DateTime.now().toIso8601String(),
+          'name': user.email?.split('@').first ?? 'Delegate', // Default name from email
+        });
+
+        // After sign up, Supabase usually signs in automatically or requires confirmation.
+        // We proceed to save local state and navigate.
+        await _onAuthSuccess(user.id, 'delegate', user.email?.split('@').first ?? 'Delegate');
+
+      } else {
+        // --- SIGN IN LOGIC ---
+        final AuthResponse response = await supabase.auth.signInWithPassword(
+          email: _emailController.text.trim(),
+          password: _passwordController.text.trim(),
+        );
+
+        final user = response.user;
+        if (user == null) throw const AuthException('Sign in failed.');
+
+        // Fetch profile to verify role
+        final List<Map<String, dynamic>> profiles = await supabase
+            .from('profiles')
+            .select('role, name')
+            .eq('id', user.id)
+            .limit(1);
+
+        if (profiles.isEmpty) throw const AuthException('Profile not found.');
+
+        final String role = profiles.first['role'] as String;
+        final String name = profiles.first['name'] as String;
+
+        if (role != 'delegate' && role != 'admin') {
+          await supabase.auth.signOut();
+          throw const AuthException('Access denied: You are not a delegate.');
+        }
+
+        await _onAuthSuccess(user.id, role, name);
       }
-
-      // 2. Fetch user profile from 'profiles' table
-      final List<Map<String, dynamic>> profiles = await supabase
-          .from('profiles')
-          .select('role, name')
-          .eq('id', user.id)
-          .limit(1);
-
-      if (profiles.isEmpty) {
-        throw const AuthException('Profile not found.');
-      }
-
-      final String role = profiles.first['role'] as String;
-      final String name = profiles.first['name'] as String;
-
-      // 3. Role Check
-      if (role != 'delegate' && role != 'admin') {
-        // If not a delegate or admin, sign out and show error
-        await supabase.auth.signOut();
-        throw const AuthException('Access denied: You are not a delegate or admin.');
-      }
-
-      // 4. Successful Login: Save user data and navigate
-      final userRole = role == 'admin' ? UserRole.admin : UserRole.delegate;
-      
-      await SecureStorageService.saveUser(
-        role: userRole,
-        name: name,
-      );
-
-      if (!mounted) return;
-
-      // Navigate to Delegate/Admin Home Screen
-      Navigator.pushNamedAndRemoveUntil(
-        context,
-        AppRoutes.homeDelegate,
-        (route) => false,
-      );
-
     } on AuthException catch (error) {
       _showErrorDialog(error.message);
     } catch (error) {
-      _showErrorDialog('An unexpected error occurred: ${error.toString()}');
+      _showErrorDialog('An error occurred: ${error.toString()}');
     } finally {
-      setState(() {
-        _isLoading = false;
-      });
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+        });
+      }
     }
+  }
+
+  Future<void> _onAuthSuccess(String userId, String role, String name) async {
+    final userRole = role == 'admin' ? UserRole.admin : UserRole.delegate;
+    
+    await SecureStorageService.saveUser(
+      role: userRole,
+      name: name,
+    );
+
+    if (!mounted) return;
+
+    Navigator.pushNamedAndRemoveUntil(
+      context,
+      AppRoutes.homeDelegate,
+      (route) => false,
+    );
   }
 
   void _showErrorDialog(String message) {
@@ -114,7 +137,6 @@ class _LoginDelegateScreenState extends ConsumerState<LoginDelegateScreen> {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
-    // Primary color from main.dart: Colors.indigo (0xFF3F51B5)
     const primaryColor = Color(0xFF3F51B5);
 
     return Scaffold(
@@ -143,37 +165,32 @@ class _LoginDelegateScreenState extends ConsumerState<LoginDelegateScreen> {
                 const SizedBox(height: 24),
                 Text(
                   l10n.delegateLogin,
-                  style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: primaryColor),
+                  textAlign: TextAlign.center,
+                  style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: primaryColor),
                 ),
                 const SizedBox(height: 40),
-                // Email Field
                 _inputField(
                   controller: _emailController,
                   label: l10n.email,
                   icon: Icons.email_outlined,
                   validator: (value) {
-                    if (value == null || value.isEmpty) {
-                      return l10n.emailRequired;
-                    }
+                    if (value == null || value.isEmpty) return l10n.emailRequired;
                     return null;
                   },
                 ),
                 const SizedBox(height: 20),
-                // Password Field
                 _inputField(
                   controller: _passwordController,
                   label: l10n.password,
                   icon: Icons.lock_outline,
                   isPassword: true,
                   validator: (value) {
-                    if (value == null || value.isEmpty) {
-                      return l10n.passwordRequired;
-                    }
+                    if (value == null || value.isEmpty) return l10n.passwordRequired;
                     return null;
                   },
                 ),
                 const SizedBox(height: 40),
-                // Login Button
+                // Main Action Button (Sign In or Sign Up)
                 SizedBox(
                   width: double.infinity,
                   height: 55,
@@ -186,13 +203,26 @@ class _LoginDelegateScreenState extends ConsumerState<LoginDelegateScreen> {
                         borderRadius: BorderRadius.circular(16),
                       ),
                     ),
-                    onPressed: _isLoading ? null : _signIn,
+                    onPressed: _isLoading ? null : _handleAuth,
                     child: _isLoading
                         ? const CircularProgressIndicator(color: Colors.white)
                         : Text(
-                            l10n.signIn,
+                            _isSignUpMode ? l10n.createAccount : l10n.signIn,
                             style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                           ),
+                  ),
+                ),
+                const SizedBox(height: 20),
+                // Toggle Button
+                TextButton(
+                  onPressed: () {
+                    setState(() {
+                      _isSignUpMode = !_isSignUpMode;
+                    });
+                  },
+                  child: Text(
+                    _isSignUpMode ? l10n.haveAccount : l10n.createAccount,
+                    style: const TextStyle(color: primaryColor, fontWeight: FontWeight.w600),
                   ),
                 ),
               ],

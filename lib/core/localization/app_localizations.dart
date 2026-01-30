@@ -76,12 +76,14 @@ class AppLocalizations {
       'download': 'Download',
       'fileAttached': 'File Attached',
       'noFile': 'No File',
-      'delegateLogin': 'Delegate Login',
+      'delegateLogin': 'Delegate Login / Sign Up',
       'email': 'Email',
       'emailRequired': 'Email is required',
       'password': 'Password',
       'passwordRequired': 'Password is required',
       'signIn': 'Sign In',
+      'createAccount': 'Create New Account',
+      'haveAccount': 'Already have an account? Sign In',
     },
     'ar': {
       'appTitle': 'يوني بلس',
@@ -148,12 +150,14 @@ class AppLocalizations {
       'download': 'تنزيل',
       'fileAttached': 'ملف مرفق',
       'noFile': 'لا يوجد ملف',
-      'delegateLogin': 'تسجيل دخول المندوب',
+      'delegateLogin': 'تسجيل الدخول / إنشاء حساب جديد',
       'email': 'البريد الإلكتروني',
       'emailRequired': 'البريد الإلكتروني مطلوب',
       'password': 'كلمة المرور',
       'passwordRequired': 'كلمة المرور مطلوبة',
       'signIn': 'تسجيل الدخول',
+      'createAccount': 'إنشاء حساب جديد',
+      'haveAccount': 'لديك حساب بالفعل؟ تسجيل الدخول',
     },
   };
 
@@ -222,13 +226,14 @@ class AppLocalizations {
   String get fileAttached => _localizedValues[locale.languageCode]!['fileAttached']!;
   String get noFile => _localizedValues[locale.languageCode]!['noFile']!;
   
-  // New getters for Delegate Login
   String get delegateLogin => _localizedValues[locale.languageCode]!['delegateLogin']!;
   String get email => _localizedValues[locale.languageCode]!['email']!;
   String get emailRequired => _localizedValues[locale.languageCode]!['emailRequired']!;
   String get password => _localizedValues[locale.languageCode]!['password']!;
   String get passwordRequired => _localizedValues[locale.languageCode]!['passwordRequired']!;
   String get signIn => _localizedValues[locale.languageCode]!['signIn']!;
+  String get createAccount => _localizedValues[locale.languageCode]!['createAccount']!;
+  String get haveAccount => _localizedValues[locale.languageCode]!['haveAccount']!;
 }
 
 class _AppLocalizationsDelegate extends LocalizationsDelegate<AppLocalizations> {
