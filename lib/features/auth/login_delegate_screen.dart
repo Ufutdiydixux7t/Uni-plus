@@ -56,7 +56,6 @@ class _LoginDelegateScreenState extends ConsumerState<LoginDelegateScreen> {
         final user = response.user;
         if (user == null) throw const AuthException('Sign up failed.');
 
-        // 1. Check if profile exists
         final existingProfile = await supabase
             .from('profiles')
             .select()
@@ -66,7 +65,6 @@ class _LoginDelegateScreenState extends ConsumerState<LoginDelegateScreen> {
         String joinCode = '';
 
         if (existingProfile == null) {
-          // 2. Check if group exists for this delegate
           final existingGroup = await supabase
               .from('groups')
               .select()
@@ -77,7 +75,6 @@ class _LoginDelegateScreenState extends ConsumerState<LoginDelegateScreen> {
             joinCode = _generateJoinCode();
             final now = DateTime.now().toIso8601String();
 
-            // Create Group
             await supabase.from('groups').insert({
               'id': const Uuid().v4(),
               'delegate_id': user.id,
@@ -85,7 +82,6 @@ class _LoginDelegateScreenState extends ConsumerState<LoginDelegateScreen> {
               'created_at': now,
             });
 
-            // Create Profile
             await supabase.from('profiles').insert({
               'id': user.id,
               'email': user.email,
@@ -95,7 +91,6 @@ class _LoginDelegateScreenState extends ConsumerState<LoginDelegateScreen> {
             });
           } else {
             joinCode = existingGroup['join_code'] as String;
-            // Create Profile with existing join_code
             await supabase.from('profiles').insert({
               'id': user.id,
               'email': user.email,
@@ -148,10 +143,9 @@ class _LoginDelegateScreenState extends ConsumerState<LoginDelegateScreen> {
   Future<void> _onAuthSuccess(String userId, String role, String joinCode) async {
     final userRole = role == 'admin' ? UserRole.admin : UserRole.delegate;
     
-    // Store join_code locally
     await SecureStorageService.saveUser(
       role: userRole,
-      name: joinCode, // Using name field to store joinCode as per previous structure or just for local storage
+      name: joinCode,
     );
 
     if (!mounted) return;
