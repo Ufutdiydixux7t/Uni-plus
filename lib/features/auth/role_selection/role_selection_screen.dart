@@ -3,7 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/providers/locale_provider.dart';
 import '../../../core/localization/app_localizations.dart';
 import '../student_register/student_register_screen.dart';
-import '../delegate_setup/delegate_setup_screen.dart';
+import '../login_delegate_screen.dart';
 
 class RoleSelectionScreen extends ConsumerWidget {
   const RoleSelectionScreen({super.key});
@@ -60,7 +60,7 @@ class RoleSelectionScreen extends ConsumerWidget {
                 icon: Icons.person_outline,
                 onTap: () => Navigator.push(
                   context,
-                  MaterialPageRoute(builder: (_) => const DelegateSetupScreen()),
+                  MaterialPageRoute(builder: (_) => const LoginDelegateScreen()),
                 ),
               ),
             ],
