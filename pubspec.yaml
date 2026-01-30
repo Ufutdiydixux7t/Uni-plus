@@ -7,6 +7,7 @@ environment:
   sdk: ^3.10.3
 
 dependencies:
+  path_provider: ^2.1.2
   flutter:
     sdk: flutter
   flutter_localizations:
