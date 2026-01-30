@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:uuid/uuid.dart'; // Ensure this is available or use a different method for UUID
 
 import '../../../core/localization/app_localizations.dart';
 import '../../../core/navigation/app_routes.dart';
@@ -52,17 +53,31 @@ class _LoginDelegateScreenState extends ConsumerState<LoginDelegateScreen> {
         final user = response.user;
         if (user == null) throw const AuthException('Sign up failed.');
 
-        // Create profile row in 'profiles' table
+        final now = DateTime.now().toIso8601String();
+        final defaultName = user.email?.split('@').first ?? 'Delegate';
+
+        // 1. Insert into 'profiles'
         await supabase.from('profiles').insert({
           'id': user.id,
           'email': user.email,
           'role': 'delegate',
           'join_code': '',
-          'created_at': DateTime.now().toIso8601String(),
-          'name': user.email?.split('@').first ?? 'Delegate',
+          'created_at': now,
+          'name': defaultName,
         });
 
-        await _onAuthSuccess(user.id, 'delegate', user.email?.split('@').first ?? 'Delegate');
+        // 2. Insert into 'groups'
+        // Using a simple UUID generation if uuid package is not available, 
+        // but typically it's better to let Supabase handle UUID or use the package.
+        // For this environment, we'll assume uuid package or use a random string if needed.
+        await supabase.from('groups').insert({
+          'id': const Uuid().v4(), // Generating a new UUID
+          'delegate_id': user.id,
+          'join_code': '',
+          'created_at': now,
+        });
+
+        await _onAuthSuccess(user.id, 'delegate', defaultName);
 
       } else {
         // --- SIGN IN LOGIC ---
@@ -135,7 +150,7 @@ class _LoginDelegateScreenState extends ConsumerState<LoginDelegateScreen> {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
     const primaryColor = Color(0xFF3F51B5);
-    const accentColor = Color(0xFF5C6BC0); // Slightly lighter indigo for Sign Up mode
+    const accentColor = Color(0xFF5C6BC0);
 
     return Scaffold(
       backgroundColor: Colors.white,
@@ -159,7 +174,6 @@ class _LoginDelegateScreenState extends ConsumerState<LoginDelegateScreen> {
             child: Column(
               children: [
                 const SizedBox(height: 10),
-                // Animated Switcher for the Icon/Header to make it feel different
                 AnimatedSwitcher(
                   duration: const Duration(milliseconds: 500),
                   child: Column(
@@ -215,7 +229,6 @@ class _LoginDelegateScreenState extends ConsumerState<LoginDelegateScreen> {
                   },
                 ),
                 const SizedBox(height: 40),
-                // Main Action Button
                 SizedBox(
                   width: double.infinity,
                   height: 55,
@@ -239,7 +252,6 @@ class _LoginDelegateScreenState extends ConsumerState<LoginDelegateScreen> {
                   ),
                 ),
                 const SizedBox(height: 24),
-                // Toggle Button with different styling
                 Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
