@@ -13,16 +13,10 @@ class GradeNotifier extends StateNotifier<List<Grade>> {
 
   final _supabase = Supabase.instance.client;
 
-  Future<void> fetchGrades({String? groupId}) async {
+  Future<void> fetchGrades() async {
     try {
-      var query = _supabase.from('grades').select();
-      
-      if (groupId != null) {
-        // Fetch grades for the group the user belongs to
-        query = query.eq('group_id', groupId);
-      }
-
-      final response = await query.order('created_at', ascending: false);
+      // Fetch all grades as there is no group_id to filter by and RLS is disabled
+      final response = await _supabase.from('grades').select().order('created_at', ascending: false);
       state = (response as List).map((json) => Grade.fromJson(json)).toList();
     } on PostgrestException catch (e) {
       print('PostgrestException fetching grades: ${e.message}');
@@ -48,25 +42,11 @@ class GradeNotifier extends StateNotifier<List<Grade>> {
       return false;
     }
 
-    // Get group_id for this delegate
-    final groupData = await _supabase
-        .from('groups')
-        .select('id')
-        .eq('delegate_id', userId)
-        .maybeSingle();
-    
-    final groupId = groupData?['id'];
-
-    if (groupId == null) {
-      print('Error: Delegate does not belong to a group. Cannot add grade.');
-      return false;
-    }
-
     try {
       if (file != null) {
         // 1. Upload to 'grades' bucket
-        // Use a path that includes group ID for better organization: group_id/grade_id/filename
-        final fileName = '$groupId/$gradeId/${file.path.split('/').last}';
+        // Use a path that includes user ID and grade ID for better organization: user_id/grade_id/filename
+        final fileName = '$userId/$gradeId/${file.path.split('/').last}';
         
         await _supabase.storage.from('grades').upload(
           fileName, 
@@ -84,7 +64,6 @@ class GradeNotifier extends StateNotifier<List<Grade>> {
         'subject': subject,
         'doctor': doctor,
         'note': note,
-        'group_id': groupId,
         'file_url': fileUrl,
         'created_by': userId, // CRITICAL: Add created_by
         // 'created_at' will be set by the database default
@@ -96,7 +75,7 @@ class GradeNotifier extends StateNotifier<List<Grade>> {
       print('Grade inserted successfully into database.');
 
       // Refresh state
-      await fetchGrades(groupId: groupId);
+      await fetchGrades();
       return true;
     } on StorageException catch (e, stackTrace) {
       print('StorageException during file upload: ${e.message}');
@@ -109,7 +88,7 @@ class GradeNotifier extends StateNotifier<List<Grade>> {
       if (fileUrl != null) {
         try {
           // The path for removal is the path used for upload
-          final pathToRemove = '$groupId/$gradeId/${file!.path.split('/').last}';
+          final pathToRemove = '$userId/$gradeId/${file!.path.split('/').last}';
           await _supabase.storage.from('grades').remove([pathToRemove]);
           print('Cleaned up uploaded file due to DB insert failure.');
         } catch (e) {
@@ -135,7 +114,7 @@ class GradeNotifier extends StateNotifier<List<Grade>> {
       // 1. Get grade details to find file_url
       final grade = await _supabase
           .from('grades')
-          .select('file_url, group_id')
+          .select('file_url') // Only need file_url now
           .eq('id', gradeId)
           .maybeSingle();
 
@@ -150,13 +129,12 @@ class GradeNotifier extends StateNotifier<List<Grade>> {
 
       // 3. Delete file from Storage if it exists
       final fileUrl = grade?['file_url'];
-      final groupId = grade?['group_id'];
-      if (fileUrl != null && fileUrl.isNotEmpty && groupId != null) {
+      if (fileUrl != null && fileUrl.isNotEmpty) {
         try {
           // Extract the path from the public URL
-          // The path is expected to be: group_id/grade_id/filename
+          // The path is expected to be: user_id/grade_id/filename
           final fileName = fileUrl.split('/').last;
-          final pathToRemove = '$groupId/$gradeId/$fileName';
+          final pathToRemove = '$currentUserId/$gradeId/$fileName';
           
           await _supabase.storage.from('grades').remove([pathToRemove]);
           print('File deleted successfully from Storage.');
@@ -166,14 +144,7 @@ class GradeNotifier extends StateNotifier<List<Grade>> {
       }
 
       // Refresh state
-      final groupData = await _supabase
-          .from('groups')
-          .select('id')
-          .eq('delegate_id', currentUserId)
-          .maybeSingle();
-      
-      final groupIdToFetch = groupData?['id'];
-      await fetchGrades(groupId: groupIdToFetch);
+      await fetchGrades();
       return true;
     } on PostgrestException catch (e, stackTrace) {
       print('PostgrestException during grade deletion: ${e.message}');
