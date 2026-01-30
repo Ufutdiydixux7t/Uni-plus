@@ -7,6 +7,7 @@ class Grade {
   final String? note;
   final String? fileUrl;
   final DateTime createdAt;
+  final String? createdBy; // New field
 
   Grade({
     required this.id,
@@ -17,6 +18,7 @@ class Grade {
     this.note,
     this.fileUrl,
     required this.createdAt,
+    this.createdBy, // Initialize new field
   });
 
   factory Grade.fromJson(Map<String, dynamic> json) {
@@ -29,6 +31,7 @@ class Grade {
       note: json['note'],
       fileUrl: json['file_url'],
       createdAt: DateTime.parse(json['created_at']),
+      createdBy: json['created_by'], // Map new field
     );
   }
 
@@ -42,6 +45,7 @@ class Grade {
       'note': note,
       'file_url': fileUrl,
       'created_at': createdAt.toIso8601String(),
+      'created_by': createdBy, // Include new field
     };
   }
 }

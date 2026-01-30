@@ -20,10 +20,6 @@ class GradeNotifier extends StateNotifier<List<Grade>> {
       if (groupId != null) {
         // Fetch grades for the group the user belongs to
         query = query.eq('group_id', groupId);
-      } else {
-        // If no group ID, return empty list (or fetch all if RLS is disabled)
-        // Since RLS is disabled, we'll fetch all for now if no group ID is provided
-        // In a real app, this would be restricted by RLS.
       }
 
       final response = await query.order('created_at', ascending: false);
@@ -90,6 +86,7 @@ class GradeNotifier extends StateNotifier<List<Grade>> {
         'note': note,
         'group_id': groupId,
         'file_url': fileUrl,
+        'created_by': userId, // CRITICAL: Add created_by
         // 'created_at' will be set by the database default
       };
 
@@ -101,11 +98,13 @@ class GradeNotifier extends StateNotifier<List<Grade>> {
       // Refresh state
       await fetchGrades(groupId: groupId);
       return true;
-    } on StorageException catch (e) {
+    } on StorageException catch (e, stackTrace) {
       print('StorageException during file upload: ${e.message}');
+      print('Stack Trace: $stackTrace');
       return false;
-    } on PostgrestException catch (e) {
+    } on PostgrestException catch (e, stackTrace) {
       print('PostgrestException during database insert: ${e.message}');
+      print('Stack Trace: $stackTrace');
       // Optional: Attempt to delete the file if the DB insert failed
       if (fileUrl != null) {
         try {
@@ -118,8 +117,71 @@ class GradeNotifier extends StateNotifier<List<Grade>> {
         }
       }
       return false;
-    } catch (e) {
+    } catch (e, stackTrace) {
       print('General Error adding grade: $e');
+      print('Stack Trace: $stackTrace');
+      return false;
+    }
+  }
+
+  Future<bool> deleteGrade(String gradeId, String createdBy) async {
+    final currentUserId = _supabase.auth.currentUser?.id;
+    if (currentUserId == null || currentUserId != createdBy) {
+      print('Error: User not authorized to delete this grade.');
+      return false;
+    }
+
+    try {
+      // 1. Get grade details to find file_url
+      final grade = await _supabase
+          .from('grades')
+          .select('file_url, group_id')
+          .eq('id', gradeId)
+          .maybeSingle();
+
+      // 2. Delete from 'grades' table (restricted by created_by)
+      await _supabase
+          .from('grades')
+          .delete()
+          .eq('id', gradeId)
+          .eq('created_by', currentUserId);
+      
+      print('Grade deleted successfully from database.');
+
+      // 3. Delete file from Storage if it exists
+      final fileUrl = grade?['file_url'];
+      final groupId = grade?['group_id'];
+      if (fileUrl != null && fileUrl.isNotEmpty && groupId != null) {
+        try {
+          // Extract the path from the public URL
+          // The path is expected to be: group_id/grade_id/filename
+          final fileName = fileUrl.split('/').last;
+          final pathToRemove = '$groupId/$gradeId/$fileName';
+          
+          await _supabase.storage.from('grades').remove([pathToRemove]);
+          print('File deleted successfully from Storage.');
+        } catch (e) {
+          print('Failed to delete file from Storage: $e');
+        }
+      }
+
+      // Refresh state
+      final groupData = await _supabase
+          .from('groups')
+          .select('id')
+          .eq('delegate_id', currentUserId)
+          .maybeSingle();
+      
+      final groupIdToFetch = groupData?['id'];
+      await fetchGrades(groupId: groupIdToFetch);
+      return true;
+    } on PostgrestException catch (e, stackTrace) {
+      print('PostgrestException during grade deletion: ${e.message}');
+      print('Stack Trace: $stackTrace');
+      return false;
+    } catch (e, stackTrace) {
+      print('General Error deleting grade: $e');
+      print('Stack Trace: $stackTrace');
       return false;
     }
   }
