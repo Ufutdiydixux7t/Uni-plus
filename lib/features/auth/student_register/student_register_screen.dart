@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../../core/auth/user_role.dart';
 import '../../../core/storage/secure_storage_service.dart';
 import '../../../core/providers/locale_provider.dart';
@@ -16,27 +17,61 @@ class StudentRegisterScreen extends ConsumerStatefulWidget {
 class _StudentRegisterScreenState extends ConsumerState<StudentRegisterScreen> {
   final _nameController = TextEditingController();
   final _codeController = TextEditingController();
+  bool _isLoading = false;
 
   Future<void> _joinClass() async {
     final name = _nameController.text.trim();
-    final code = _codeController.text.trim();
+    final code = _codeController.text.trim().toUpperCase();
 
     if (name.isEmpty || code.isEmpty) {
+      _showError('Please fill all fields');
       return;
     }
 
-    await SecureStorageService.saveUser(
-      role: UserRole.student,
-      name: name,
-      classCode: code,
-    );
+    setState(() => _isLoading = true);
 
-    if (!mounted) return;
+    try {
+      final supabase = Supabase.instance.client;
 
-    Navigator.pushAndRemoveUntil(
-      context,
-      MaterialPageRoute(builder: (_) => const DailyFeedScreen()),
-      (route) => false,
+      // 1. Verify join_code exists in groups table
+      final group = await supabase
+          .from('groups')
+          .select('id, delegate_id')
+          .eq('join_code', code)
+          .maybeSingle();
+
+      if (group == null) {
+        throw Exception('Invalid Join Code. Please check with your delegate.');
+      }
+
+      // 2. Save user locally (Student doesn't need Supabase Auth for now as per current flow)
+      await SecureStorageService.saveUser(
+        role: UserRole.student,
+        name: name,
+        classCode: code,
+      );
+
+      // Note: In a full implementation, we would also insert into group_members here
+      // if we had a student user ID. Since the current flow is local-first for students,
+      // we just verify the code exists.
+
+      if (!mounted) return;
+
+      Navigator.pushAndRemoveUntil(
+        context,
+        MaterialPageRoute(builder: (_) => const DailyFeedScreen()),
+        (route) => false,
+      );
+    } catch (e) {
+      _showError(e.toString().replaceAll('Exception: ', ''));
+    } finally {
+      if (mounted) setState(() => _isLoading = false);
+    }
+  }
+
+  void _showError(String message) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text(message), backgroundColor: Colors.red),
     );
   }
 
@@ -102,11 +137,13 @@ class _StudentRegisterScreenState extends ConsumerState<StudentRegisterScreen> {
                       borderRadius: BorderRadius.circular(16),
                     ),
                   ),
-                  onPressed: _joinClass,
-                  child: Text(
-                    l10n.submit,
-                    style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-                  ),
+                  onPressed: _isLoading ? null : _joinClass,
+                  child: _isLoading 
+                    ? const CircularProgressIndicator(color: Colors.white)
+                    : Text(
+                        l10n.submit,
+                        style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                      ),
                 ),
               ),
             ],
