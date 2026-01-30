@@ -114,6 +114,7 @@ class _AdminDashboardScreenState extends ConsumerState<AdminDashboardScreen> {
     }
   }
 
+  // Modified to show GradesManagementSheet directly for 'grades'
   void _navigateToContent(String title, String category) {
     if (category == 'grades') {
       _showGradesManagement();
@@ -299,6 +300,7 @@ class _AdminDashboardScreenState extends ConsumerState<AdminDashboardScreen> {
         _actionCard(Icons.description, l10n.summaries, () => _navigateToContent(l10n.summaries, 'summaries')),
         _actionCard(Icons.task_alt, l10n.tasks, () => _navigateToContent(l10n.tasks, 'tasks')),
         _actionCard(Icons.assignment, l10n.forms, () => _navigateToContent(l10n.forms, 'forms')),
+        // This card now directly calls _showGradesManagement via _navigateToContent
         _actionCard(Icons.grade, l10n.grades, () => _navigateToContent(l10n.grades, 'grades')),
       ],
     );
@@ -461,7 +463,8 @@ class _GradesManagementSheetState extends ConsumerState<GradesManagementSheet> {
         Navigator.pop(context);
         ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Grade added successfully!')));
       } else {
-        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Failed to add grade.')));
+        // Updated message to guide the user about the RLS requirement
+        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Failed to add grade. Please ensure RLS policies are correctly configured on Supabase for INSERT and UPLOAD operations.')));
       }
     }
   }

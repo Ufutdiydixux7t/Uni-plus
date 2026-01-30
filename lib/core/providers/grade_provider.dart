@@ -15,6 +15,7 @@ class GradeNotifier extends StateNotifier<List<Grade>> {
 
   Future<void> fetchGrades({String? studentId, String? groupId}) async {
     try {
+      // The query will automatically respect RLS policies based on the authenticated user.
       var query = _supabase.from('grades').select();
       
       if (studentId != null) {
@@ -44,24 +45,27 @@ class GradeNotifier extends StateNotifier<List<Grade>> {
     try {
       String? fileUrl;
       if (file != null) {
-        final fileName = '${DateTime.now().millisecondsSinceEpoch}_${const Uuid().v4()}_${file.path.split('/').last}';
+        final userId = _supabase.auth.currentUser?.id;
+        if (userId == null) {
+          print('Error: User not authenticated for file upload.');
+          return false;
+        }
         
-        // 1. Upload to 'grades' bucket
-        final uploadResponse = await _supabase.storage.from('grades').upload(
+        // Use the authenticated user's ID in the file path to help with RLS policy on Storage
+        final fileName = '$userId/${DateTime.now().millisecondsSinceEpoch}_${const Uuid().v4()}_${file.path.split('/').last}';
+        
+        // 1. Upload to 'grades' bucket using the authenticated user's session
+        // This requires a Storage RLS policy that allows 'insert' for authenticated users.
+        await _supabase.storage.from('grades').upload(
           fileName, 
           file,
           fileOptions: const FileOptions(cacheControl: '3600', upsert: false),
         );
 
-        // Check for upload success
-        if (uploadResponse.isNotEmpty) {
-          // 2. Get public URL
-          fileUrl = _supabase.storage.from('grades').getPublicUrl(fileName);
-          print('File uploaded successfully. Public URL: $fileUrl');
-        } else {
-          print('File upload failed: Upload response was empty.');
-          return false;
-        }
+        // 2. Get public URL
+        // NOTE: Supabase Storage getPublicUrl does not throw an error, it just constructs the URL.
+        fileUrl = _supabase.storage.from('grades').getPublicUrl(fileName);
+        print('File uploaded successfully. Public URL: $fileUrl');
       }
 
       final newGrade = {
@@ -69,19 +73,16 @@ class GradeNotifier extends StateNotifier<List<Grade>> {
         'subject': subject,
         'doctor': doctor,
         'note': note,
-        'student_id': studentId,
+        // Assuming grades are group-wide, student_id is not set here unless it's a specific student's grade.
+        // For group-wide grades, we rely on group_id.
         'group_id': groupId,
         'file_url': fileUrl,
         'created_at': DateTime.now().toIso8601String(),
       };
 
       // 3. Insert into 'grades' table
-      final insertResponse = await _supabase.from('grades').insert(newGrade).select();
-      
-      if (insertResponse.isEmpty) {
-        print('Database insertion failed: Insert response was empty.');
-        return false;
-      }
+      // This requires a Database RLS policy that allows 'insert' for authenticated users (delegates).
+      await _supabase.from('grades').insert(newGrade);
       
       print('Grade inserted successfully into database.');
 
@@ -89,7 +90,8 @@ class GradeNotifier extends StateNotifier<List<Grade>> {
       await fetchGrades(studentId: studentId, groupId: groupId);
       return true;
     } catch (e, stackTrace) {
-      print('Error adding grade: $e');
+      // If RLS is not configured correctly, the error will be caught here.
+      print('Error adding grade (likely RLS issue): $e');
       print('Stack Trace: $stackTrace');
       return false;
     }

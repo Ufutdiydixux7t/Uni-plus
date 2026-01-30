@@ -18,12 +18,12 @@ void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
   // Supabase Initialization (Phase 1)
-  // Using the Service Role Key for elevated permissions, which is necessary for
-  // file uploads to Supabase Storage from the client without complex RLS setup.
-  // NOTE: In a production environment, this key should be securely stored on a backend server.
+  // Reverting to the public Anon Key as requested by the user.
+  // NOTE: Row Level Security (RLS) must be configured on the 'grades' table and 'grades' storage bucket
+  // to allow authenticated users (delegates) to perform INSERT and UPLOAD operations.
   await Supabase.initialize(
     url: 'https://gvazzaxlekapzwztfowg.supabase.co',
-    anonKey: 'sb_secret_oaIHYlsJtQA2_KvSfSWOQQ_MAhSEV2p', // Changed to Service Role Key
+    anonKey: 'sb_publishable_VSYDHkYftsuw_9SkAz2V8Q_sWncNSQU', // Reverted to Anon Key
   );
 
   runApp(
