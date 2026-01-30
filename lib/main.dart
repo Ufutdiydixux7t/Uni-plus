@@ -12,6 +12,7 @@ import 'features/auth/role_selection/role_selection_screen.dart';
 import 'features/daily_feed/daily_feed_screen.dart';
 import 'features/admin_dashboard/admin_dashboard_screen.dart';
 import 'features/auth/splash/splash_screen.dart';
+import 'features/auth/login_delegate_screen.dart'; // New: Delegate Login Screen
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -68,6 +69,7 @@ class UniPlusApp extends ConsumerWidget {
         AppRoutes.roleSelection: (context) => const RoleSelectionScreen(),
         AppRoutes.homeStudent: (context) => const DailyFeedScreen(),
         AppRoutes.homeDelegate: (context) => const AdminDashboardScreen(),
+        AppRoutes.loginDelegate: (context) => const LoginDelegateScreen(), // New route
       },
       home: const SplashScreen(),
     );
