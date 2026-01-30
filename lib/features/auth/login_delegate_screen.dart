@@ -59,11 +59,9 @@ class _LoginDelegateScreenState extends ConsumerState<LoginDelegateScreen> {
           'role': 'delegate',
           'join_code': '',
           'created_at': DateTime.now().toIso8601String(),
-          'name': user.email?.split('@').first ?? 'Delegate', // Default name from email
+          'name': user.email?.split('@').first ?? 'Delegate',
         });
 
-        // After sign up, Supabase usually signs in automatically or requires confirmation.
-        // We proceed to save local state and navigate.
         await _onAuthSuccess(user.id, 'delegate', user.email?.split('@').first ?? 'Delegate');
 
       } else {
@@ -76,7 +74,6 @@ class _LoginDelegateScreenState extends ConsumerState<LoginDelegateScreen> {
         final user = response.user;
         if (user == null) throw const AuthException('Sign in failed.');
 
-        // Fetch profile to verify role
         final List<Map<String, dynamic>> profiles = await supabase
             .from('profiles')
             .select('role, name')
@@ -138,13 +135,14 @@ class _LoginDelegateScreenState extends ConsumerState<LoginDelegateScreen> {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
     const primaryColor = Color(0xFF3F51B5);
+    const accentColor = Color(0xFF5C6BC0); // Slightly lighter indigo for Sign Up mode
 
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: AppBar(
         elevation: 0,
         backgroundColor: Colors.transparent,
-        foregroundColor: primaryColor,
+        foregroundColor: _isSignUpMode ? accentColor : primaryColor,
         actions: [
           IconButton(
             icon: const Icon(Icons.language),
@@ -160,19 +158,44 @@ class _LoginDelegateScreenState extends ConsumerState<LoginDelegateScreen> {
             key: _formKey,
             child: Column(
               children: [
-                const SizedBox(height: 20),
-                Image.asset('assets/icons/uniplus_icon1.png', height: 100),
-                const SizedBox(height: 24),
-                Text(
-                  l10n.delegateLogin,
-                  textAlign: TextAlign.center,
-                  style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: primaryColor),
+                const SizedBox(height: 10),
+                // Animated Switcher for the Icon/Header to make it feel different
+                AnimatedSwitcher(
+                  duration: const Duration(milliseconds: 500),
+                  child: Column(
+                    key: ValueKey<bool>(_isSignUpMode),
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.all(16),
+                        decoration: BoxDecoration(
+                          color: (_isSignUpMode ? accentColor : primaryColor).withOpacity(0.1),
+                          shape: BoxShape.circle,
+                        ),
+                        child: Icon(
+                          _isSignUpMode ? Icons.person_add_outlined : Icons.login_outlined,
+                          size: 60,
+                          color: _isSignUpMode ? accentColor : primaryColor,
+                        ),
+                      ),
+                      const SizedBox(height: 20),
+                      Text(
+                        _isSignUpMode ? l10n.createAccount : l10n.signIn,
+                        textAlign: TextAlign.center,
+                        style: TextStyle(
+                          fontSize: 26, 
+                          fontWeight: FontWeight.bold, 
+                          color: _isSignUpMode ? accentColor : primaryColor
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
                 const SizedBox(height: 40),
                 _inputField(
                   controller: _emailController,
                   label: l10n.email,
                   icon: Icons.email_outlined,
+                  activeColor: _isSignUpMode ? accentColor : primaryColor,
                   validator: (value) {
                     if (value == null || value.isEmpty) return l10n.emailRequired;
                     return null;
@@ -184,21 +207,24 @@ class _LoginDelegateScreenState extends ConsumerState<LoginDelegateScreen> {
                   label: l10n.password,
                   icon: Icons.lock_outline,
                   isPassword: true,
+                  activeColor: _isSignUpMode ? accentColor : primaryColor,
                   validator: (value) {
                     if (value == null || value.isEmpty) return l10n.passwordRequired;
+                    if (_isSignUpMode && value.length < 6) return 'Password must be at least 6 characters';
                     return null;
                   },
                 ),
                 const SizedBox(height: 40),
-                // Main Action Button (Sign In or Sign Up)
+                // Main Action Button
                 SizedBox(
                   width: double.infinity,
                   height: 55,
                   child: ElevatedButton(
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: primaryColor,
+                      backgroundColor: _isSignUpMode ? accentColor : primaryColor,
                       foregroundColor: Colors.white,
-                      elevation: 0,
+                      elevation: 2,
+                      shadowColor: (_isSignUpMode ? accentColor : primaryColor).withOpacity(0.5),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(16),
                       ),
@@ -212,18 +238,31 @@ class _LoginDelegateScreenState extends ConsumerState<LoginDelegateScreen> {
                           ),
                   ),
                 ),
-                const SizedBox(height: 20),
-                // Toggle Button
-                TextButton(
-                  onPressed: () {
-                    setState(() {
-                      _isSignUpMode = !_isSignUpMode;
-                    });
-                  },
-                  child: Text(
-                    _isSignUpMode ? l10n.haveAccount : l10n.createAccount,
-                    style: const TextStyle(color: primaryColor, fontWeight: FontWeight.w600),
-                  ),
+                const SizedBox(height: 24),
+                // Toggle Button with different styling
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Text(
+                      _isSignUpMode ? 'Already have an account?' : "Don't have an account?",
+                      style: TextStyle(color: Colors.grey[600]),
+                    ),
+                    TextButton(
+                      onPressed: () {
+                        setState(() {
+                          _isSignUpMode = !_isSignUpMode;
+                        });
+                      },
+                      child: Text(
+                        _isSignUpMode ? l10n.signIn : l10n.createAccount,
+                        style: TextStyle(
+                          color: _isSignUpMode ? accentColor : primaryColor, 
+                          fontWeight: FontWeight.bold,
+                          fontSize: 16
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
               ],
             ),
@@ -237,20 +276,38 @@ class _LoginDelegateScreenState extends ConsumerState<LoginDelegateScreen> {
     required TextEditingController controller,
     required String label,
     required IconData icon,
+    required Color activeColor,
     bool isPassword = false,
     String? Function(String?)? validator,
   }) {
-    const primaryColor = Color(0xFF3F51B5);
     return TextFormField(
       controller: controller,
       obscureText: isPassword,
       validator: validator,
+      cursorColor: activeColor,
       decoration: InputDecoration(
-        prefixIcon: Icon(icon, size: 22, color: primaryColor),
+        prefixIcon: Icon(icon, size: 22, color: activeColor),
         labelText: label,
-        border: OutlineInputBorder(
+        labelStyle: TextStyle(color: Colors.grey[600]),
+        floatingLabelStyle: TextStyle(color: activeColor),
+        enabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(16),
+          borderSide: BorderSide(color: Colors.grey[300]!),
         ),
+        focusedBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(16),
+          borderSide: BorderSide(color: activeColor, width: 2),
+        ),
+        errorBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(16),
+          borderSide: const BorderSide(color: Colors.red, width: 1),
+        ),
+        focusedErrorBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(16),
+          borderSide: const BorderSide(color: Colors.red, width: 2),
+        ),
+        filled: true,
+        fillColor: Colors.grey[50],
         contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
       ),
     );
