@@ -54,8 +54,6 @@ class _LoginDelegateScreenState extends ConsumerState<LoginDelegateScreen> {
       }
 
       // 2. Fetch user profile from 'profiles' table
-      // NOTE: The 'profiles' table and 'role' column are assumed to exist
-      // based on standard Supabase/Postgres setup for role-based access.
       final List<Map<String, dynamic>> profiles = await supabase
           .from('profiles')
           .select('role, name')
@@ -77,7 +75,6 @@ class _LoginDelegateScreenState extends ConsumerState<LoginDelegateScreen> {
       }
 
       // 4. Successful Login: Save user data and navigate
-      // Assuming 'delegate' role is equivalent to UserRole.delegate in the app's core
       final userRole = role == 'admin' ? UserRole.admin : UserRole.delegate;
       
       await SecureStorageService.saveUser(
@@ -90,7 +87,7 @@ class _LoginDelegateScreenState extends ConsumerState<LoginDelegateScreen> {
       // Navigate to Delegate/Admin Home Screen
       Navigator.pushNamedAndRemoveUntil(
         context,
-        AppRoutes.homeDelegate, // Assumed to be the delegate/admin home route
+        AppRoutes.homeDelegate,
         (route) => false,
       );
 
@@ -106,7 +103,6 @@ class _LoginDelegateScreenState extends ConsumerState<LoginDelegateScreen> {
   }
 
   void _showErrorDialog(String message) {
-    final l10n = AppLocalizations.of(context);
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text(message),
@@ -146,18 +142,18 @@ class _LoginDelegateScreenState extends ConsumerState<LoginDelegateScreen> {
                 Image.asset('assets/icons/uniplus_icon1.png', height: 100),
                 const SizedBox(height: 24),
                 Text(
-                  l10n.delegateLogin, // Assuming a localization key for "Delegate Login"
+                  l10n.delegateLogin,
                   style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: primaryColor),
                 ),
                 const SizedBox(height: 40),
                 // Email Field
                 _inputField(
                   controller: _emailController,
-                  label: l10n.email, // Assuming a localization key for "Email"
+                  label: l10n.email,
                   icon: Icons.email_outlined,
                   validator: (value) {
                     if (value == null || value.isEmpty) {
-                      return l10n.emailRequired; // Assuming a localization key
+                      return l10n.emailRequired;
                     }
                     return null;
                   },
@@ -166,12 +162,12 @@ class _LoginDelegateScreenState extends ConsumerState<LoginDelegateScreen> {
                 // Password Field
                 _inputField(
                   controller: _passwordController,
-                  label: l10n.password, // Assuming a localization key for "Password"
+                  label: l10n.password,
                   icon: Icons.lock_outline,
                   isPassword: true,
                   validator: (value) {
                     if (value == null || value.isEmpty) {
-                      return l10n.passwordRequired; // Assuming a localization key
+                      return l10n.passwordRequired;
                     }
                     return null;
                   },
@@ -194,7 +190,7 @@ class _LoginDelegateScreenState extends ConsumerState<LoginDelegateScreen> {
                     child: _isLoading
                         ? const CircularProgressIndicator(color: Colors.white)
                         : Text(
-                            l10n.signIn, // Assuming a localization key for "Sign In"
+                            l10n.signIn,
                             style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                           ),
                   ),
@@ -214,7 +210,6 @@ class _LoginDelegateScreenState extends ConsumerState<LoginDelegateScreen> {
     bool isPassword = false,
     String? Function(String?)? validator,
   }) {
-    // Replicating the style from student_register_screen.dart
     const primaryColor = Color(0xFF3F51B5);
     return TextFormField(
       controller: controller,

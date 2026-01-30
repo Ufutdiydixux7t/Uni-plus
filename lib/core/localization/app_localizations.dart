@@ -76,6 +76,12 @@ class AppLocalizations {
       'download': 'Download',
       'fileAttached': 'File Attached',
       'noFile': 'No File',
+      'delegateLogin': 'Delegate Login',
+      'email': 'Email',
+      'emailRequired': 'Email is required',
+      'password': 'Password',
+      'passwordRequired': 'Password is required',
+      'signIn': 'Sign In',
     },
     'ar': {
       'appTitle': 'يوني بلس',
@@ -142,6 +148,12 @@ class AppLocalizations {
       'download': 'تنزيل',
       'fileAttached': 'ملف مرفق',
       'noFile': 'لا يوجد ملف',
+      'delegateLogin': 'تسجيل دخول المندوب',
+      'email': 'البريد الإلكتروني',
+      'emailRequired': 'البريد الإلكتروني مطلوب',
+      'password': 'كلمة المرور',
+      'passwordRequired': 'كلمة المرور مطلوبة',
+      'signIn': 'تسجيل الدخول',
     },
   };
 
@@ -209,6 +221,14 @@ class AppLocalizations {
   String get download => _localizedValues[locale.languageCode]!['download']!;
   String get fileAttached => _localizedValues[locale.languageCode]!['fileAttached']!;
   String get noFile => _localizedValues[locale.languageCode]!['noFile']!;
+  
+  // New getters for Delegate Login
+  String get delegateLogin => _localizedValues[locale.languageCode]!['delegateLogin']!;
+  String get email => _localizedValues[locale.languageCode]!['email']!;
+  String get emailRequired => _localizedValues[locale.languageCode]!['emailRequired']!;
+  String get password => _localizedValues[locale.languageCode]!['password']!;
+  String get passwordRequired => _localizedValues[locale.languageCode]!['passwordRequired']!;
+  String get signIn => _localizedValues[locale.languageCode]!['signIn']!;
 }
 
 class _AppLocalizationsDelegate extends LocalizationsDelegate<AppLocalizations> {
