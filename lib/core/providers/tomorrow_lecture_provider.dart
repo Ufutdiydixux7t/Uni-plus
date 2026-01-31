@@ -15,7 +15,7 @@ class TomorrowLectureNotifier extends StateNotifier<List<TomorrowLecture>> {
 
   Future<void> fetchTomorrowLectures() async {
     try {
-      final response = await _supabase.from(_tableName).select().order('created_at', ascending: false);
+      final List<dynamic> response = await _supabase.from(_tableName).select().order('created_at', ascending: false);
       state = (response as List).map((json) => TomorrowLecture.fromJson(json)).toList();
     } on PostgrestException catch (e) {
       print('PostgrestException fetching $_tableName: ${e.message}');
@@ -32,6 +32,7 @@ class TomorrowLectureNotifier extends StateNotifier<List<TomorrowLecture>> {
     String? doctor,
     String? room,
     String? time,
+    String? groupId, // Added groupId
   }) async {
     final contentId = const Uuid().v4();
     final userId = _supabase.auth.currentUser?.id;
@@ -47,6 +48,8 @@ class TomorrowLectureNotifier extends StateNotifier<List<TomorrowLecture>> {
         'doctor': doctor,
         'room': room,
         'time': time,
+        'delegate_id': userId, // Added delegate_id
+        'group_id': groupId, // Added group_id
         // No file_url for tasks
       };
 
@@ -64,10 +67,15 @@ class TomorrowLectureNotifier extends StateNotifier<List<TomorrowLecture>> {
   }
 
   // Returns null on success, or an error message string on failure
-  Future<String?> deleteTomorrowLecture(String contentId) async {
+  Future<String?> deleteTomorrowLecture(String contentId, String delegateId) async {
     final currentUserId = _supabase.auth.currentUser?.id;
     if (currentUserId == null) {
       return 'User not authenticated. Please log in.';
+    }
+    
+    // Check if the current user is the creator (delegate)
+    if (currentUserId != delegateId) {
+      return 'You are not authorized to delete this content.';
     }
 
     try {
@@ -75,7 +83,8 @@ class TomorrowLectureNotifier extends StateNotifier<List<TomorrowLecture>> {
       await _supabase
           .from(_tableName)
           .delete()
-          .eq('id', contentId);
+          .eq('id', contentId)
+          .eq('delegate_id', currentUserId);
       
       // Refresh state
       await fetchTomorrowLectures();

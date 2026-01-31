@@ -31,11 +31,15 @@ class _AddTomorrowLectureDialogState extends ConsumerState<AddTomorrowLectureDia
     if (!_formKey.currentState!.validate()) return;
     setState(() => _isSubmitting = true);
 
+    final user = Supabase.instance.client.auth.currentUser;
+    final groupId = user?.userMetadata?["group_id"];
+
     final errorMessage = await ref.read(tomorrowLectureProvider.notifier).addTomorrowLecture(
       subject: _subjectController.text,
       doctor: _doctorController.text,
       time: _timeController.text,
       room: _roomController.text,
+      groupId: groupId,
     );
 
     if (mounted) {
