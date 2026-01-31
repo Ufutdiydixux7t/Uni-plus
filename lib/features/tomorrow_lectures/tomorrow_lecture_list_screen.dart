@@ -156,7 +156,7 @@ class _TomorrowLectureListScreenState extends ConsumerState<TomorrowLectureListS
               onPressed: _showAddTomorrowLectureDialog,
               backgroundColor: const Color(0xFF3F51B5),
               icon: const Icon(Icons.add, color: Colors.white),
-              label: Text(l10n.addContent, style: const TextStyle(color: Colors.white)),
+              label: Text(l10n.addAnnouncement, style: const TextStyle(color: Colors.white)), // Changed to addAnnouncement
             )
           : null,
     );

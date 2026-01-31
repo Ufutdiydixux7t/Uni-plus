@@ -39,11 +39,15 @@ class _AddFormDialogState extends ConsumerState<AddFormDialog> {
     if (!_formKey.currentState!.validate()) return;
     setState(() => _isSubmitting = true);
 
+    final user = Supabase.instance.client.auth.currentUser;
+    final groupId = user?.userMetadata?["group_id"];
+
     final errorMessage = await ref.read(formProvider.notifier).addForm(
       subject: _subjectController.text,
       doctor: _doctorController.text,
       note: _noteController.text,
       file: _selectedFile,
+      groupId: groupId,
     );
 
     if (mounted) {
