@@ -1,17 +1,43 @@
-import 'package:freezed_annotation/freezed_annotation.dart';
+class Task {
+  final String id;
+  final String subject;
+  final String? doctor;
+  final String? note;
+  final DateTime createdAt;
+  final String? delegateId; // بناءً على نمط الجداول الأخرى
+  final String? groupId; // بناءً على الخطأ المتكرر The named parameter 'groupId' isn't defined
 
-part 'task_model.freezed.dart';
-part 'task_model.g.dart';
+  Task({
+    required this.id,
+    required this.subject,
+    this.doctor,
+    this.note,
+    required this.createdAt,
+    this.delegateId,
+    this.groupId,
+  });
 
-@freezed
-class Task with _$Task {
-  const factory Task({
-    required String id,
-    required String subject,
-    String? doctor,
-    String? note,
-    @JsonKey(name: 'created_at') required DateTime createdAt,
-  }) = _Task;
+  factory Task.fromJson(Map<String, dynamic> json) {
+    return Task(
+      id: json['id'],
+      subject: json['subject'] ?? '',
+      doctor: json['doctor'],
+      note: json['note'],
+      createdAt: DateTime.parse(json['created_at']),
+      delegateId: json['delegate_id'],
+      groupId: json['group_id'],
+    );
+  }
 
-  factory Task.fromJson(Map<String, dynamic> json) => _$TaskFromJson(json);
+  Map<String, dynamic> toJson() {
+    return {
+      'id': id,
+      'subject': subject,
+      'doctor': doctor,
+      'note': note,
+      'created_at': createdAt.toIso8601String(),
+      'delegate_id': delegateId,
+      'group_id': groupId,
+    };
+  }
 }

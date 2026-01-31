@@ -1,19 +1,47 @@
-import 'package:freezed_annotation/freezed_annotation.dart';
+class DailyReport {
+  final String id;
+  final String subject;
+  final String? doctor;
+  final String? room;
+  final String? day;
+  final String? fileUrl;
+  final DateTime createdAt;
+  final String? delegateId; // بناءً على الخطأ The getter 'delegateId' isn't defined
 
-part 'daily_report_model.freezed.dart';
-part 'daily_report_model.g.dart';
+  DailyReport({
+    required this.id,
+    required this.subject,
+    this.doctor,
+    this.room,
+    this.day,
+    this.fileUrl,
+    required this.createdAt,
+    this.delegateId,
+  });
 
-@freezed
-class DailyReport with _$DailyReport {
-  const factory DailyReport({
-    required String id,
-    required String subject,
-    String? doctor,
-    String? room,
-    String? day,
-    @JsonKey(name: 'file_url') String? fileUrl,
-    @JsonKey(name: 'created_at') required DateTime createdAt,
-  }) = _DailyReport;
+  factory DailyReport.fromJson(Map<String, dynamic> json) {
+    return DailyReport(
+      id: json['id'],
+      subject: json['subject'] ?? '',
+      doctor: json['doctor'],
+      room: json['room'],
+      day: json['day'],
+      fileUrl: json['file_url'],
+      createdAt: DateTime.parse(json['created_at']),
+      delegateId: json['delegate_id'],
+    );
+  }
 
-  factory DailyReport.fromJson(Map<String, dynamic> json) => _$DailyReportFromJson(json);
+  Map<String, dynamic> toJson() {
+    return {
+      'id': id,
+      'subject': subject,
+      'doctor': doctor,
+      'room': room,
+      'day': day,
+      'file_url': fileUrl,
+      'created_at': createdAt.toIso8601String(),
+      'delegate_id': delegateId,
+    };
+  }
 }

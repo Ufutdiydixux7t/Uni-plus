@@ -34,6 +34,7 @@ class FormNotifier extends StateNotifier<List<FormModel>> {
     String? doctor,
     String? note,
     File? file,
+    String? groupId, // Added groupId
   }) async {
     String? fileUrl;
     final contentId = const Uuid().v4();
@@ -67,7 +68,8 @@ class FormNotifier extends StateNotifier<List<FormModel>> {
         'doctor': doctor,
         'note': note,
         'file_url': fileUrl,
-        // No created_by/delegate_id in forms table schema provided
+        'delegate_id': userId, // Added delegate_id
+        'group_id': groupId, // Added group_id
       };
 
       // 3. Insert into table
@@ -97,10 +99,15 @@ class FormNotifier extends StateNotifier<List<FormModel>> {
   }
 
   // Returns null on success, or an error message string on failure
-  Future<String?> deleteForm(String contentId) async {
+  Future<String?> deleteForm(String contentId, String delegateId) async {
     final currentUserId = _supabase.auth.currentUser?.id;
     if (currentUserId == null) {
       return 'User not authenticated. Please log in.';
+    }
+    
+    // Check if the current user is the creator (delegate)
+    if (currentUserId != delegateId) {
+      return 'You are not authorized to delete this form.';
     }
 
     try {
@@ -115,7 +122,8 @@ class FormNotifier extends StateNotifier<List<FormModel>> {
       await _supabase
           .from(_tableName)
           .delete()
-          .eq('id', contentId);
+          .eq('id', contentId)
+          .eq('delegate_id', currentUserId);
       
       // 3. Delete file from Storage if it exists
       final fileUrl = content?['file_url'];
