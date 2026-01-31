@@ -237,8 +237,7 @@ class AppLocalizations {
   String get signIn => _localizedValues[locale.languageCode]!['signIn']!;
   String get createAccount => _localizedValues[locale.languageCode]!['createAccount']!;
   String get haveAccount => _localizedValues[locale.languageCode]!['haveAccount']!;
-
-  get requiredField => null;
+  String get requiredField => locale.languageCode == 'ar' ? 'هذا الحقل مطلوب' : 'This field is required';
 }
 
 class _AppLocalizationsDelegate extends LocalizationsDelegate<AppLocalizations> {

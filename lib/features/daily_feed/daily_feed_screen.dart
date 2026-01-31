@@ -29,6 +29,7 @@ class _DailyFeedScreenState extends ConsumerState<DailyFeedScreen> {
   void initState() {
     super.initState();
     _loadUserData();
+    _refreshData();
   }
 
   Future<void> _loadUserData() async {
@@ -39,6 +40,17 @@ class _DailyFeedScreenState extends ConsumerState<DailyFeedScreen> {
       studentName = name ?? 'User';
       _userRole = role;
     });
+  }
+
+  void _refreshData() {
+    // Refresh all relevant data from Supabase
+    ref.read(tomorrowLectureProvider.notifier).fetchTomorrowLectures();
+    ref.read(contentProvider.notifier).fetchContent();
+    ref.read(lectureProvider.notifier).fetchLectures();
+    ref.read(gradeProvider.notifier).fetchGrades();
+    ref.read(taskProvider.notifier).fetchTasks();
+    ref.read(summaryProvider.notifier).fetchSummaries();
+    ref.read(dailyReportProvider.notifier).fetchDailyReports();
   }
 
   List<HomeGridItem> _getGridItems(AppLocalizations l10n) {
@@ -77,7 +89,8 @@ class _DailyFeedScreenState extends ConsumerState<DailyFeedScreen> {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
-    final announcements = ref.watch(announcementProvider);
+    // Use tomorrowLectureProvider instead of announcementProvider for "Tomorrow Lectures"
+    final tomorrowLectures = ref.watch(tomorrowLectureProvider);
     final isDelegate = _userRole == UserRole.delegate || _userRole == UserRole.admin;
     final gridItems = _getGridItems(l10n);
 
@@ -118,7 +131,7 @@ class _DailyFeedScreenState extends ConsumerState<DailyFeedScreen> {
                       ],
                     ),
                     const SizedBox(height: 16),
-                    if (announcements.isEmpty)
+                    if (tomorrowLectures.isEmpty)
                       Container(
                         width: double.infinity,
                         padding: const EdgeInsets.all(20),
@@ -146,8 +159,8 @@ class _DailyFeedScreenState extends ConsumerState<DailyFeedScreen> {
                           mainAxisSpacing: 12,
                           childAspectRatio: 1.2,
                         ),
-                        itemCount: announcements.length,
-                        itemBuilder: (context, index) => _announcementCard(announcements[index], l10n),
+                        itemCount: tomorrowLectures.length,
+                        itemBuilder: (context, index) => _tomorrowLectureCard(tomorrowLectures[index], l10n),
                       ),
                   ],
                 ),
@@ -323,7 +336,7 @@ class _DailyFeedScreenState extends ConsumerState<DailyFeedScreen> {
     );
   }
 
-  Widget _announcementCard(dynamic ann, AppLocalizations l10n) {
+  Widget _tomorrowLectureCard(dynamic lecture, AppLocalizations l10n) {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
@@ -336,9 +349,17 @@ class _DailyFeedScreenState extends ConsumerState<DailyFeedScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(ann.subject, style: const TextStyle(fontWeight: FontWeight.bold), maxLines: 1, overflow: TextOverflow.ellipsis),
-          const SizedBox(height: 8),
-          Text(ann.note ?? '', style: TextStyle(color: Colors.grey.shade600, fontSize: 12), maxLines: 2, overflow: TextOverflow.ellipsis),
+          Text(lecture.subject, style: const TextStyle(fontWeight: FontWeight.bold), maxLines: 1, overflow: TextOverflow.ellipsis),
+          const SizedBox(height: 4),
+          Text(lecture.doctor ?? '', style: TextStyle(color: Colors.grey.shade600, fontSize: 11), maxLines: 1, overflow: TextOverflow.ellipsis),
+          const Spacer(),
+          Row(
+            children: [
+              const Icon(Icons.access_time, size: 12, color: Colors.blue),
+              const SizedBox(width: 4),
+              Text(lecture.time ?? '', style: const TextStyle(fontSize: 10, color: Colors.blue)),
+            ],
+          ),
         ],
       ),
     );

@@ -19,6 +19,7 @@ class SummaryNotifier extends StateNotifier<List<Summary>> {
     try {
       final response = await _supabase.from(_tableName).select().order('created_at', ascending: false);
       state = (response as List).map((json) => Summary.fromJson(json)).toList();
+      print('Fetched ${state.length} summaries');
     } on PostgrestException catch (e) {
       print('PostgrestException fetching $_tableName: ${e.message}');
       state = [];

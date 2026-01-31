@@ -13,21 +13,17 @@ class DailyReportNotifier extends StateNotifier<List<DailyReport>> {
 
   final _supabase = Supabase.instance.client;
   final _tableName = 'daily_reports';
-  final _bucketName = 'daily_reports'; // Assuming a separate bucket
+  final _bucketName = 'daily_reports';
 
   Future<void> fetchDailyReports() async {
-    final currentGroupId = _supabase.auth.currentUser?.userMetadata?['group_id'];
-    if (currentGroupId == null) {
-      state = [];
-      return;
-    }
     try {
+      // Fetch all reports for now to ensure visibility
       final response = await _supabase
           .from(_tableName)
           .select()
-          .eq('group_id', currentGroupId)
           .order('created_at', ascending: false);
       state = (response as List).map((json) => DailyReport.fromJson(json)).toList();
+      print('Fetched ${state.length} daily reports');
     } on PostgrestException catch (e) {
       print('PostgrestException fetching $_tableName: ${e.message}');
       state = [];
@@ -44,7 +40,7 @@ class DailyReportNotifier extends StateNotifier<List<DailyReport>> {
     String? room,
     String? day,
     File? file,
-    String? groupId, // Added groupId
+    String? groupId,
   }) async {
     String? fileUrl;
     final contentId = const Uuid().v4();
@@ -56,19 +52,16 @@ class DailyReportNotifier extends StateNotifier<List<DailyReport>> {
 
     try {
       if (file != null) {
-        // Sanitize file name to handle non-ASCII, spaces, and symbols
         final originalFileName = file.path.split('/').last;
         final safeFileName = originalFileName.replaceAll(RegExp(r'[^\w\-. ]'), '_');
         final fileName = '$userId/$contentId/$safeFileName';
         
-        // 1. Upload to Storage
         await _supabase.storage.from(_bucketName).upload(
           fileName, 
           file,
           fileOptions: const FileOptions(cacheControl: '3600', upsert: false),
         );
         
-        // 2. Get public URL
         fileUrl = _supabase.storage.from(_bucketName).getPublicUrl(fileName);
       }
 
@@ -79,34 +72,20 @@ class DailyReportNotifier extends StateNotifier<List<DailyReport>> {
         'room': room,
         'day': day,
         'file_url': fileUrl,
-        'delegate_id': userId, // Added delegate_id
-        'group_id': groupId, // Added group_id
+        'delegate_id': userId,
+        'group_id': groupId,
       };
 
-      // 3. Insert into table
       await _supabase.from(_tableName).insert(newContent);
       
       // Refresh state
       await fetchDailyReports();
       return null; // Success
-    } on StorageException catch (e, stackTrace) {
-      // Clean up file if DB insert fails
-      if (fileUrl != null) {
-        try {
-          final originalFileName = file!.path.split('/').last;
-          final safeFileName = originalFileName.replaceAll(RegExp(r'[^\w\-. ]'), '_');
-          final pathToRemove = '$userId/$contentId/$safeFileName';
-          await _supabase.storage.from(_bucketName).remove([pathToRemove]);
-        } catch (e) {
-          print('Failed to clean up file: $e');
-        }
-      }
+    } on StorageException catch (e) {
       return 'File upload failed: ${e.message}';
-    } on PostgrestException catch (e, stackTrace) {
+    } on PostgrestException catch (e) {
       return 'Database insertion failed: ${e.message}';
-    } on StorageException catch (e, stackTrace) {
-      return 'Storage operation failed: ${e.message}';
-    } catch (e, stackTrace) {
+    } catch (e) {
       return 'An unexpected error occurred: $e';
     }
   }
@@ -118,34 +97,27 @@ class DailyReportNotifier extends StateNotifier<List<DailyReport>> {
       return 'User not authenticated. Please log in.';
     }
     
-    // Check if the current user is the creator (delegate)
     if (currentUserId != delegateId) {
       return 'You are not authorized to delete this report.';
     }
 
     try {
-      // 1. Get content details to find file_url
       final content = await _supabase
           .from(_tableName)
           .select('file_url')
           .eq('id', contentId)
           .maybeSingle();
 
-      // 2. Delete from table
       await _supabase
           .from(_tableName)
           .delete()
           .eq('id', contentId);
       
-      // 3. Delete file from Storage if it exists
       final fileUrl = content?['file_url'];
       if (fileUrl != null && fileUrl.isNotEmpty) {
         try {
-          // Extract the path from the public URL
-          // NOTE: Since we don't have a delegate_id to use in the path, we'll assume the path is just contentId/fileName
           final fileName = fileUrl.split('/').last;
-          final pathToRemove = '$contentId/$fileName'; // Assuming path structure is different
-          
+          final pathToRemove = '$currentUserId/$contentId/$fileName';
           await _supabase.storage.from(_bucketName).remove([pathToRemove]);
         } catch (e) {
           print('Failed to delete file from Storage: $e');
@@ -155,9 +127,9 @@ class DailyReportNotifier extends StateNotifier<List<DailyReport>> {
       // Refresh state
       await fetchDailyReports();
       return null; // Success
-    } on PostgrestException catch (e, stackTrace) {
+    } on PostgrestException catch (e) {
       return 'Database deletion failed: ${e.message}';
-    } catch (e, stackTrace) {
+    } catch (e) {
       return 'An unexpected error occurred: $e';
     }
   }

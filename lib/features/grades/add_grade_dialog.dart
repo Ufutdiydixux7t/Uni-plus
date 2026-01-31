@@ -52,6 +52,8 @@ class _AddGradeDialogState extends ConsumerState<AddGradeDialog> {
       if (errorMessage == null) {
         Navigator.pop(context); // Close dialog on success
         ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(l10n.success)));
+        // Refresh the list after successful addition
+        ref.read(gradeProvider.notifier).fetchGrades();
       } else {
         // Show detailed error message to the user
         ScaffoldMessenger.of(context).showSnackBar(

@@ -15,9 +15,10 @@ class GradeNotifier extends StateNotifier<List<Grade>> {
 
   Future<void> fetchGrades() async {
     try {
-      // Fetch all grades as there is no group_id to filter by and RLS is disabled
       final response = await _supabase.from('grades').select().order('created_at', ascending: false);
-      state = (response as List).map((json) => Grade.fromJson(json)).toList();
+      final List<Grade> grades = (response as List).map((json) => Grade.fromJson(json)).toList();
+      state = grades;
+      print('Fetched ${grades.length} grades');
     } on PostgrestException catch (e) {
       print('PostgrestException fetching grades: ${e.message}');
       state = [];

@@ -90,71 +90,80 @@ class _GradesListScreenState extends ConsumerState<GradesListScreen> {
       ),
       body: grades.isEmpty
           ? Center(child: Text(l10n.noContent))
-          : ListView.builder(
+          : GridView.builder(
               padding: const EdgeInsets.all(16),
+              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                crossAxisCount: 2,
+                crossAxisSpacing: 12,
+                mainAxisSpacing: 12,
+                childAspectRatio: 0.8,
+              ),
               itemCount: grades.length,
               itemBuilder: (context, index) {
                 final grade = grades[index];
                 final canDelete = isDelegate && grade.createdBy == currentUserId;
 
                 return Card(
-                  margin: const EdgeInsets.only(bottom: 16),
                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
                   elevation: 2,
                   child: Padding(
-                    padding: const EdgeInsets.all(16),
+                    padding: const EdgeInsets.all(12),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Row(
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
-                            Expanded(
-                              child: Text(
-                                grade.subject, 
-                                style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-                                overflow: TextOverflow.ellipsis,
-                              ),
-                            ),
+                            const Icon(Icons.grade, color: Color(0xFF3F51B5), size: 20),
                             Row(
                               mainAxisSize: MainAxisSize.min,
                               children: [
                                 if (canDelete)
                                   IconButton(
-                                    icon: const Icon(Icons.delete_outline, color: Colors.red, size: 20),
+                                    icon: const Icon(Icons.delete_outline, color: Colors.red, size: 18),
                                     onPressed: () => _confirmDelete(context, grade.id, grade.createdBy!),
+                                    constraints: const BoxConstraints(),
+                                    padding: EdgeInsets.zero,
                                   ),
                                 if (grade.fileUrl != null && grade.fileUrl!.isNotEmpty)
                                   IconButton(
-                                    icon: const Icon(Icons.open_in_new, color: Color(0xFF3F51B5), size: 20),
+                                    icon: const Icon(Icons.open_in_new, color: Color(0xFF3F51B5), size: 18),
                                     onPressed: () async {
                                       final url = Uri.parse(grade.fileUrl!);
                                       if (await canLaunchUrl(url)) {
                                         await launchUrl(url, mode: LaunchMode.externalApplication);
                                       }
                                     },
+                                    constraints: const BoxConstraints(),
+                                    padding: EdgeInsets.zero,
                                   ),
                               ],
                             ),
                           ],
                         ),
+                        const SizedBox(height: 8),
+                        Text(
+                          grade.subject,
+                          style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
                         const SizedBox(height: 4),
                         if (grade.doctor != null && grade.doctor!.isNotEmpty)
-                          Text('${l10n.doctor}: ${grade.doctor}', style: TextStyle(color: Colors.grey.shade600, fontSize: 14)),
-                        const Divider(height: 24),
-                        if (grade.note != null && grade.note!.isNotEmpty)
-                          Text('${l10n.note}: ${grade.note!}', style: const TextStyle(fontSize: 14, height: 1.4)),
-                        const SizedBox(height: 16),
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            Text(
-                              '${grade.createdAt.day}/${grade.createdAt.month}/${grade.createdAt.year}',
-                              style: TextStyle(color: Colors.grey.shade500, fontSize: 12),
+                          Text('${l10n.doctor}: ${grade.doctor}', style: TextStyle(color: Colors.grey.shade600, fontSize: 12)),
+                        const SizedBox(height: 4),
+                        Expanded(
+                          child: SingleChildScrollView(
+                            child: Text(
+                              grade.note ?? '',
+                              style: const TextStyle(fontSize: 11, color: Colors.black87),
                             ),
-                            if (grade.fileUrl != null && grade.fileUrl!.isNotEmpty)
-                              const Icon(Icons.attach_file, size: 16, color: Colors.grey),
-                          ],
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                        Text(
+                          '${grade.createdAt.day}/${grade.createdAt.month}/${grade.createdAt.year}',
+                          style: TextStyle(color: Colors.grey.shade500, fontSize: 10),
                         ),
                       ],
                     ),

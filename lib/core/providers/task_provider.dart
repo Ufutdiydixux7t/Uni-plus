@@ -14,18 +14,14 @@ class TaskNotifier extends StateNotifier<List<Task>> {
   final _tableName = 'tasks';
 
   Future<void> fetchTasks() async {
-    final currentGroupId = _supabase.auth.currentUser?.userMetadata?['group_id'];
-    if (currentGroupId == null) {
-      state = [];
-      return;
-    }
     try {
+      // Fetch all tasks for now to ensure visibility, as group_id might be missing in metadata
       final response = await _supabase
           .from(_tableName)
           .select()
-          .eq('group_id', currentGroupId)
           .order('created_at', ascending: false);
       state = (response as List).map((json) => Task.fromJson(json)).toList();
+      print('Fetched ${state.length} tasks');
     } on PostgrestException catch (e) {
       print('PostgrestException fetching $_tableName: ${e.message}');
       state = [];
@@ -40,7 +36,7 @@ class TaskNotifier extends StateNotifier<List<Task>> {
     required String subject,
     String? doctor,
     String? note,
-    String? groupId, // Added groupId
+    String? groupId,
   }) async {
     final contentId = const Uuid().v4();
     final userId = _supabase.auth.currentUser?.id;
@@ -55,22 +51,18 @@ class TaskNotifier extends StateNotifier<List<Task>> {
         'subject': subject,
         'doctor': doctor,
         'note': note,
-        'delegate_id': userId, // Added delegate_id
-        'group_id': groupId, // Added group_id
-        // No file_url for tasks
+        'delegate_id': userId,
+        'group_id': groupId,
       };
 
-      // 3. Insert into table
       await _supabase.from(_tableName).insert(newContent);
       
       // Refresh state
       await fetchTasks();
       return null; // Success
-    } on PostgrestException catch (e, stackTrace) {
+    } on PostgrestException catch (e) {
       return 'Database insertion failed: ${e.message}';
-    } on StorageException catch (e, stackTrace) {
-      return 'Storage operation failed: ${e.message}';
-    } catch (e, stackTrace) {
+    } catch (e) {
       return 'An unexpected error occurred: $e';
     }
   }
@@ -82,13 +74,11 @@ class TaskNotifier extends StateNotifier<List<Task>> {
       return 'User not authenticated. Please log in.';
     }
     
-    // Check if the current user is the creator (delegate)
     if (currentUserId != delegateId) {
       return 'You are not authorized to delete this task.';
     }
 
     try {
-      // 1. Delete from table
       await _supabase
           .from(_tableName)
           .delete()
@@ -98,9 +88,9 @@ class TaskNotifier extends StateNotifier<List<Task>> {
       // Refresh state
       await fetchTasks();
       return null; // Success
-    } on PostgrestException catch (e, stackTrace) {
+    } on PostgrestException catch (e) {
       return 'Database deletion failed: ${e.message}';
-    } catch (e, stackTrace) {
+    } catch (e) {
       return 'An unexpected error occurred: $e';
     }
   }

@@ -19,7 +19,9 @@ class ContentListScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = AppLocalizations.of(context);
-    final contentItems = ref.watch(contentProvider.notifier).getByCategory(category);
+    // Watch the provider to react to state changes
+    final allContent = ref.watch(contentProvider);
+    final contentItems = allContent.where((item) => item.category == category).toList();
     
     return FutureBuilder<UserRole>(
       future: SecureStorageService.getUserRole(),

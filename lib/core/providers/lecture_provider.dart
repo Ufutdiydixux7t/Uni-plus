@@ -17,20 +17,9 @@ class LectureNotifier extends StateNotifier<List<Lecture>> {
 
   Future<void> fetchLectures() async {
     try {
-      // Delegate: see only what they added (created_by = currentUser.id)
-      // Student: see all
-      final userId = _supabase.auth.currentUser?.id;
-      final userRole = await _getUserRole(); // Assuming a helper function exists or role is passed
-      
-      PostgrestTransformBuilder<PostgrestList> query = _supabase.from(_tableName).select().order('created_at', ascending: false);
-
-      // NOTE: Since we don't have the UserRole logic here, we'll fetch all for now
-      // and rely on the UI to filter/show delete button based on role.
-      // The requirement is to fetch all for the student, and delegate sees only theirs.
-      // We will fetch all and filter in the UI for simplicity, or rely on RLS if enabled.
-      // Given the instruction to "Display all grades uploaded" (for grades), we'll fetch all.
-      final response = await query;
+      final response = await _supabase.from(_tableName).select().order('created_at', ascending: false);
       state = (response as List).map((json) => Lecture.fromJson(json)).toList();
+      print('Fetched ${state.length} lectures');
     } on PostgrestException catch (e) {
       print('PostgrestException fetching $_tableName: ${e.message}');
       state = [];

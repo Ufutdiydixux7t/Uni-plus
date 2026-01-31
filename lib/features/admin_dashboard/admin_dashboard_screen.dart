@@ -1,25 +1,24 @@
 import 'dart:math';
-import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:uuid/uuid.dart';
-import 'package:file_picker/file_picker.dart';
 import '../../core/localization/app_localizations.dart';
 import '../../core/storage/secure_storage_service.dart';
-import '../../core/providers/announcement_provider.dart';
+import '../../core/providers/tomorrow_lecture_provider.dart';
+import '../../core/providers/content_provider.dart';
+import '../../core/providers/lecture_provider.dart';
 import '../../core/providers/grade_provider.dart';
+import '../../core/providers/task_provider.dart';
+import '../../core/providers/summary_provider.dart';
+import '../../core/providers/daily_report_provider.dart';
 import '../../shared/widgets/app_drawer.dart';
 import '../shared/content_list_screen.dart';
 import '../lectures/lectures_screen.dart';
 import '../summaries/summaries_screen.dart';
-
 import '../../core/auth/user_role.dart';
-
-import '../summaries/send_summary_screen.dart';
-import '../../core/auth/user_role.dart'; // Import UserRole
-import '../grades/grades_list_screen.dart'; // Import the new GradesListScreen
+import '../grades/grades_list_screen.dart';
 
 class AdminDashboardScreen extends ConsumerStatefulWidget {
   const AdminDashboardScreen({super.key});
@@ -37,6 +36,17 @@ class _AdminDashboardScreenState extends ConsumerState<AdminDashboardScreen> {
   void initState() {
     super.initState();
     _loadJoinCode();
+    _refreshData();
+  }
+
+  void _refreshData() {
+    ref.read(tomorrowLectureProvider.notifier).fetchTomorrowLectures();
+    ref.read(contentProvider.notifier).fetchContent();
+    ref.read(lectureProvider.notifier).fetchLectures();
+    ref.read(gradeProvider.notifier).fetchGrades();
+    ref.read(taskProvider.notifier).fetchTasks();
+    ref.read(summaryProvider.notifier).fetchSummaries();
+    ref.read(dailyReportProvider.notifier).fetchDailyReports();
   }
 
   String _generateJoinCode() {
@@ -118,7 +128,6 @@ class _AdminDashboardScreenState extends ConsumerState<AdminDashboardScreen> {
 
   void _navigateToContent(String title, String category) {
     if (category == 'grades') {
-      // Navigate to the new GradesListScreen for the delegate role
       Navigator.push(context, MaterialPageRoute(builder: (_) => const GradesListScreen(userRole: UserRole.delegate)));
       return;
     }
@@ -142,7 +151,7 @@ class _AdminDashboardScreenState extends ConsumerState<AdminDashboardScreen> {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
-    final announcements = ref.watch(announcementProvider);
+    final tomorrowLectures = ref.watch(tomorrowLectureProvider);
 
     return Scaffold(
       key: _scaffoldKey,
@@ -162,7 +171,10 @@ class _AdminDashboardScreenState extends ConsumerState<AdminDashboardScreen> {
         actions: [
           IconButton(
             icon: const Icon(Icons.refresh, color: Colors.black),
-            onPressed: _loadJoinCode,
+            onPressed: () {
+              _loadJoinCode();
+              _refreshData();
+            },
           )
         ],
       ),
@@ -175,7 +187,7 @@ class _AdminDashboardScreenState extends ConsumerState<AdminDashboardScreen> {
             children: [
               _joinCodeCard(l10n),
               const SizedBox(height: 32),
-              _announcementSection(l10n, announcements),
+              _tomorrowLecturesSection(l10n, tomorrowLectures),
               const SizedBox(height: 32),
               Text(
                 l10n.addContent,
@@ -184,7 +196,6 @@ class _AdminDashboardScreenState extends ConsumerState<AdminDashboardScreen> {
               const SizedBox(height: 16),
               _dashboardGrid(l10n),
               const SizedBox(height: 32),
-              
               Text(
                 l10n.receivedSummaries,
                 style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
@@ -279,6 +290,81 @@ class _AdminDashboardScreenState extends ConsumerState<AdminDashboardScreen> {
     );
   }
 
+  Widget _tomorrowLecturesSection(AppLocalizations l10n, List<dynamic> lectures) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Text(
+              l10n.tomorrowLectures,
+              style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+            ),
+            TextButton(
+              onPressed: () => _navigateToContent(l10n.tomorrowLectures, 'tomorrow_lectures'),
+              child: Text(l10n.addContent),
+            ),
+          ],
+        ),
+        const SizedBox(height: 16),
+        if (lectures.isEmpty)
+          _emptyState(l10n.noContent)
+        else
+          SizedBox(
+            height: 120,
+            child: ListView.builder(
+              scrollDirection: Axis.horizontal,
+              itemCount: lectures.length,
+              itemBuilder: (context, index) => _tomorrowLectureCard(lectures[index], l10n),
+            ),
+          ),
+      ],
+    );
+  }
+
+  Widget _emptyState(String message) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: Colors.grey.shade200),
+      ),
+      child: Center(child: Text(message, style: const TextStyle(color: Colors.grey))),
+    );
+  }
+
+  Widget _tomorrowLectureCard(dynamic lecture, AppLocalizations l10n) {
+    return Container(
+      width: 200,
+      margin: const EdgeInsets.only(right: 16),
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: Colors.grey.shade200),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(lecture.subject, style: const TextStyle(fontWeight: FontWeight.bold), maxLines: 1, overflow: TextOverflow.ellipsis),
+          const SizedBox(height: 4),
+          Text(lecture.doctor ?? '', style: TextStyle(color: Colors.grey.shade600, fontSize: 11), maxLines: 1, overflow: TextOverflow.ellipsis),
+          const Spacer(),
+          Row(
+            children: [
+              const Icon(Icons.access_time, size: 12, color: Colors.blue),
+              const SizedBox(width: 4),
+              Text(lecture.time ?? '', style: const TextStyle(fontSize: 10, color: Colors.blue)),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
   Widget _dashboardGrid(AppLocalizations l10n) {
     return GridView.count(
       shrinkWrap: true,
@@ -293,7 +379,6 @@ class _AdminDashboardScreenState extends ConsumerState<AdminDashboardScreen> {
         _actionCard(Icons.description, l10n.summaries, () => _navigateToContent(l10n.summaries, 'summaries')),
         _actionCard(Icons.task_alt, l10n.tasks, () => _navigateToContent(l10n.tasks, 'tasks')),
         _actionCard(Icons.assignment, l10n.forms, () => _navigateToContent(l10n.forms, 'forms')),
-        // Navigate to GradesListScreen instead of showing a modal sheet directly
         _actionCard(Icons.grade, l10n.grades, () => _navigateToContent(l10n.grades, 'grades')),
       ],
     );
@@ -355,53 +440,6 @@ class _AdminDashboardScreenState extends ConsumerState<AdminDashboardScreen> {
           ),
         ),
       ),
-    );
-  }
-
-  Widget _announcementSection(AppLocalizations l10n, List announcements) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            Text(l10n.announcements, style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-            TextButton(onPressed: () {}, child: Text(l10n.locale.languageCode == 'ar' ? 'عرض الكل' : 'View All')),
-          ],
-        ),
-        const SizedBox(height: 12),
-        if (announcements.isEmpty)
-          Center(child: Text(l10n.locale.languageCode == 'ar' ? 'لا توجد إعلانات' : 'No announcements'))
-        else
-          SizedBox(
-            height: 120,
-            child: ListView.builder(
-              scrollDirection: Axis.horizontal,
-              itemCount: announcements.length,
-              itemBuilder: (context, index) {
-                final ann = announcements[index];
-                return Container(
-                  width: 280,
-                  margin: const EdgeInsets.only(right: 16),
-                  padding: const EdgeInsets.all(16),
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(20),
-                    border: Border.all(color: Colors.grey.shade200),
-                  ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(ann.subject, style: const TextStyle(fontWeight: FontWeight.bold), maxLines: 1, overflow: TextOverflow.ellipsis),
-                      const SizedBox(height: 8),
-                      Text(ann.note ?? '', style: TextStyle(color: Colors.grey.shade600, fontSize: 12), maxLines: 2, overflow: TextOverflow.ellipsis),
-                    ],
-                  ),
-                );
-              },
-            ),
-          ),
-      ],
     );
   }
 }

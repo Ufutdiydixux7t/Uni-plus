@@ -14,18 +14,14 @@ class TomorrowLectureNotifier extends StateNotifier<List<TomorrowLecture>> {
   final _tableName = 'tomorrow_lectures';
 
   Future<void> fetchTomorrowLectures() async {
-    final currentGroupId = _supabase.auth.currentUser?.userMetadata?['group_id'];
-    if (currentGroupId == null) {
-      state = [];
-      return;
-    }
     try {
-      final List<dynamic> response = await _supabase
+      // Fetch all tomorrow lectures for now to ensure visibility
+      final response = await _supabase
           .from(_tableName)
           .select()
-          .eq('group_id', currentGroupId)
           .order('created_at', ascending: false);
       state = (response as List).map((json) => TomorrowLecture.fromJson(json)).toList();
+      print('Fetched ${state.length} tomorrow lectures');
     } on PostgrestException catch (e) {
       print('PostgrestException fetching $_tableName: ${e.message}');
       state = [];
@@ -41,7 +37,7 @@ class TomorrowLectureNotifier extends StateNotifier<List<TomorrowLecture>> {
     String? doctor,
     String? room,
     String? time,
-    String? groupId, // Added groupId
+    String? groupId,
   }) async {
     final contentId = const Uuid().v4();
     final userId = _supabase.auth.currentUser?.id;
@@ -57,22 +53,18 @@ class TomorrowLectureNotifier extends StateNotifier<List<TomorrowLecture>> {
         'doctor': doctor,
         'room': room,
         'time': time,
-        'delegate_id': userId, // Added delegate_id
-        'group_id': groupId, // Added group_id
-        // No file_url for tasks
+        'delegate_id': userId,
+        'group_id': groupId,
       };
 
-      // 3. Insert into table
       await _supabase.from(_tableName).insert(newContent);
       
       // Refresh state
       await fetchTomorrowLectures();
       return null; // Success
-    } on PostgrestException catch (e, stackTrace) {
+    } on PostgrestException catch (e) {
       return 'Database insertion failed: ${e.message}';
-    } on StorageException catch (e, stackTrace) {
-      return 'Storage operation failed: ${e.message}';
-    } catch (e, stackTrace) {
+    } catch (e) {
       return 'An unexpected error occurred: $e';
     }
   }
@@ -84,13 +76,11 @@ class TomorrowLectureNotifier extends StateNotifier<List<TomorrowLecture>> {
       return 'User not authenticated. Please log in.';
     }
     
-    // Check if the current user is the creator (delegate)
     if (currentUserId != delegateId) {
       return 'You are not authorized to delete this content.';
     }
 
     try {
-      // 1. Delete from table
       await _supabase
           .from(_tableName)
           .delete()
@@ -100,9 +90,9 @@ class TomorrowLectureNotifier extends StateNotifier<List<TomorrowLecture>> {
       // Refresh state
       await fetchTomorrowLectures();
       return null; // Success
-    } on PostgrestException catch (e, stackTrace) {
+    } on PostgrestException catch (e) {
       return 'Database deletion failed: ${e.message}';
-    } catch (e, stackTrace) {
+    } catch (e) {
       return 'An unexpected error occurred: $e';
     }
   }
