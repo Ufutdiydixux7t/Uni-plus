@@ -35,6 +35,7 @@ class StudentSummaryNotifier extends StateNotifier<List<StudentSummary>> {
     String? doctor,
     String? note,
     File? file,
+    String? groupId, // Added groupId
   }) async {
     String? fileUrl;
     final contentId = const Uuid().v4();
@@ -69,6 +70,7 @@ class StudentSummaryNotifier extends StateNotifier<List<StudentSummary>> {
         'note': note,
         'file_url': fileUrl,
         'student_id': userId, // Student is the uploader
+        'group_id': groupId, // Added group_id
         // delegate_id is null on upload
       };
 

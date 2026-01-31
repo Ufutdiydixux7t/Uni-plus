@@ -46,6 +46,7 @@ class LectureNotifier extends StateNotifier<List<Lecture>> {
     String? doctor,
     String? note,
     File? file,
+    String? groupId, // Added groupId
   }) async {
     String? fileUrl;
     final contentId = const Uuid().v4();
@@ -80,6 +81,7 @@ class LectureNotifier extends StateNotifier<List<Lecture>> {
         'note': note,
         'file_url': fileUrl,
         'delegate_id': userId, // Use delegate_id as per table schema
+        'group_id': groupId, // Added group_id
       };
 
       // 3. Insert into table

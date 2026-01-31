@@ -1,20 +1,51 @@
-import 'package:freezed_annotation/freezed_annotation.dart';
+class Summary {
+  final String id;
+  final String subject;
+  final String? doctor;
+  final String? note;
+  final String? fileUrl;
+  final DateTime createdAt;
+  final String? delegateId;
+  final String? studentId;
+  final String? groupId; // بناءً على الخطأ المتكرر The named parameter 'groupId' isn't defined
 
-part 'summary_model.freezed.dart';
-part 'summary_model.g.dart';
+  Summary({
+    required this.id,
+    required this.subject,
+    this.doctor,
+    this.note,
+    this.fileUrl,
+    required this.createdAt,
+    this.delegateId,
+    this.studentId,
+    this.groupId,
+  });
 
-@freezed
-class Summary with _$Summary {
-  const factory Summary({
-    required String id,
-    required String subject,
-    String? doctor,
-    String? note,
-    @JsonKey(name: 'file_url') String? fileUrl,
-    @JsonKey(name: 'created_at') required DateTime createdAt,
-    @JsonKey(name: 'delegate_id') String? delegateId,
-    @JsonKey(name: 'student_id') String? studentId,
-  }) = _Summary;
+  factory Summary.fromJson(Map<String, dynamic> json) {
+    return Summary(
+      id: json['id'],
+      subject: json['subject'] ?? '',
+      doctor: json['doctor'],
+      note: json['note'],
+      fileUrl: json['file_url'],
+      createdAt: DateTime.parse(json['created_at']),
+      delegateId: json['delegate_id'],
+      studentId: json['student_id'],
+      groupId: json['group_id'],
+    );
+  }
 
-  factory Summary.fromJson(Map<String, dynamic> json) => _$SummaryFromJson(json);
+  Map<String, dynamic> toJson() {
+    return {
+      'id': id,
+      'subject': subject,
+      'doctor': doctor,
+      'note': note,
+      'file_url': fileUrl,
+      'created_at': createdAt.toIso8601String(),
+      'delegate_id': delegateId,
+      'student_id': studentId,
+      'group_id': groupId,
+    };
+  }
 }

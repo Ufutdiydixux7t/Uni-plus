@@ -35,6 +35,7 @@ class DailyReportNotifier extends StateNotifier<List<DailyReport>> {
     String? room,
     String? day,
     File? file,
+    String? groupId, // Added groupId
   }) async {
     String? fileUrl;
     final contentId = const Uuid().v4();
@@ -69,7 +70,8 @@ class DailyReportNotifier extends StateNotifier<List<DailyReport>> {
         'room': room,
         'day': day,
         'file_url': fileUrl,
-        // No delegate_id in daily_reports table schema provided, assuming it's not needed for insert
+        'delegate_id': userId, // Added delegate_id
+        'group_id': groupId, // Added group_id
       };
 
       // 3. Insert into table
@@ -99,13 +101,16 @@ class DailyReportNotifier extends StateNotifier<List<DailyReport>> {
   }
 
   // Returns null on success, or an error message string on failure
-  Future<String?> deleteDailyReport(String contentId) async {
+  Future<String?> deleteDailyReport(String contentId, String delegateId) async {
     final currentUserId = _supabase.auth.currentUser?.id;
     if (currentUserId == null) {
       return 'User not authenticated. Please log in.';
     }
-    // Assuming deletion is allowed for any authenticated user since no delegate_id is in the schema
-    // If the requirement is to delete only what they created, the table needs a created_by/delegate_id column.
+    
+    // Check if the current user is the creator (delegate)
+    if (currentUserId != delegateId) {
+      return 'You are not authorized to delete this report.';
+    }
 
     try {
       // 1. Get content details to find file_url

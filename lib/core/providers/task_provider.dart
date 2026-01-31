@@ -31,6 +31,7 @@ class TaskNotifier extends StateNotifier<List<Task>> {
     required String subject,
     String? doctor,
     String? note,
+    String? groupId, // Added groupId
   }) async {
     final contentId = const Uuid().v4();
     final userId = _supabase.auth.currentUser?.id;
@@ -45,6 +46,8 @@ class TaskNotifier extends StateNotifier<List<Task>> {
         'subject': subject,
         'doctor': doctor,
         'note': note,
+        'delegate_id': userId, // Added delegate_id
+        'group_id': groupId, // Added group_id
         // No file_url for tasks
       };
 
@@ -62,10 +65,15 @@ class TaskNotifier extends StateNotifier<List<Task>> {
   }
 
   // Returns null on success, or an error message string on failure
-  Future<String?> deleteTask(String contentId) async {
+  Future<String?> deleteTask(String contentId, String delegateId) async {
     final currentUserId = _supabase.auth.currentUser?.id;
     if (currentUserId == null) {
       return 'User not authenticated. Please log in.';
+    }
+    
+    // Check if the current user is the creator (delegate)
+    if (currentUserId != delegateId) {
+      return 'You are not authorized to delete this task.';
     }
 
     try {
@@ -73,7 +81,8 @@ class TaskNotifier extends StateNotifier<List<Task>> {
       await _supabase
           .from(_tableName)
           .delete()
-          .eq('id', contentId);
+          .eq('id', contentId)
+          .eq('delegate_id', currentUserId);
       
       // Refresh state
       await fetchTasks();

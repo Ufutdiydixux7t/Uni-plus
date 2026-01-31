@@ -34,7 +34,7 @@ class _FormListScreenState extends ConsumerState<FormListScreen> {
     );
   }
 
-  void _confirmDelete(BuildContext context, String contentId) {
+  void _confirmDelete(BuildContext context, String contentId, String delegateId) {
     final l10n = AppLocalizations.of(context);
     showDialog(
       context: context,
@@ -46,7 +46,7 @@ class _FormListScreenState extends ConsumerState<FormListScreen> {
           TextButton(
             onPressed: () async {
               Navigator.pop(context);
-              final errorMessage = await ref.read(formProvider.notifier).deleteForm(contentId);
+              final errorMessage = await ref.read(formProvider.notifier).deleteForm(contentId, delegateId);
               if (mounted) {
                 if (errorMessage == null) {
                   ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(l10n.success)));
@@ -99,8 +99,9 @@ class _FormListScreenState extends ConsumerState<FormListScreen> {
               itemCount: forms.length,
               itemBuilder: (context, index) {
                 final form = forms[index];
-                // Assuming any delegate can delete any form since no created_by field was in the model
-                final canDelete = isDelegate; 
+                // Check if the current user is the creator (delegate)
+                final currentUserId = Supabase.instance.client.auth.currentUser?.id;
+                final canDelete = isDelegate && form.delegateId == currentUserId;
 
                 return Card(
                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
@@ -120,7 +121,7 @@ class _FormListScreenState extends ConsumerState<FormListScreen> {
                                 if (canDelete)
                                   IconButton(
                                     icon: const Icon(Icons.delete_outline, color: Colors.red, size: 20),
-                                    onPressed: () => _confirmDelete(context, form.id),
+                                    onPressed: () => _confirmDelete(context, form.id, form.delegateId!),
                                     constraints: const BoxConstraints(),
                                     padding: EdgeInsets.zero,
                                   ),
