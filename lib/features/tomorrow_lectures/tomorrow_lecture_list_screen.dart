@@ -75,150 +75,120 @@ class _TomorrowLectureListScreenState extends ConsumerState<TomorrowLectureListS
     final isDelegate = widget.userRole == UserRole.delegate || widget.userRole == UserRole.admin;
 
     return Scaffold(
-      backgroundColor: const Color(0xFFF8F9FA),
+      backgroundColor: const Color(0xFFF5F7FA),
       appBar: AppBar(
-        title: Text(l10n.tomorrowLectures, style: const TextStyle(color: Colors.black, fontWeight: FontWeight.bold, fontSize: 22)),
+        title: Text(l10n.tomorrowLectures, style: const TextStyle(color: Colors.black, fontWeight: FontWeight.bold)),
         backgroundColor: Colors.white,
         elevation: 0,
-        centerTitle: true,
         iconTheme: const IconThemeData(color: Colors.black),
         actions: [
           IconButton(
-            icon: const Icon(Icons.refresh_rounded, size: 28),
+            icon: const Icon(Icons.refresh),
             onPressed: _fetchTomorrowLectures,
           )
         ],
       ),
       body: lectures.isEmpty
-          ? Center(child: Text(l10n.noContent, style: const TextStyle(fontSize: 18, color: Colors.grey)))
-          : ListView.builder(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+          ? Center(child: Text(l10n.noContent))
+          : GridView.builder(
+              padding: const EdgeInsets.all(16),
+              gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                crossAxisCount: MediaQuery.of(context).size.width > 600 ? 2 : 1,
+                crossAxisSpacing: 16,
+                mainAxisSpacing: 16,
+                childAspectRatio: MediaQuery.of(context).size.width > 600 ? 1.8 : 2.2,
+              ),
               itemCount: lectures.length,
               itemBuilder: (context, index) {
                 final lecture = lectures[index];
                 final canDelete = isDelegate && lecture.delegateId == currentUserId;
 
-                return Container(
-                  margin: const EdgeInsets.only(bottom: 16),
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(16),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black.withOpacity(0.05),
-                        blurRadius: 10,
-                        offset: const Offset(0, 4),
+                // Optional: Use different gradients for a professional look
+                final List<Color> gradientColors = index % 2 == 0 
+                  ? [const Color(0xFF3F51B5), const Color(0xFF5C6BC0)]
+                  : [const Color(0xFF1A237E), const Color(0xFF3949AB)];
+
+                return Card(
+                  elevation: 4,
+                  shadowColor: Colors.black26,
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                  child: Container(
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(16),
+                      gradient: LinearGradient(
+                        colors: [Colors.white, Colors.grey.shade50],
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
                       ),
-                    ],
-                  ),
-                  child: ClipRRect(
-                    borderRadius: BorderRadius.circular(16),
-                    child: IntrinsicHeight(
-                      child: Row(
-                        crossAxisAlignment: CrossAxisAlignment.stretch,
-                        children: [
-                          // Side accent bar
-                          Container(
-                            width: 6,
-                            color: const Color(0xFF3F51B5),
-                          ),
-                          Expanded(
-                            child: Padding(
-                              padding: const EdgeInsets.all(16),
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Row(
-                                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                    children: [
-                                      Expanded(
-                                        child: Text(
-                                          lecture.subject,
-                                          style: const TextStyle(
-                                            fontWeight: FontWeight.w900,
-                                            fontSize: 18,
-                                            color: Color(0xFF1A237E),
-                                          ),
-                                          maxLines: 1,
-                                          overflow: TextOverflow.ellipsis,
-                                        ),
-                                      ),
-                                      if (canDelete)
-                                        IconButton(
-                                          icon: const Icon(Icons.delete_sweep_outlined, color: Colors.redAccent, size: 24),
-                                          onPressed: () => _confirmDelete(context, lecture.id, lecture.delegateId!),
-                                          constraints: const BoxConstraints(),
-                                          padding: EdgeInsets.zero,
-                                        ),
-                                    ],
-                                  ),
-                                  const Divider(height: 20, thickness: 0.5),
-                                  if (lecture.doctor != null && lecture.doctor!.isNotEmpty)
-                                    Padding(
-                                      padding: const EdgeInsets.only(bottom: 8),
-                                      child: Row(
-                                        children: [
-                                          const Icon(Icons.person_pin_rounded, size: 20, color: Color(0xFF3F51B5)),
-                                          const SizedBox(width: 8),
-                                          Text(
-                                            '${l10n.doctor}: ',
-                                            style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14, color: Colors.black87),
-                                          ),
-                                          Expanded(
-                                            child: Text(
-                                              lecture.doctor!,
-                                              style: const TextStyle(fontSize: 14, color: Colors.black54, fontWeight: FontWeight.w500),
-                                              maxLines: 1,
-                                              overflow: TextOverflow.ellipsis,
-                                            ),
-                                          ),
-                                        ],
-                                      ),
-                                    ),
-                                  Row(
-                                    children: [
-                                      if (lecture.time != null && lecture.time!.isNotEmpty)
-                                        Expanded(
-                                          child: Row(
-                                            children: [
-                                              const Icon(Icons.alarm_on_rounded, size: 20, color: Color(0xFF3F51B5)),
-                                              const SizedBox(width: 8),
-                                              Text(
-                                                lecture.time!,
-                                                style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: Colors.black87),
-                                              ),
-                                            ],
-                                          ),
-                                        ),
-                                      if (lecture.room != null && lecture.room!.isNotEmpty)
-                                        Expanded(
-                                          child: Row(
-                                            children: [
-                                              const Icon(Icons.meeting_room_outlined, size: 20, color: Color(0xFF3F51B5)),
-                                              const SizedBox(width: 8),
-                                              Text(
-                                                lecture.room!,
-                                                style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: Colors.black87),
-                                              ),
-                                            ],
-                                          ),
-                                        ),
-                                    ],
-                                  ),
-                                  const SizedBox(height: 12),
-                                  Align(
-                                    alignment: Alignment.bottomRight,
-                                    child: Text(
-                                      '${lecture.createdAt.day}/${lecture.createdAt.month}/${lecture.createdAt.year}',
-                                      style: TextStyle(color: Colors.grey.shade500, fontSize: 12, fontWeight: FontWeight.w500),
-                                    ),
-                                  ),
-                                ],
+                    ),
+                    child: Stack(
+                      children: [
+                        // Accent line
+                        Positioned(
+                          left: 0,
+                          top: 20,
+                          bottom: 20,
+                          child: Container(
+                            width: 4,
+                            decoration: BoxDecoration(
+                              color: gradientColors[0],
+                              borderRadius: const BorderRadius.only(
+                                topRight: Radius.circular(4),
+                                bottomRight: Radius.circular(4),
                               ),
                             ),
                           ),
-                        ],
-                      ),
+                        ),
+                        Padding(
+                          padding: const EdgeInsets.fromLTRB(20, 16, 16, 16),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Row(
+                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                children: [
+                                  Expanded(
+                                    child: Text(
+                                      lecture.subject,
+                                      style: TextStyle(
+                                        fontWeight: FontWeight.bold,
+                                        fontSize: 18,
+                                        color: gradientColors[0],
+                                      ),
+                                      maxLines: 1,
+                                      overflow: TextOverflow.ellipsis,
+                                    ),
+                                  ),
+                                  if (canDelete)
+                                    IconButton(
+                                      icon: const Icon(Icons.delete_outline, color: Colors.red, size: 22),
+                                      onPressed: () => _confirmDelete(context, lecture.id, lecture.delegateId!),
+                                      constraints: const BoxConstraints(),
+                                      padding: EdgeInsets.zero,
+                                    ),
+                                ],
+                              ),
+                              const SizedBox(height: 8),
+                              _buildInfoRow(Icons.person_outline, l10n.doctor, lecture.doctor ?? '-'),
+                              const SizedBox(height: 4),
+                              Row(
+                                children: [
+                                  Expanded(child: _buildInfoRow(Icons.meeting_room_outlined, l10n.room, lecture.room ?? '-')),
+                                  Expanded(child: _buildInfoRow(Icons.access_time, l10n.time, lecture.time ?? '-')),
+                                ],
+                              ),
+                              const Spacer(),
+                              Align(
+                                alignment: Alignment.bottomRight,
+                                child: Text(
+                                  '${lecture.createdAt.day}/${lecture.createdAt.month}/${lecture.createdAt.year}',
+                                  style: TextStyle(color: Colors.grey.shade500, fontSize: 10),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
                     ),
                   ),
                 );
@@ -228,11 +198,31 @@ class _TomorrowLectureListScreenState extends ConsumerState<TomorrowLectureListS
           ? FloatingActionButton.extended(
               onPressed: _showAddTomorrowLectureDialog,
               backgroundColor: const Color(0xFF3F51B5),
-              elevation: 4,
-              icon: const Icon(Icons.add_task_rounded, color: Colors.white),
-              label: Text(l10n.addAnnouncement, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 16)),
+              icon: const Icon(Icons.add, color: Colors.white),
+              label: Text(l10n.addAnnouncement, style: const TextStyle(color: Colors.white)),
             )
           : null,
+    );
+  }
+
+  Widget _buildInfoRow(IconData icon, String label, String value) {
+    return Row(
+      children: [
+        Icon(icon, size: 16, color: Colors.grey.shade600),
+        const SizedBox(width: 6),
+        Text(
+          '$label: ',
+          style: TextStyle(fontSize: 13, color: Colors.grey.shade800, fontWeight: FontWeight.w500),
+        ),
+        Expanded(
+          child: Text(
+            value,
+            style: TextStyle(fontSize: 13, color: Colors.grey.shade600),
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+          ),
+        ),
+      ],
     );
   }
 }
