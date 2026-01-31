@@ -75,118 +75,148 @@ class _TomorrowLectureListScreenState extends ConsumerState<TomorrowLectureListS
     final isDelegate = widget.userRole == UserRole.delegate || widget.userRole == UserRole.admin;
 
     return Scaffold(
+      backgroundColor: const Color(0xFFF8F9FA),
       appBar: AppBar(
-        title: Text(l10n.tomorrowLectures, style: const TextStyle(color: Colors.black, fontWeight: FontWeight.bold)),
+        title: Text(l10n.tomorrowLectures, style: const TextStyle(color: Colors.black, fontWeight: FontWeight.bold, fontSize: 22)),
         backgroundColor: Colors.white,
         elevation: 0,
+        centerTitle: true,
         iconTheme: const IconThemeData(color: Colors.black),
         actions: [
           IconButton(
-            icon: const Icon(Icons.refresh),
+            icon: const Icon(Icons.refresh_rounded, size: 28),
             onPressed: _fetchTomorrowLectures,
           )
         ],
       ),
       body: lectures.isEmpty
-          ? Center(child: Text(l10n.noContent))
+          ? Center(child: Text(l10n.noContent, style: const TextStyle(fontSize: 18, color: Colors.grey)))
           : ListView.builder(
-              padding: const EdgeInsets.all(16),
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
               itemCount: lectures.length,
               itemBuilder: (context, index) {
                 final lecture = lectures[index];
                 final canDelete = isDelegate && lecture.delegateId == currentUserId;
 
-                return Card(
+                return Container(
                   margin: const EdgeInsets.only(bottom: 16),
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-                  elevation: 3,
-                  shadowColor: Colors.black12,
-                  child: Container(
-                    decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(20),
-                      gradient: LinearGradient(
-                        colors: [Colors.white, Colors.grey.shade50],
-                        begin: Alignment.topLeft,
-                        end: Alignment.bottomRight,
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(16),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withOpacity(0.05),
+                        blurRadius: 10,
+                        offset: const Offset(0, 4),
                       ),
-                    ),
-                    child: Padding(
-                      padding: const EdgeInsets.all(16),
+                    ],
+                  ),
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(16),
+                    child: IntrinsicHeight(
                       child: Row(
-                        crossAxisAlignment: CrossAxisAlignment.start,
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
                         children: [
+                          // Side accent bar
                           Container(
-                            padding: const EdgeInsets.all(12),
-                            decoration: BoxDecoration(
-                              color: const Color(0xFF3F51B5).withOpacity(0.1),
-                              borderRadius: BorderRadius.circular(15),
-                            ),
-                            child: const Icon(Icons.school_outlined, color: Color(0xFF3F51B5), size: 28),
+                            width: 6,
+                            color: const Color(0xFF3F51B5),
                           ),
-                          const SizedBox(width: 16),
                           Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  lecture.subject,
-                                  style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 17, color: Color(0xFF2C3E50)),
-                                  maxLines: 1,
-                                  overflow: TextOverflow.ellipsis,
-                                ),
-                                const SizedBox(height: 6),
-                                if (lecture.doctor != null && lecture.doctor!.isNotEmpty)
+                            child: Padding(
+                              padding: const EdgeInsets.all(16),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
                                   Row(
+                                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                     children: [
-                                      Icon(Icons.person_outline, size: 14, color: Colors.grey.shade600),
-                                      const SizedBox(width: 4),
                                       Expanded(
                                         child: Text(
-                                          '${l10n.doctor}: ${lecture.doctor}',
-                                          style: TextStyle(color: Colors.grey.shade700, fontSize: 13),
+                                          lecture.subject,
+                                          style: const TextStyle(
+                                            fontWeight: FontWeight.w900,
+                                            fontSize: 18,
+                                            color: Color(0xFF1A237E),
+                                          ),
                                           maxLines: 1,
                                           overflow: TextOverflow.ellipsis,
                                         ),
                                       ),
+                                      if (canDelete)
+                                        IconButton(
+                                          icon: const Icon(Icons.delete_sweep_outlined, color: Colors.redAccent, size: 24),
+                                          onPressed: () => _confirmDelete(context, lecture.id, lecture.delegateId!),
+                                          constraints: const BoxConstraints(),
+                                          padding: EdgeInsets.zero,
+                                        ),
                                     ],
                                   ),
-                                const SizedBox(height: 4),
-                                Row(
-                                  children: [
-                                    if (lecture.time != null && lecture.time!.isNotEmpty) ...[
-                                      Icon(Icons.access_time, size: 14, color: Colors.grey.shade600),
-                                      const SizedBox(width: 4),
-                                      Text(
-                                        lecture.time!,
-                                        style: TextStyle(color: Colors.grey.shade700, fontSize: 13),
+                                  const Divider(height: 20, thickness: 0.5),
+                                  if (lecture.doctor != null && lecture.doctor!.isNotEmpty)
+                                    Padding(
+                                      padding: const EdgeInsets.only(bottom: 8),
+                                      child: Row(
+                                        children: [
+                                          const Icon(Icons.person_pin_rounded, size: 20, color: Color(0xFF3F51B5)),
+                                          const SizedBox(width: 8),
+                                          Text(
+                                            '${l10n.doctor}: ',
+                                            style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14, color: Colors.black87),
+                                          ),
+                                          Expanded(
+                                            child: Text(
+                                              lecture.doctor!,
+                                              style: const TextStyle(fontSize: 14, color: Colors.black54, fontWeight: FontWeight.w500),
+                                              maxLines: 1,
+                                              overflow: TextOverflow.ellipsis,
+                                            ),
+                                          ),
+                                        ],
                                       ),
-                                      const SizedBox(width: 12),
+                                    ),
+                                  Row(
+                                    children: [
+                                      if (lecture.time != null && lecture.time!.isNotEmpty)
+                                        Expanded(
+                                          child: Row(
+                                            children: [
+                                              const Icon(Icons.alarm_on_rounded, size: 20, color: Color(0xFF3F51B5)),
+                                              const SizedBox(width: 8),
+                                              Text(
+                                                lecture.time!,
+                                                style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: Colors.black87),
+                                              ),
+                                            ],
+                                          ),
+                                        ),
+                                      if (lecture.room != null && lecture.room!.isNotEmpty)
+                                        Expanded(
+                                          child: Row(
+                                            children: [
+                                              const Icon(Icons.meeting_room_outlined, size: 20, color: Color(0xFF3F51B5)),
+                                              const SizedBox(width: 8),
+                                              Text(
+                                                lecture.room!,
+                                                style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: Colors.black87),
+                                              ),
+                                            ],
+                                          ),
+                                        ),
                                     ],
-                                    if (lecture.room != null && lecture.room!.isNotEmpty) ...[
-                                      Icon(Icons.location_on_outlined, size: 14, color: Colors.grey.shade600),
-                                      const SizedBox(width: 4),
-                                      Text(
-                                        lecture.room!,
-                                        style: TextStyle(color: Colors.grey.shade700, fontSize: 13),
-                                      ),
-                                    ],
-                                  ],
-                                ),
-                                const SizedBox(height: 8),
-                                Text(
-                                  '${lecture.createdAt.day}/${lecture.createdAt.month}/${lecture.createdAt.year}',
-                                  style: TextStyle(color: Colors.grey.shade500, fontSize: 11, fontStyle: FontStyle.italic),
-                                ),
-                              ],
+                                  ),
+                                  const SizedBox(height: 12),
+                                  Align(
+                                    alignment: Alignment.bottomRight,
+                                    child: Text(
+                                      '${lecture.createdAt.day}/${lecture.createdAt.month}/${lecture.createdAt.year}',
+                                      style: TextStyle(color: Colors.grey.shade500, fontSize: 12, fontWeight: FontWeight.w500),
+                                    ),
+                                  ),
+                                ],
+                              ),
                             ),
                           ),
-                          if (canDelete)
-                            IconButton(
-                              icon: const Icon(Icons.delete_outline, color: Colors.redAccent, size: 22),
-                              onPressed: () => _confirmDelete(context, lecture.id, lecture.delegateId!),
-                              constraints: const BoxConstraints(),
-                              padding: const EdgeInsets.all(4),
-                            ),
                         ],
                       ),
                     ),
@@ -198,8 +228,9 @@ class _TomorrowLectureListScreenState extends ConsumerState<TomorrowLectureListS
           ? FloatingActionButton.extended(
               onPressed: _showAddTomorrowLectureDialog,
               backgroundColor: const Color(0xFF3F51B5),
-              icon: const Icon(Icons.add, color: Colors.white),
-              label: Text(l10n.addAnnouncement, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+              elevation: 4,
+              icon: const Icon(Icons.add_task_rounded, color: Colors.white),
+              label: Text(l10n.addAnnouncement, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 16)),
             )
           : null,
     );
