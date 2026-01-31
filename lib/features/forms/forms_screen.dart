@@ -2,10 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/storage/secure_storage_service.dart';
 import '../../core/auth/user_role.dart';
-import 'lecture_list_screen.dart'; // Import the new list screen
+import 'form_list_screen.dart'; // Import the new list screen
 
-class LecturesScreen extends ConsumerWidget {
-  const LecturesScreen({super.key});
+class FormsScreen extends ConsumerWidget {
+  const FormsScreen({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -14,8 +14,8 @@ class LecturesScreen extends ConsumerWidget {
       builder: (context, snapshot) {
         final role = snapshot.data ?? UserRole.student;
         
-        // Use the new LectureListScreen which handles the UI logic
-        return LectureListScreen(userRole: role);
+        // Use the new FormListScreen which handles the UI logic
+        return FormListScreen(userRole: role);
       },
     );
   }

@@ -1,7 +1,24 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../../core/storage/secure_storage_service.dart';
-import '../../core/localization/app_localizations.dart';
+import '../../core/storage/secure_storage_service.dart';import '../../core/auth/user_role.dart';
+import 'summary_list_screen.dart'; // Import the new list screen
+
+class SummariesScreen extends ConsumerWidget {
+  const SummariesScreen({super.key});
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    return FutureBuilder<UserRole>(
+      future: SecureStorageService.getUserRole(),
+      builder: (context, snapshot) {
+        final role = snapshot.data ?? UserRole.student;
+        
+        // Use the new SummaryListScreen which handles the UI logic
+        return SummaryListScreen(userRole: role);
+      },
+    );
+  }
+}ort '../../core/localization/app_localizations.dart';
 import '../../core/providers/content_provider.dart';
 import '../../core/auth/user_role.dart';
 import '../../shared/widgets/add_content_dialog.dart';
@@ -187,6 +204,7 @@ class _SummariesScreenState extends ConsumerState<SummariesScreen> {
           ),
         ],
       ),
+>>>>>>> a41f17fb411f3af0f62ac0fcce11efca6cbdd889
     );
   }
 }
