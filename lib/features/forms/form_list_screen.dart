@@ -4,9 +4,8 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../../core/auth/user_role.dart';
 import '../../core/localization/app_localizations.dart';
-import '../../core/providers/form_provider.dart'; // New Form Provider
-import '../../core/models/form_model.dart'; // New Form Model
-import 'add_form_dialog.dart'; // New Form Dialog
+import '../../core/providers/form_provider.dart';
+import 'add_form_dialog.dart';
 
 class FormListScreen extends ConsumerStatefulWidget {
   final UserRole userRole;
@@ -17,6 +16,8 @@ class FormListScreen extends ConsumerStatefulWidget {
 }
 
 class _FormListScreenState extends ConsumerState<FormListScreen> {
+  final currentUserId = Supabase.instance.client.auth.currentUser?.id;
+
   @override
   void initState() {
     super.initState();
@@ -91,80 +92,76 @@ class _FormListScreenState extends ConsumerState<FormListScreen> {
           : GridView.builder(
               padding: const EdgeInsets.all(16),
               gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                crossAxisCount: 2,
-                crossAxisSpacing: 12,
+                crossAxisCount: 1, // جعلها مستطيلة عبر استخدام عمود واحد أو تعديل النسبة
+                childAspectRatio: 2.5, // نسبة العرض إلى الارتفاع لجعلها مستطيلة
                 mainAxisSpacing: 12,
-                childAspectRatio: 0.8,
               ),
               itemCount: forms.length,
               itemBuilder: (context, index) {
                 final form = forms[index];
-                // Check if the current user is the creator (delegate)
-                              final currentUserId = Supabase.instance.client.auth.currentUser?.id;
                 final canDelete = isDelegate && form.delegateId == currentUserId;
-                final showDelete = isDelegate;
 
                 return Card(
                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
                   elevation: 2,
                   child: Padding(
-                    padding: const EdgeInsets.all(12),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
+                    padding: const EdgeInsets.all(16),
+                    child: Row(
                       children: [
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            const Icon(Icons.description, color: Color(0xFF3F51B5), size: 20),
-                            Row(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                if (canDelete)
-                                  IconButton(
-                                    icon: const Icon(Icons.delete_outline, color: Colors.red, size: 20),
-                                    onPressed: () => _confirmDelete(context, form.id, form.delegateId!),
-                                    constraints: const BoxConstraints(),
-                                    padding: EdgeInsets.zero,
-                                  ),
-                                if (form.fileUrl != null && form.fileUrl!.isNotEmpty)
-                                  IconButton(
-                                    icon: const Icon(Icons.open_in_new, color: Color(0xFF3F51B5), size: 20),
-                                    onPressed: () async {
-                                      final url = Uri.parse(form.fileUrl!);
-                                      if (await canLaunchUrl(url)) {
-                                        await launchUrl(url, mode: LaunchMode.externalApplication);
-                                      }
-                                    },
-                                    constraints: const BoxConstraints(),
-                                    padding: EdgeInsets.zero,
-                                  ),
-                              ],
-                            ),
-                          ],
+                        Container(
+                          padding: const EdgeInsets.all(12),
+                          decoration: BoxDecoration(
+                            color: const Color(0xFF3F51B5).withOpacity(0.1),
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: const Icon(Icons.description, color: Color(0xFF3F51B5), size: 24),
                         ),
-                        const SizedBox(height: 8),
-                        Text(
-                          form.subject,
-                          style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                        const SizedBox(height: 4),
-                        if (form.doctor != null && form.doctor!.isNotEmpty)
-                          Text('${l10n.doctor}: ${form.doctor}', style: TextStyle(color: Colors.grey.shade600, fontSize: 12)),
-                        const SizedBox(height: 4),
+                        const SizedBox(width: 16),
                         Expanded(
-                          child: SingleChildScrollView(
-                            child: Text(
-                              form.note ?? '',
-                              style: const TextStyle(fontSize: 11, color: Colors.black87),
-                            ),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Text(
+                                form.subject,
+                                style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                              if (form.doctor != null && form.doctor!.isNotEmpty)
+                                Text(
+                                  '${l10n.doctor}: ${form.doctor}',
+                                  style: TextStyle(color: Colors.grey.shade600, fontSize: 13),
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                              const SizedBox(height: 4),
+                              Text(
+                                '${form.createdAt.day}/${form.createdAt.month}/${form.createdAt.year}',
+                                style: TextStyle(color: Colors.grey.shade500, fontSize: 11),
+                              ),
+                            ],
                           ),
                         ),
-                        const SizedBox(height: 8),
-                        Text(
-                          '${form.createdAt.day}/${form.createdAt.month}/${form.createdAt.year}',
-                          style: TextStyle(color: Colors.grey.shade500, fontSize: 10),
+                        Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            if (form.fileUrl != null && form.fileUrl!.isNotEmpty)
+                              IconButton(
+                                icon: const Icon(Icons.open_in_new, color: Color(0xFF3F51B5)),
+                                onPressed: () async {
+                                  final url = Uri.parse(form.fileUrl!);
+                                  if (await canLaunchUrl(url)) {
+                                    await launchUrl(url, mode: LaunchMode.externalApplication);
+                                  }
+                                },
+                              ),
+                            if (canDelete)
+                              IconButton(
+                                icon: const Icon(Icons.delete_outline, color: Colors.red),
+                                onPressed: () => _confirmDelete(context, form.id, form.delegateId!),
+                              ),
+                          ],
                         ),
                       ],
                     ),
