@@ -102,7 +102,9 @@ class _StudentSummaryListScreenState extends ConsumerState<StudentSummaryListScr
               itemBuilder: (context, index) {
                 final summary = summaries[index];
                 // Student can delete only what they created
-                final canDelete = isStudent && summary.studentId == currentUserId;
+                // Delegate can delete any summary, Student can delete only their own
+                final isDelegate = widget.userRole == UserRole.delegate || widget.userRole == UserRole.admin;
+                final canDelete = isDelegate || (isStudent && summary.studentId == currentUserId);
 
                 return Card(
                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
@@ -172,14 +174,14 @@ class _StudentSummaryListScreenState extends ConsumerState<StudentSummaryListScr
                 );
               },
             ),
-      floatingActionButton: isStudent
-          ? FloatingActionButton.extended(
-              onPressed: _showAddStudentSummaryDialog,
-              backgroundColor: const Color(0xFF3F51B5),
-              icon: const Icon(Icons.add, color: Colors.white),
-              label: Text(l10n.addContent, style: const TextStyle(color: Colors.white)),
-            )
-          : null,
+	      floatingActionButton: isStudent
+	          ? FloatingActionButton.extended(
+	              onPressed: _showAddStudentSummaryDialog,
+	              backgroundColor: const Color(0xFF3F51B5),
+	              icon: const Icon(Icons.add, color: Colors.white),
+	              label: Text(l10n.addContent, style: const TextStyle(color: Colors.white)),
+	            )
+	          : null,
     );
   }
 }

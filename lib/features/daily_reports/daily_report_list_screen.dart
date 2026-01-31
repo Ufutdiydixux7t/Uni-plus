@@ -102,6 +102,7 @@ class _DailyReportListScreenState extends ConsumerState<DailyReportListScreen> {
                 // Check if the current user is the creator (delegate)
                 final currentUserId = Supabase.instance.client.auth.currentUser?.id;
                 final canDelete = isDelegate && report.delegateId == currentUserId;
+                final showDelete = isDelegate;
 
                 return Card(
                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),

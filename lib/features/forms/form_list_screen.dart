@@ -100,8 +100,9 @@ class _FormListScreenState extends ConsumerState<FormListScreen> {
               itemBuilder: (context, index) {
                 final form = forms[index];
                 // Check if the current user is the creator (delegate)
-                final currentUserId = Supabase.instance.client.auth.currentUser?.id;
+                              final currentUserId = Supabase.instance.client.auth.currentUser?.id;
                 final canDelete = isDelegate && form.delegateId == currentUserId;
+                final showDelete = isDelegate;
 
                 return Card(
                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),

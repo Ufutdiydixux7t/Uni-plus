@@ -14,8 +14,17 @@ class TaskNotifier extends StateNotifier<List<Task>> {
   final _tableName = 'tasks';
 
   Future<void> fetchTasks() async {
+    final currentGroupId = _supabase.auth.currentUser?.userMetadata?['group_id'];
+    if (currentGroupId == null) {
+      state = [];
+      return;
+    }
     try {
-      final response = await _supabase.from(_tableName).select().order('created_at', ascending: false);
+      final response = await _supabase
+          .from(_tableName)
+          .select()
+          .eq('group_id', currentGroupId)
+          .order('created_at', ascending: false);
       state = (response as List).map((json) => Task.fromJson(json)).toList();
     } on PostgrestException catch (e) {
       print('PostgrestException fetching $_tableName: ${e.message}');
@@ -59,6 +68,8 @@ class TaskNotifier extends StateNotifier<List<Task>> {
       return null; // Success
     } on PostgrestException catch (e, stackTrace) {
       return 'Database insertion failed: ${e.message}';
+    } on StorageException catch (e, stackTrace) {
+      return 'Storage operation failed: ${e.message}';
     } catch (e, stackTrace) {
       return 'An unexpected error occurred: $e';
     }

@@ -17,6 +17,7 @@ class TaskListScreen extends ConsumerStatefulWidget {
 
 class _TaskListScreenState extends ConsumerState<TaskListScreen> {
   final currentUserId = Supabase.instance.client.auth.currentUser?.id;
+  final isDelegate = widget.userRole == UserRole.delegate || widget.userRole == UserRole.admin;
 
   @override
   void initState() {
@@ -102,6 +103,8 @@ class _TaskListScreenState extends ConsumerState<TaskListScreen> {
                 final task = tasks[index];
                 // Delegate can delete only what they created
                 final canDelete = isDelegate && task.delegateId == currentUserId;
+                // Students see read-only, Delegates can delete.
+                final showDelete = isDelegate;
 
                 return Card(
                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),

@@ -17,6 +17,7 @@ class TomorrowLectureListScreen extends ConsumerStatefulWidget {
 
 class _TomorrowLectureListScreenState extends ConsumerState<TomorrowLectureListScreen> {
   final currentUserId = Supabase.instance.client.auth.currentUser?.id;
+  final isDelegate = widget.userRole == UserRole.delegate || widget.userRole == UserRole.admin;
 
   @override
   void initState() {
@@ -102,6 +103,7 @@ class _TomorrowLectureListScreenState extends ConsumerState<TomorrowLectureListS
                 final lecture = lectures[index];
                 // Delegate can delete only what they created
                 final canDelete = isDelegate && lecture.delegateId == currentUserId;
+                final showDelete = isDelegate;
 
                 return Card(
                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
