@@ -3,9 +3,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../core/auth/user_role.dart';
 import '../../core/localization/app_localizations.dart';
-import '../../core/providers/task_provider.dart'; // New Task Provider
-import '../../core/models/task_model.dart'; // New Task Model
-import 'add_task_dialog.dart'; // New Task Dialog
+import '../../core/providers/task_provider.dart';
+import '../../core/models/task_model.dart';
+import 'add_task_dialog.dart';
 
 class TaskListScreen extends ConsumerStatefulWidget {
   final UserRole userRole;
@@ -17,7 +17,6 @@ class TaskListScreen extends ConsumerStatefulWidget {
 
 class _TaskListScreenState extends ConsumerState<TaskListScreen> {
   final currentUserId = Supabase.instance.client.auth.currentUser?.id;
-  late final isDelegate = widget.userRole == UserRole.delegate || widget.userRole == UserRole.admin;
 
   @override
   void initState() {
@@ -36,7 +35,7 @@ class _TaskListScreenState extends ConsumerState<TaskListScreen> {
     );
   }
 
-  void _confirmDelete(BuildContext context, String contentId, String delegateId) {
+  void _confirmDelete(BuildContext context, String taskId, String delegateId) {
     final l10n = AppLocalizations.of(context);
     showDialog(
       context: context,
@@ -48,7 +47,7 @@ class _TaskListScreenState extends ConsumerState<TaskListScreen> {
           TextButton(
             onPressed: () async {
               Navigator.pop(context);
-              final errorMessage = await ref.read(taskProvider.notifier).deleteTask(contentId, delegateId);
+              final errorMessage = await ref.read(taskProvider.notifier).deleteTask(taskId, delegateId);
               if (mounted) {
                 if (errorMessage == null) {
                   ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(l10n.success)));
@@ -76,6 +75,7 @@ class _TaskListScreenState extends ConsumerState<TaskListScreen> {
     final isDelegate = widget.userRole == UserRole.delegate || widget.userRole == UserRole.admin;
 
     return Scaffold(
+      backgroundColor: const Color(0xFFF6F7FB),
       appBar: AppBar(
         title: Text(l10n.tasks, style: const TextStyle(color: Colors.black, fontWeight: FontWeight.bold)),
         backgroundColor: Colors.white,
@@ -90,66 +90,83 @@ class _TaskListScreenState extends ConsumerState<TaskListScreen> {
       ),
       body: tasks.isEmpty
           ? Center(child: Text(l10n.noContent))
-          : GridView.builder(
+          : ListView.builder(
               padding: const EdgeInsets.all(16),
-              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                crossAxisCount: 2,
-                crossAxisSpacing: 12,
-                mainAxisSpacing: 12,
-                childAspectRatio: 0.8,
-              ),
               itemCount: tasks.length,
               itemBuilder: (context, index) {
                 final task = tasks[index];
-                // Delegate can delete only what they created
                 final canDelete = isDelegate && task.delegateId == currentUserId;
-                // Students see read-only, Delegates can delete.
-                final showDelete = isDelegate;
 
                 return Card(
+                  margin: const EdgeInsets.only(bottom: 16),
                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
                   elevation: 2,
                   child: Padding(
-                    padding: const EdgeInsets.all(12),
+                    padding: const EdgeInsets.all(16),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
-                            const Icon(Icons.task, color: Color(0xFF3F51B5), size: 20),
+                            Container(
+                              padding: const EdgeInsets.all(8),
+                              decoration: BoxDecoration(
+                                color: const Color(0xFF3F51B5).withOpacity(0.1),
+                                borderRadius: BorderRadius.circular(8),
+                              ),
+                              child: const Icon(Icons.task, color: Color(0xFF3F51B5), size: 20),
+                            ),
+                            const SizedBox(width: 12),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    task.subject,
+                                    style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
+                                  if (task.doctor != null && task.doctor!.isNotEmpty)
+                                    Text(
+                                      '${l10n.doctor}: ${task.doctor}',
+                                      style: TextStyle(color: Colors.grey.shade600, fontSize: 13),
+                                    ),
+                                ],
+                              ),
+                            ),
                             if (canDelete)
                               IconButton(
-                                icon: const Icon(Icons.delete_outline, color: Colors.red, size: 20),
+                                icon: const Icon(Icons.delete_outline, color: Colors.red),
                                 onPressed: () => _confirmDelete(context, task.id, task.delegateId!),
-                                constraints: const BoxConstraints(),
-                                padding: EdgeInsets.zero,
                               ),
                           ],
                         ),
-                        const SizedBox(height: 8),
+                        const Divider(height: 24),
                         Text(
-                          task.subject,
-                          style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
+                          task.note ?? '',
+                          style: const TextStyle(fontSize: 14, color: Colors.black87, height: 1.4),
                         ),
-                        const SizedBox(height: 4),
-                        if (task.doctor != null && task.doctor!.isNotEmpty)
-                          Text('${l10n.doctor}: ${task.doctor}', style: TextStyle(color: Colors.grey.shade600, fontSize: 12)),
-                        const SizedBox(height: 4),
-                        Expanded(
-                          child: SingleChildScrollView(
-                            child: Text(
-                              task.note ?? '',
-                              style: const TextStyle(fontSize: 11, color: Colors.black87),
+                        const SizedBox(height: 16),
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Text(
+                              '${task.createdAt.day}/${task.createdAt.month}/${task.createdAt.year}',
+                              style: TextStyle(color: Colors.grey.shade500, fontSize: 12),
                             ),
-                          ),
-                        ),
-                        const SizedBox(height: 8),
-                        Text(
-                          '${task.createdAt.day}/${task.createdAt.month}/${task.createdAt.year}',
-                          style: TextStyle(color: Colors.grey.shade500, fontSize: 10),
+                            Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                              decoration: BoxDecoration(
+                                color: Colors.grey.shade100,
+                                borderRadius: BorderRadius.circular(6),
+                              ),
+                              child: Text(
+                                l10n.tasks,
+                                style: TextStyle(color: Colors.grey.shade600, fontSize: 10, fontWeight: FontWeight.bold),
+                              ),
+                            ),
+                          ],
                         ),
                       ],
                     ),

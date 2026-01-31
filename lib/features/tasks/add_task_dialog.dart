@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../core/localization/app_localizations.dart';
 import '../../core/providers/task_provider.dart';
 
@@ -30,26 +29,19 @@ class _AddTaskDialogState extends ConsumerState<AddTaskDialog> {
     if (!_formKey.currentState!.validate()) return;
     setState(() => _isSubmitting = true);
 
-    final user = Supabase.instance.client.auth.currentUser;
-    final groupId = user?.userMetadata?["group_id"];
-
     final errorMessage = await ref.read(taskProvider.notifier).addTask(
       subject: _subjectController.text,
       doctor: _doctorController.text,
       note: _noteController.text,
-      groupId: groupId,
     );
 
     if (mounted) {
       setState(() => _isSubmitting = false);
       final l10n = AppLocalizations.of(context);
       if (errorMessage == null) {
-        Navigator.pop(context); // Close dialog on success
+        Navigator.pop(context);
         ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(l10n.success)));
-        // Refresh the list after successful addition
-        ref.read(taskProvider.notifier).fetchTasks();
       } else {
-        // Show detailed error message to the user
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text('${l10n.error}: $errorMessage'),
@@ -104,7 +96,6 @@ class _AddTaskDialogState extends ConsumerState<AddTaskDialog> {
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // Title
                 Text(
                   '${l10n.addContent}: ${l10n.tasks}',
                   style: theme.textTheme.headlineSmall?.copyWith(
@@ -113,37 +104,29 @@ class _AddTaskDialogState extends ConsumerState<AddTaskDialog> {
                   ),
                 ),
                 const SizedBox(height: 24),
-
-                // Subject Field
                 _buildTextField(
                   controller: _subjectController,
                   label: l10n.subject,
                   icon: Icons.book_outlined,
                   validator: (value) => value!.isEmpty ? l10n.requiredField : null,
                 ),
-
-                // Doctor Field
                 _buildTextField(
                   controller: _doctorController,
                   label: l10n.doctor,
                   icon: Icons.person_outline,
+                  validator: (value) => value!.isEmpty ? l10n.requiredField : null,
                 ),
-
-                // Note Field
                 _buildTextField(
                   controller: _noteController,
                   label: l10n.note,
                   icon: Icons.notes_outlined,
                   maxLines: 3,
+                  validator: (value) => value!.isEmpty ? l10n.requiredField : null,
                 ),
-
                 const SizedBox(height: 24),
-
-                // Action Buttons
                 Row(
                   mainAxisAlignment: MainAxisAlignment.end,
                   children: [
-                    // Cancel Button
                     TextButton(
                       onPressed: _isSubmitting ? null : () => Navigator.pop(context),
                       child: Text(
@@ -152,8 +135,6 @@ class _AddTaskDialogState extends ConsumerState<AddTaskDialog> {
                       ),
                     ),
                     const SizedBox(width: 8),
-
-                    // Save Button
                     ElevatedButton(
                       onPressed: _isSubmitting ? null : _submit,
                       style: ElevatedButton.styleFrom(
