@@ -13,11 +13,13 @@ import '../../core/providers/grade_provider.dart';
 import '../../core/providers/task_provider.dart';
 import '../../core/providers/summary_provider.dart';
 import '../../core/providers/daily_report_provider.dart';
+import '../../core/providers/form_provider.dart';
 import '../../shared/widgets/app_drawer.dart';
 import '../shared/content_list_screen.dart';
 import '../lectures/lectures_screen.dart';
 import '../summaries/summaries_screen.dart';
 import '../forms/forms_screen.dart';
+import '../daily_reports/daily_reports_screen.dart';
 import '../../core/auth/user_role.dart';
 import '../grades/grades_list_screen.dart';
 
@@ -48,6 +50,7 @@ class _AdminDashboardScreenState extends ConsumerState<AdminDashboardScreen> {
     ref.read(taskProvider.notifier).fetchTasks();
     ref.read(summaryProvider.notifier).fetchSummaries();
     ref.read(dailyReportProvider.notifier).fetchDailyReports();
+    ref.read(formProvider.notifier).fetchForms();
   }
 
   String _generateJoinCode() {
@@ -130,14 +133,14 @@ class _AdminDashboardScreenState extends ConsumerState<AdminDashboardScreen> {
   void _navigateToContent(String title, String category) {
     if (category == 'grades') {
       Navigator.push(context, MaterialPageRoute(builder: (_) => const GradesListScreen(userRole: UserRole.delegate)));
-      return;
-    }
-    if (category == 'lectures') {
+    } else if (category == 'lectures') {
       Navigator.push(context, MaterialPageRoute(builder: (_) => const LecturesScreen()));
     } else if (category == 'summaries') {
       Navigator.push(context, MaterialPageRoute(builder: (_) => const SummariesScreen()));
     } else if (category == 'forms') {
       Navigator.push(context, MaterialPageRoute(builder: (_) => const FormsScreen()));
+    } else if (category == 'reports' || category == 'daily_reports') {
+      Navigator.push(context, MaterialPageRoute(builder: (_) => const DailyReportsScreen()));
     } else {
       Navigator.push(
         context,

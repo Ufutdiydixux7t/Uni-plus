@@ -7,6 +7,7 @@ import '../../core/providers/lecture_provider.dart';
 import '../../core/providers/summary_provider.dart';
 import '../../core/providers/task_provider.dart';
 import '../../core/providers/tomorrow_lecture_provider.dart';
+import '../../core/providers/form_provider.dart';
 import '../../core/storage/secure_storage_service.dart';
 import '../../core/localization/app_localizations.dart';
 import '../../core/providers/announcement_provider.dart';
@@ -16,6 +17,7 @@ import '../shared/content_list_screen.dart';
 import '../lectures/lectures_screen.dart';
 import '../summaries/summaries_screen.dart';
 import '../forms/forms_screen.dart';
+import '../daily_reports/daily_reports_screen.dart';
 import '../summaries/send_summary_screen.dart';
 import '../student_grades/student_grades_screen.dart';
 import './models/home_grid_item.dart';
@@ -50,7 +52,6 @@ class _DailyFeedScreenState extends ConsumerState<DailyFeedScreen> {
   }
 
   void _refreshData() {
-    // Refresh all relevant data from Supabase
     ref.read(tomorrowLectureProvider.notifier).fetchTomorrowLectures();
     ref.read(contentProvider.notifier).fetchContent();
     ref.read(lectureProvider.notifier).fetchLectures();
@@ -58,6 +59,7 @@ class _DailyFeedScreenState extends ConsumerState<DailyFeedScreen> {
     ref.read(taskProvider.notifier).fetchTasks();
     ref.read(summaryProvider.notifier).fetchSummaries();
     ref.read(dailyReportProvider.notifier).fetchDailyReports();
+    ref.read(formProvider.notifier).fetchForms();
   }
 
   List<HomeGridItem> _getGridItems(AppLocalizations l10n) {
@@ -82,6 +84,8 @@ class _DailyFeedScreenState extends ConsumerState<DailyFeedScreen> {
       Navigator.push(context, MaterialPageRoute(builder: (_) => const SummariesScreen()));
     } else if (item.category == 'forms') {
       Navigator.push(context, MaterialPageRoute(builder: (_) => const FormsScreen()));
+    } else if (item.category == 'reports' || item.category == 'daily_reports') {
+      Navigator.push(context, MaterialPageRoute(builder: (_) => const DailyReportsScreen()));
     } else {
       Navigator.push(
         context,
@@ -98,7 +102,6 @@ class _DailyFeedScreenState extends ConsumerState<DailyFeedScreen> {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
-    // Use tomorrowLectureProvider instead of announcementProvider for "Tomorrow Lectures"
     final tomorrowLectures = ref.watch(tomorrowLectureProvider);
     final isDelegate = _userRole == UserRole.delegate || _userRole == UserRole.admin;
     final gridItems = _getGridItems(l10n);
@@ -277,70 +280,12 @@ class _DailyFeedScreenState extends ConsumerState<DailyFeedScreen> {
           const SizedBox(height: 6),
           Text(
             l10n.locale.languageCode == 'ar' ? 'الوصول إلى المحتوى الأكاديمي بسهولة' : 'Access your academic content easily',
-            style: const TextStyle(color: Colors.white70, fontSize: 13),
+            style: TextStyle(
+              color: Colors.white.withOpacity(0.8),
+              fontSize: 14,
+            ),
           ),
         ],
-      ),
-    );
-  }
-
-  Widget _actionCard(IconData icon, String title, VoidCallback onTap) {
-    return InkWell(
-      onTap: onTap,
-      borderRadius: BorderRadius.circular(20),
-      child: Container(
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(20),
-          boxShadow: [
-            BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 10, offset: const Offset(0, 4)),
-          ],
-        ),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(icon, size: 32, color: const Color(0xFF3F51B5)),
-            const SizedBox(height: 12),
-            Text(title, style: const TextStyle(fontWeight: FontWeight.bold)),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _horizontalActionCard({required IconData icon, required String title, required String subtitle, required VoidCallback onTap}) {
-    return InkWell(
-      onTap: onTap,
-      borderRadius: BorderRadius.circular(20),
-      child: Container(
-        padding: const EdgeInsets.all(16),
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(20),
-          boxShadow: [
-            BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 10, offset: const Offset(0, 4)),
-          ],
-        ),
-        child: Row(
-          children: [
-            Container(
-              padding: const EdgeInsets.all(12),
-              decoration: BoxDecoration(color: const Color(0xFF3F51B5).withOpacity(0.1), borderRadius: BorderRadius.circular(12)),
-              child: Icon(icon, color: const Color(0xFF3F51B5)),
-            ),
-            const SizedBox(width: 16),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(title, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
-                  Text(subtitle, style: TextStyle(color: Colors.grey.shade600, fontSize: 12)),
-                ],
-              ),
-            ),
-            const Icon(Icons.arrow_forward_ios, size: 16, color: Colors.grey),
-          ],
-        ),
       ),
     );
   }
@@ -358,15 +303,28 @@ class _DailyFeedScreenState extends ConsumerState<DailyFeedScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(lecture.subject, style: const TextStyle(fontWeight: FontWeight.bold), maxLines: 1, overflow: TextOverflow.ellipsis),
+          Text(
+            lecture.subject,
+            style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+          ),
           const SizedBox(height: 4),
-          Text(lecture.doctor ?? '', style: TextStyle(color: Colors.grey.shade600, fontSize: 11), maxLines: 1, overflow: TextOverflow.ellipsis),
+          Text(
+            lecture.doctor ?? '',
+            style: TextStyle(color: Colors.grey.shade600, fontSize: 12),
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+          ),
           const Spacer(),
           Row(
             children: [
-              const Icon(Icons.access_time, size: 12, color: Colors.blue),
+              const Icon(Icons.access_time, size: 14, color: Colors.blue),
               const SizedBox(width: 4),
-              Text(lecture.time ?? '', style: const TextStyle(fontSize: 10, color: Colors.blue)),
+              Text(
+                lecture.time ?? '',
+                style: const TextStyle(fontSize: 12, color: Colors.blue, fontWeight: FontWeight.w500),
+              ),
             ],
           ),
         ],
@@ -374,7 +332,76 @@ class _DailyFeedScreenState extends ConsumerState<DailyFeedScreen> {
     );
   }
 
+  Widget _actionCard(IconData icon, String title, VoidCallback onTap) {
+    return Card(
+      elevation: 0,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(20),
+        side: BorderSide(color: Colors.grey.shade200),
+      ),
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(20),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(icon, size: 32, color: const Color(0xFF3F51B5)),
+            const SizedBox(height: 12),
+            Text(
+              title,
+              style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
+              textAlign: TextAlign.center,
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _horizontalActionCard({required IconData icon, required String title, required String subtitle, required VoidCallback onTap}) {
+    return Card(
+      elevation: 0,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(20),
+        side: BorderSide(color: Colors.grey.shade200),
+      ),
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(20),
+        child: Padding(
+          padding: const EdgeInsets.all(16),
+          child: Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: const Color(0xFF3F51B5).withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Icon(icon, color: const Color(0xFF3F51B5)),
+              ),
+              const SizedBox(width: 16),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(title, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+                    Text(subtitle, style: TextStyle(color: Colors.grey.shade600, fontSize: 12)),
+                  ],
+                ),
+              ),
+              const Icon(Icons.arrow_forward_ios, size: 16, color: Colors.grey),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
   void _showSendSummaryDialog(BuildContext context, AppLocalizations l10n) {
-    Navigator.push(context, MaterialPageRoute(builder: (_) => const SendSummaryScreen()));
+    showDialog(
+      context: context,
+      builder: (context) => const SendSummaryScreen(),
+    );
   }
 }
