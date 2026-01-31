@@ -25,7 +25,9 @@ class _FormListScreenState extends ConsumerState<FormListScreen> {
   }
 
   Future<void> _fetchForms() async {
-    ref.read(formProvider.notifier).fetchForms();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      ref.read(formProvider.notifier).fetchForms();
+    });
   }
 
   void _showAddFormDialog() {

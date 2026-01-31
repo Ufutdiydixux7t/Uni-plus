@@ -17,6 +17,7 @@ import '../../shared/widgets/app_drawer.dart';
 import '../shared/content_list_screen.dart';
 import '../lectures/lectures_screen.dart';
 import '../summaries/summaries_screen.dart';
+import '../forms/forms_screen.dart';
 import '../../core/auth/user_role.dart';
 import '../grades/grades_list_screen.dart';
 
@@ -135,6 +136,8 @@ class _AdminDashboardScreenState extends ConsumerState<AdminDashboardScreen> {
       Navigator.push(context, MaterialPageRoute(builder: (_) => const LecturesScreen()));
     } else if (category == 'summaries') {
       Navigator.push(context, MaterialPageRoute(builder: (_) => const SummariesScreen()));
+    } else if (category == 'forms') {
+      Navigator.push(context, MaterialPageRoute(builder: (_) => const FormsScreen()));
     } else {
       Navigator.push(
         context,

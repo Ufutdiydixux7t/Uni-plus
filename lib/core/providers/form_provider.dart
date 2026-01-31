@@ -17,6 +17,7 @@ class FormNotifier extends StateNotifier<List<FormModel>> {
 
   Future<void> fetchForms() async {
     try {
+      // Fetch all forms without group_id restriction for now to ensure visibility
       final response = await _supabase.from(_tableName).select().order('created_at', ascending: false);
       state = (response as List).map((json) => FormModel.fromJson(json)).toList();
       print('Fetched ${state.length} forms');

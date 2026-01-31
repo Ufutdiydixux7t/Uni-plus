@@ -15,6 +15,7 @@ import '../../shared/widgets/app_drawer.dart';
 import '../shared/content_list_screen.dart';
 import '../lectures/lectures_screen.dart';
 import '../summaries/summaries_screen.dart';
+import '../forms/forms_screen.dart';
 import '../summaries/send_summary_screen.dart';
 import '../student_grades/student_grades_screen.dart';
 import './models/home_grid_item.dart';
@@ -79,6 +80,8 @@ class _DailyFeedScreenState extends ConsumerState<DailyFeedScreen> {
       Navigator.push(context, MaterialPageRoute(builder: (_) => const LecturesScreen()));
     } else if (item.category == 'summaries') {
       Navigator.push(context, MaterialPageRoute(builder: (_) => const SummariesScreen()));
+    } else if (item.category == 'forms') {
+      Navigator.push(context, MaterialPageRoute(builder: (_) => const FormsScreen()));
     } else {
       Navigator.push(
         context,
