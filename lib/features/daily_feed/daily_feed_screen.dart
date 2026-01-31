@@ -1,6 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/providers/content_provider.dart';
+import '../../core/providers/daily_report_provider.dart';
+import '../../core/providers/grade_provider.dart';
+import '../../core/providers/lecture_provider.dart';
+import '../../core/providers/summary_provider.dart';
+import '../../core/providers/task_provider.dart';
+import '../../core/providers/tomorrow_lecture_provider.dart';
 import '../../core/storage/secure_storage_service.dart';
 import '../../core/localization/app_localizations.dart';
 import '../../core/providers/announcement_provider.dart';

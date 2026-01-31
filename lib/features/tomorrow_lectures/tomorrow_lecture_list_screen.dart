@@ -17,7 +17,7 @@ class TomorrowLectureListScreen extends ConsumerStatefulWidget {
 
 class _TomorrowLectureListScreenState extends ConsumerState<TomorrowLectureListScreen> {
   final currentUserId = Supabase.instance.client.auth.currentUser?.id;
-  final isDelegate = widget.userRole == UserRole.delegate || widget.userRole == UserRole.admin;
+  late final isDelegate = widget.userRole == UserRole.delegate || widget.userRole == UserRole.admin;
 
   @override
   void initState() {

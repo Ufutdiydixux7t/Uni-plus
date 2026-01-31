@@ -17,7 +17,7 @@ class TaskListScreen extends ConsumerStatefulWidget {
 
 class _TaskListScreenState extends ConsumerState<TaskListScreen> {
   final currentUserId = Supabase.instance.client.auth.currentUser?.id;
-  final isDelegate = widget.userRole == UserRole.delegate || widget.userRole == UserRole.admin;
+  late final isDelegate = widget.userRole == UserRole.delegate || widget.userRole == UserRole.admin;
 
   @override
   void initState() {

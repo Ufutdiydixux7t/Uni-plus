@@ -26,7 +26,6 @@ dependencies:
   cupertino_icons: ^1.0.8
   file_picker: ^8.0.0
   excel: ^4.0.0
-  path_provider: ^2.1.2
   open_file: ^3.5.11
 
 dev_dependencies:
