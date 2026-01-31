@@ -93,10 +93,10 @@ class _TomorrowLectureListScreenState extends ConsumerState<TomorrowLectureListS
           : GridView.builder(
               padding: const EdgeInsets.all(16),
               gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                crossAxisCount: 2,
+                crossAxisCount: 1,
                 crossAxisSpacing: 12,
                 mainAxisSpacing: 12,
-                childAspectRatio: 0.8,
+                childAspectRatio: 2.5,
               ),
               itemCount: lectures.length,
               itemBuilder: (context, index) {

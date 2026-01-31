@@ -93,10 +93,10 @@ class _StudentSummaryListScreenState extends ConsumerState<StudentSummaryListScr
           : GridView.builder(
               padding: const EdgeInsets.all(16),
               gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                crossAxisCount: 2,
+                crossAxisCount: 1,
                 crossAxisSpacing: 12,
                 mainAxisSpacing: 12,
-                childAspectRatio: 0.8,
+                childAspectRatio: 2.5,
               ),
               itemCount: summaries.length,
               itemBuilder: (context, index) {
