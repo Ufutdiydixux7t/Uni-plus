@@ -157,6 +157,95 @@ class _AdminDashboardScreenState extends ConsumerState<AdminDashboardScreen> {
     }
   }
 
+  void _showAddTomorrowLectureDialog() {
+    final l10n = AppLocalizations.of(context);
+    final subjectController = TextEditingController();
+    final doctorController = TextEditingController();
+    final roomController = TextEditingController();
+    final timeController = TextEditingController();
+    final formKey = GlobalKey<FormState>();
+    bool isSubmitting = false;
+
+    showDialog(
+      context: context,
+      builder: (context) => StatefulBuilder(
+        builder: (context, setDialogState) => AlertDialog(
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+          title: Text(
+            l10n.locale.languageCode == 'ar' ? 'إضافة محاضرة غداً' : 'Add Tomorrow Lecture',
+            style: const TextStyle(color: Color(0xFF3F51B5), fontWeight: FontWeight.bold),
+          ),
+          content: Form(
+            key: formKey,
+            child: SingleChildScrollView(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  _buildDialogField(subjectController, l10n.subject, Icons.book_outlined, l10n),
+                  _buildDialogField(doctorController, l10n.doctor, Icons.person_outline, l10n),
+                  _buildDialogField(roomController, l10n.locale.languageCode == 'ar' ? 'القاعة' : 'Room', Icons.room_outlined, l10n),
+                  _buildDialogField(timeController, l10n.locale.languageCode == 'ar' ? 'الوقت' : 'Time', Icons.access_time_outlined, l10n),
+                ],
+              ),
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: isSubmitting ? null : () => Navigator.pop(context),
+              child: Text(l10n.cancel, style: TextStyle(color: Colors.grey.shade600)),
+            ),
+            ElevatedButton(
+              onPressed: isSubmitting ? null : () async {
+                if (formKey.currentState!.validate()) {
+                  setDialogState(() => isSubmitting = true);
+                  final error = await ref.read(tomorrowLectureProvider.notifier).addTomorrowLecture(
+                    subject: subjectController.text,
+                    doctor: doctorController.text,
+                    room: roomController.text,
+                    time: timeController.text,
+                  );
+                  if (mounted) {
+                    if (error == null) {
+                      Navigator.pop(context);
+                      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(l10n.success)));
+                    } else {
+                      setDialogState(() => isSubmitting = false);
+                      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(error), backgroundColor: Colors.red));
+                    }
+                  }
+                }
+              },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: const Color(0xFF3F51B5),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+              ),
+              child: isSubmitting 
+                ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
+                : Text(l10n.save, style: const TextStyle(color: Colors.white)),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildDialogField(TextEditingController controller, String label, IconData icon, AppLocalizations l10n) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 16),
+      child: TextFormField(
+        controller: controller,
+        decoration: InputDecoration(
+          labelText: label,
+          prefixIcon: Icon(icon, color: const Color(0xFF3F51B5)),
+          filled: true,
+          fillColor: Colors.grey.shade100,
+          border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide.none),
+        ),
+        validator: (value) => value == null || value.isEmpty ? l10n.requiredField : null,
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
@@ -310,9 +399,10 @@ class _AdminDashboardScreenState extends ConsumerState<AdminDashboardScreen> {
               l10n.tomorrowLectures,
               style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
             ),
-            TextButton(
-              onPressed: () => _navigateToContent(l10n.tomorrowLectures, 'tomorrow_lectures'),
-              child: Text(l10n.addContent),
+            IconButton(
+              onPressed: _showAddTomorrowLectureDialog,
+              icon: const Icon(Icons.add_circle, color: Color(0xFF3F51B5), size: 28),
+              tooltip: l10n.addContent,
             ),
           ],
         ),
@@ -321,9 +411,10 @@ class _AdminDashboardScreenState extends ConsumerState<AdminDashboardScreen> {
           _emptyState(l10n.noContent)
         else
           SizedBox(
-            height: 120,
+            height: 160,
             child: ListView.builder(
               scrollDirection: Axis.horizontal,
+              physics: const BouncingScrollPhysics(),
               itemCount: lectures.length,
               itemBuilder: (context, index) => _tomorrowLectureCard(lectures[index], l10n),
             ),
@@ -347,27 +438,107 @@ class _AdminDashboardScreenState extends ConsumerState<AdminDashboardScreen> {
 
   Widget _tomorrowLectureCard(dynamic lecture, AppLocalizations l10n) {
     return Container(
-      width: 200,
-      margin: const EdgeInsets.only(right: 16),
+      width: 220,
+      margin: const EdgeInsets.only(right: 16, bottom: 8),
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: Colors.grey.shade200),
+        borderRadius: BorderRadius.circular(20),
+        boxShadow: [
+          BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 10, offset: const Offset(0, 4)),
+        ],
       ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+      child: Stack(
         children: [
-          Text(lecture.subject, style: const TextStyle(fontWeight: FontWeight.bold), maxLines: 1, overflow: TextOverflow.ellipsis),
-          const SizedBox(height: 4),
-          Text(lecture.doctor ?? '', style: TextStyle(color: Colors.grey.shade600, fontSize: 11), maxLines: 1, overflow: TextOverflow.ellipsis),
-          const Spacer(),
-          Row(
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const Icon(Icons.access_time, size: 12, color: Colors.blue),
-              const SizedBox(width: 4),
-              Text(lecture.time ?? '', style: const TextStyle(fontSize: 10, color: Colors.blue)),
+              Row(
+                children: [
+                  const Icon(Icons.school, size: 18, color: Color(0xFF3F51B5)),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Text(
+                      lecture.subject,
+                      style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 8),
+              _lectureInfoRow(Icons.person, lecture.doctor ?? ''),
+              _lectureInfoRow(Icons.room, lecture.room ?? ''),
+              const Spacer(),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                decoration: BoxDecoration(
+                  color: const Color(0xFF3F51B5).withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    const Icon(Icons.access_time, size: 14, color: Color(0xFF3F51B5)),
+                    const SizedBox(width: 6),
+                    Text(
+                      lecture.time ?? '',
+                      style: const TextStyle(fontSize: 12, color: Color(0xFF3F51B5), fontWeight: FontWeight.bold),
+                    ),
+                  ],
+                ),
+              ),
             ],
+          ),
+          Positioned(
+            top: -10,
+            right: -10,
+            child: IconButton(
+              icon: const Icon(Icons.delete_outline, color: Colors.red, size: 18),
+              onPressed: () => _confirmDeleteLecture(lecture.id, lecture.delegateId ?? ''),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _lectureInfoRow(IconData icon, String text) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 4),
+      child: Row(
+        children: [
+          Icon(icon, size: 14, color: Colors.grey),
+          const SizedBox(width: 6),
+          Expanded(
+            child: Text(
+              text,
+              style: TextStyle(color: Colors.grey.shade700, fontSize: 12),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _confirmDeleteLecture(String id, String delegateId) {
+    final l10n = AppLocalizations.of(context);
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text(l10n.delete),
+        content: Text(l10n.confirmDelete),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(context), child: Text(l10n.cancel)),
+          TextButton(
+            onPressed: () async {
+              Navigator.pop(context);
+              await ref.read(tomorrowLectureProvider.notifier).deleteTomorrowLecture(id, delegateId);
+            },
+            child: Text(l10n.delete, style: const TextStyle(color: Colors.red)),
           ),
         ],
       ),

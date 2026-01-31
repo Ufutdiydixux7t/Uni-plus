@@ -20,6 +20,7 @@ import '../forms/forms_screen.dart';
 import '../daily_reports/daily_reports_screen.dart';
 import '../summaries/send_summary_screen.dart';
 import '../student_grades/student_grades_screen.dart';
+import '../tasks/tasks_screen.dart';
 import './models/home_grid_item.dart';
 
 class DailyFeedScreen extends ConsumerStatefulWidget {
@@ -84,6 +85,8 @@ class _DailyFeedScreenState extends ConsumerState<DailyFeedScreen> {
       Navigator.push(context, MaterialPageRoute(builder: (_) => const SummariesScreen()));
     } else if (item.category == 'forms') {
       Navigator.push(context, MaterialPageRoute(builder: (_) => const FormsScreen()));
+    } else if (item.category == 'tasks') {
+      Navigator.push(context, MaterialPageRoute(builder: (_) => const TasksScreen()));
     } else if (item.category == 'reports' || item.category == 'daily_reports') {
       Navigator.push(context, MaterialPageRoute(builder: (_) => const DailyReportsScreen()));
     } else {
@@ -144,35 +147,16 @@ class _DailyFeedScreenState extends ConsumerState<DailyFeedScreen> {
                     ),
                     const SizedBox(height: 16),
                     if (tomorrowLectures.isEmpty)
-                      Container(
-                        width: double.infinity,
-                        padding: const EdgeInsets.all(20),
-                        decoration: BoxDecoration(
-                          color: Colors.white,
-                          borderRadius: BorderRadius.circular(16),
-                          boxShadow: [
-                            BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 10, offset: const Offset(0, 4)),
-                          ],
-                        ),
-                        child: Center(
-                          child: Text(
-                            l10n.noContent,
-                            style: const TextStyle(color: Colors.grey),
-                          ),
-                        ),
-                      )
+                      _emptyState(l10n.noContent)
                     else
-                      GridView.builder(
-                        shrinkWrap: true,
-                        physics: const NeverScrollableScrollPhysics(),
-                        gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                          crossAxisCount: 2,
-                          crossAxisSpacing: 12,
-                          mainAxisSpacing: 12,
-                          childAspectRatio: 1.2,
+                      SizedBox(
+                        height: 160,
+                        child: ListView.builder(
+                          scrollDirection: Axis.horizontal,
+                          physics: const BouncingScrollPhysics(),
+                          itemCount: tomorrowLectures.length,
+                          itemBuilder: (context, index) => _tomorrowLectureCard(tomorrowLectures[index], l10n),
                         ),
-                        itemCount: tomorrowLectures.length,
-                        itemBuilder: (context, index) => _tomorrowLectureCard(tomorrowLectures[index], l10n),
                       ),
                   ],
                 ),
@@ -265,6 +249,10 @@ class _DailyFeedScreenState extends ConsumerState<DailyFeedScreen> {
                 onPressed: () => _scaffoldKey.currentState?.openDrawer(),
               ),
               const Spacer(),
+              IconButton(
+                icon: const Icon(Icons.refresh, color: Colors.white),
+                onPressed: _refreshData,
+              ),
             ],
           ),
           const SizedBox(height: 16),
@@ -272,14 +260,13 @@ class _DailyFeedScreenState extends ConsumerState<DailyFeedScreen> {
             '${l10n.welcome}, $studentName',
             style: const TextStyle(
               color: Colors.white,
-              fontSize: 22,
-              fontWeight: FontWeight.w600,
-              height: 1.3,
+              fontSize: 24,
+              fontWeight: FontWeight.bold,
             ),
           ),
-          const SizedBox(height: 6),
+          const SizedBox(height: 4),
           Text(
-            l10n.locale.languageCode == 'ar' ? 'الوصول إلى المحتوى الأكاديمي بسهولة' : 'Access your academic content easily',
+            l10n.locale.languageCode == 'ar' ? 'نتمنى لك يوماً دراسياً موفقاً' : 'Have a great study day',
             style: TextStyle(
               color: Colors.white.withOpacity(0.8),
               fontSize: 14,
@@ -290,12 +277,27 @@ class _DailyFeedScreenState extends ConsumerState<DailyFeedScreen> {
     );
   }
 
-  Widget _tomorrowLectureCard(dynamic lecture, AppLocalizations l10n) {
+  Widget _emptyState(String message) {
     return Container(
-      padding: const EdgeInsets.all(16),
+      width: double.infinity,
+      padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: Colors.grey.shade200),
+      ),
+      child: Center(child: Text(message, style: const TextStyle(color: Colors.grey))),
+    );
+  }
+
+  Widget _tomorrowLectureCard(dynamic lecture, AppLocalizations l10n) {
+    return Container(
+      width: 220,
+      margin: const EdgeInsets.only(right: 16, bottom: 8),
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(20),
         boxShadow: [
           BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 10, offset: const Offset(0, 4)),
         ],
@@ -303,29 +305,61 @@ class _DailyFeedScreenState extends ConsumerState<DailyFeedScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
-            lecture.subject,
-            style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-          ),
-          const SizedBox(height: 4),
-          Text(
-            lecture.doctor ?? '',
-            style: TextStyle(color: Colors.grey.shade600, fontSize: 12),
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-          ),
-          const Spacer(),
           Row(
             children: [
-              const Icon(Icons.access_time, size: 14, color: Colors.blue),
-              const SizedBox(width: 4),
-              Text(
-                lecture.time ?? '',
-                style: const TextStyle(fontSize: 12, color: Colors.blue, fontWeight: FontWeight.w500),
+              const Icon(Icons.school, size: 18, color: Color(0xFF3F51B5)),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Text(
+                  lecture.subject,
+                  style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
               ),
             ],
+          ),
+          const SizedBox(height: 8),
+          _lectureInfoRow(Icons.person, lecture.doctor ?? ''),
+          _lectureInfoRow(Icons.room, lecture.room ?? ''),
+          const Spacer(),
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+            decoration: BoxDecoration(
+              color: const Color(0xFF3F51B5).withOpacity(0.1),
+              borderRadius: BorderRadius.circular(10),
+            ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const Icon(Icons.access_time, size: 14, color: Color(0xFF3F51B5)),
+                const SizedBox(width: 6),
+                Text(
+                  lecture.time ?? '',
+                  style: const TextStyle(fontSize: 12, color: Color(0xFF3F51B5), fontWeight: FontWeight.bold),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _lectureInfoRow(IconData icon, String text) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 4),
+      child: Row(
+        children: [
+          Icon(icon, size: 14, color: Colors.grey),
+          const SizedBox(width: 6),
+          Expanded(
+            child: Text(
+              text,
+              style: TextStyle(color: Colors.grey.shade700, fontSize: 12),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+            ),
           ),
         ],
       ),
@@ -347,11 +381,7 @@ class _DailyFeedScreenState extends ConsumerState<DailyFeedScreen> {
           children: [
             Icon(icon, size: 32, color: const Color(0xFF3F51B5)),
             const SizedBox(height: 12),
-            Text(
-              title,
-              style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
-              textAlign: TextAlign.center,
-            ),
+            Text(title, style: const TextStyle(fontWeight: FontWeight.bold)),
           ],
         ),
       ),
@@ -374,10 +404,7 @@ class _DailyFeedScreenState extends ConsumerState<DailyFeedScreen> {
             children: [
               Container(
                 padding: const EdgeInsets.all(12),
-                decoration: BoxDecoration(
-                  color: const Color(0xFF3F51B5).withOpacity(0.1),
-                  borderRadius: BorderRadius.circular(12),
-                ),
+                decoration: BoxDecoration(color: const Color(0xFF3F51B5).withOpacity(0.1), borderRadius: BorderRadius.circular(12)),
                 child: Icon(icon, color: const Color(0xFF3F51B5)),
               ),
               const SizedBox(width: 16),
@@ -399,9 +426,6 @@ class _DailyFeedScreenState extends ConsumerState<DailyFeedScreen> {
   }
 
   void _showSendSummaryDialog(BuildContext context, AppLocalizations l10n) {
-    showDialog(
-      context: context,
-      builder: (context) => const SendSummaryScreen(),
-    );
+    Navigator.push(context, MaterialPageRoute(builder: (_) => const SendSummaryScreen()));
   }
 }
