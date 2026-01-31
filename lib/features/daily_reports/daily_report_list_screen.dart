@@ -4,9 +4,9 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../../core/auth/user_role.dart';
 import '../../core/localization/app_localizations.dart';
-import '../../core/providers/daily_report_provider.dart'; // New DailyReport Provider
-import '../../core/models/daily_report_model.dart'; // New DailyReport Model
-import 'add_daily_report_dialog.dart'; // New DailyReport Dialog
+import '../../core/providers/daily_report_provider.dart';
+import '../../core/models/daily_report_model.dart';
+import 'add_daily_report_dialog.dart';
 
 class DailyReportListScreen extends ConsumerStatefulWidget {
   final UserRole userRole;
@@ -17,6 +17,8 @@ class DailyReportListScreen extends ConsumerStatefulWidget {
 }
 
 class _DailyReportListScreenState extends ConsumerState<DailyReportListScreen> {
+  final currentUserId = Supabase.instance.client.auth.currentUser?.id;
+
   @override
   void initState() {
     super.initState();
@@ -88,80 +90,82 @@ class _DailyReportListScreenState extends ConsumerState<DailyReportListScreen> {
       ),
       body: reports.isEmpty
           ? Center(child: Text(l10n.noContent))
-          : GridView.builder(
+          : ListView.builder(
               padding: const EdgeInsets.all(16),
-              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                crossAxisCount: 2,
-                crossAxisSpacing: 12,
-                mainAxisSpacing: 12,
-                childAspectRatio: 0.8,
-              ),
               itemCount: reports.length,
               itemBuilder: (context, index) {
                 final report = reports[index];
-                // Check if the current user is the creator (delegate)
-                final currentUserId = Supabase.instance.client.auth.currentUser?.id;
                 final canDelete = isDelegate && report.delegateId == currentUserId;
-                final showDelete = isDelegate;
 
                 return Card(
+                  margin: const EdgeInsets.only(bottom: 12),
                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
                   elevation: 2,
                   child: Padding(
-                    padding: const EdgeInsets.all(12),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
+                    padding: const EdgeInsets.all(16),
+                    child: Row(
                       children: [
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        Container(
+                          padding: const EdgeInsets.all(12),
+                          decoration: BoxDecoration(
+                            color: const Color(0xFF3F51B5).withOpacity(0.1),
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: const Icon(Icons.calendar_today, color: Color(0xFF3F51B5), size: 24),
+                        ),
+                        const SizedBox(width: 16),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                report.subject,
+                                style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                              if (report.doctor != null && report.doctor!.isNotEmpty)
+                                Text(
+                                  '${l10n.doctor}: ${report.doctor}',
+                                  style: TextStyle(color: Colors.grey.shade600, fontSize: 13),
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                              if (report.room != null && report.room!.isNotEmpty)
+                                Text(
+                                  '${l10n.room}: ${report.room}',
+                                  style: TextStyle(color: Colors.grey.shade600, fontSize: 12),
+                                ),
+                              const SizedBox(height: 4),
+                              Text(
+                                '${report.createdAt.day}/${report.createdAt.month}/${report.createdAt.year}',
+                                style: TextStyle(color: Colors.grey.shade500, fontSize: 11),
+                              ),
+                            ],
+                          ),
+                        ),
+                        Column(
                           children: [
-                            const Icon(Icons.calendar_today, color: Color(0xFF3F51B5), size: 20),
-                            Row(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                if (canDelete)
-                                  IconButton(
-                                    icon: const Icon(Icons.delete_outline, color: Colors.red, size: 20),
-                                    onPressed: () => _confirmDelete(context, report.id, report.delegateId!),
-                                    constraints: const BoxConstraints(),
-                                    padding: EdgeInsets.zero,
-                                  ),
-                                if (report.fileUrl != null && report.fileUrl!.isNotEmpty)
-                                  IconButton(
-                                    icon: const Icon(Icons.open_in_new, color: Color(0xFF3F51B5), size: 20),
-                                    onPressed: () async {
-                                      final url = Uri.parse(report.fileUrl!);
-                                      if (await canLaunchUrl(url)) {
-                                        await launchUrl(url, mode: LaunchMode.externalApplication);
-                                      }
-                                    },
-                                    constraints: const BoxConstraints(),
-                                    padding: EdgeInsets.zero,
-                                  ),
-                              ],
-                            ),
+                            if (report.fileUrl != null && report.fileUrl!.isNotEmpty)
+                              IconButton(
+                                icon: const Icon(Icons.open_in_new, color: Color(0xFF3F51B5)),
+                                onPressed: () async {
+                                  final url = Uri.parse(report.fileUrl!);
+                                  if (await canLaunchUrl(url)) {
+                                    await launchUrl(url, mode: LaunchMode.externalApplication);
+                                  }
+                                },
+                                constraints: const BoxConstraints(),
+                                padding: const EdgeInsets.all(8),
+                              ),
+                            if (canDelete)
+                              IconButton(
+                                icon: const Icon(Icons.delete_outline, color: Colors.red),
+                                onPressed: () => _confirmDelete(context, report.id, report.delegateId!),
+                                constraints: const BoxConstraints(),
+                                padding: const EdgeInsets.all(8),
+                              ),
                           ],
-                        ),
-                        const SizedBox(height: 8),
-                        Text(
-                          report.subject,
-                          style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                        const SizedBox(height: 4),
-                        if (report.doctor != null && report.doctor!.isNotEmpty)
-                          Text('${l10n.doctor}: ${report.doctor}', style: TextStyle(color: Colors.grey.shade600, fontSize: 12)),
-                        const SizedBox(height: 4),
-                        if (report.room != null && report.room!.isNotEmpty)
-                          Text('${l10n.room}: ${report.room}', style: TextStyle(color: Colors.grey.shade600, fontSize: 12)),
-                        const SizedBox(height: 4),
-                        if (report.day != null && report.day!.isNotEmpty)
-                          Text('${l10n.day}: ${report.day}', style: TextStyle(color: Colors.grey.shade600, fontSize: 12)),
-                        const SizedBox(height: 8),
-                        Text(
-                          '${report.createdAt.day}/${report.createdAt.month}/${report.createdAt.year}',
-                          style: TextStyle(color: Colors.grey.shade500, fontSize: 10),
                         ),
                       ],
                     ),

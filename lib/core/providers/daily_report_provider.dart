@@ -17,11 +17,7 @@ class DailyReportNotifier extends StateNotifier<List<DailyReport>> {
 
   Future<void> fetchDailyReports() async {
     try {
-      // Fetch all reports for now to ensure visibility
-      final response = await _supabase
-          .from(_tableName)
-          .select()
-          .order('created_at', ascending: false);
+      final response = await _supabase.from(_tableName).select().order('created_at', ascending: false);
       state = (response as List).map((json) => DailyReport.fromJson(json)).toList();
       print('Fetched ${state.length} daily reports');
     } on PostgrestException catch (e) {
@@ -33,17 +29,15 @@ class DailyReportNotifier extends StateNotifier<List<DailyReport>> {
     }
   }
 
-  // Returns null on success, or an error message string on failure
   Future<String?> addDailyReport({
     required String subject,
-    String? doctor,
-    String? room,
-    String? day,
+    required String doctor,
+    required String room,
+    required String day,
     File? file,
-    String? groupId,
   }) async {
     String? fileUrl;
-    final contentId = const Uuid().v4();
+    final reportId = const Uuid().v4();
     final userId = _supabase.auth.currentUser?.id;
 
     if (userId == null) {
@@ -54,7 +48,7 @@ class DailyReportNotifier extends StateNotifier<List<DailyReport>> {
       if (file != null) {
         final originalFileName = file.path.split('/').last;
         final safeFileName = originalFileName.replaceAll(RegExp(r'[^\w\-. ]'), '_');
-        final fileName = '$userId/$contentId/$safeFileName';
+        final fileName = '$userId/$reportId/$safeFileName';
         
         await _supabase.storage.from(_bucketName).upload(
           fileName, 
@@ -65,66 +59,72 @@ class DailyReportNotifier extends StateNotifier<List<DailyReport>> {
         fileUrl = _supabase.storage.from(_bucketName).getPublicUrl(fileName);
       }
 
-      final newContent = {
-        'id': contentId,
+      final newReport = {
+        'id': reportId,
         'subject': subject,
         'doctor': doctor,
         'room': room,
         'day': day,
         'file_url': fileUrl,
         'delegate_id': userId,
-        'group_id': groupId,
       };
 
-      await _supabase.from(_tableName).insert(newContent);
+      await _supabase.from(_tableName).insert(newReport);
       
-      // Refresh state
       await fetchDailyReports();
       return null; // Success
     } on StorageException catch (e) {
       return 'File upload failed: ${e.message}';
     } on PostgrestException catch (e) {
+      if (fileUrl != null) {
+        try {
+          final originalFileName = file!.path.split('/').last;
+          final safeFileName = originalFileName.replaceAll(RegExp(r'[^\w\-. ]'), '_');
+          final pathToRemove = '$userId/$reportId/$safeFileName';
+          await _supabase.storage.from(_bucketName).remove([pathToRemove]);
+        } catch (cleanupError) {
+          print('Failed to clean up file: $cleanupError');
+        }
+      }
       return 'Database insertion failed: ${e.message}';
     } catch (e) {
       return 'An unexpected error occurred: $e';
     }
   }
 
-  // Returns null on success, or an error message string on failure
-  Future<String?> deleteDailyReport(String contentId, String delegateId) async {
+  Future<String?> deleteDailyReport(String reportId, String delegateId) async {
     final currentUserId = _supabase.auth.currentUser?.id;
     if (currentUserId == null) {
       return 'User not authenticated. Please log in.';
     }
-    
     if (currentUserId != delegateId) {
       return 'You are not authorized to delete this report.';
     }
 
     try {
-      final content = await _supabase
+      final report = await _supabase
           .from(_tableName)
           .select('file_url')
-          .eq('id', contentId)
+          .eq('id', reportId)
           .maybeSingle();
 
       await _supabase
           .from(_tableName)
           .delete()
-          .eq('id', contentId);
+          .eq('id', reportId)
+          .eq('delegate_id', currentUserId);
       
-      final fileUrl = content?['file_url'];
+      final fileUrl = report?['file_url'];
       if (fileUrl != null && fileUrl.isNotEmpty) {
         try {
           final fileName = fileUrl.split('/').last;
-          final pathToRemove = '$currentUserId/$contentId/$fileName';
+          final pathToRemove = '$currentUserId/$reportId/$fileName';
           await _supabase.storage.from(_bucketName).remove([pathToRemove]);
         } catch (e) {
           print('Failed to delete file from Storage: $e');
         }
       }
 
-      // Refresh state
       await fetchDailyReports();
       return null; // Success
     } on PostgrestException catch (e) {

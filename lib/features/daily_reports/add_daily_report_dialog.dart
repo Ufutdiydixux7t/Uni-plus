@@ -2,7 +2,6 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:file_picker/file_picker.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../core/localization/app_localizations.dart';
 import '../../core/providers/daily_report_provider.dart';
 
@@ -42,16 +41,12 @@ class _AddDailyReportDialogState extends ConsumerState<AddDailyReportDialog> {
     if (!_formKey.currentState!.validate()) return;
     setState(() => _isSubmitting = true);
 
-    final user = Supabase.instance.client.auth.currentUser;
-    final groupId = user?.userMetadata?["group_id"];
-
     final errorMessage = await ref.read(dailyReportProvider.notifier).addDailyReport(
       subject: _subjectController.text,
       doctor: _doctorController.text,
       room: _roomController.text,
       day: _dayController.text,
       file: _selectedFile,
-      groupId: groupId,
     );
 
     if (mounted) {
@@ -60,10 +55,7 @@ class _AddDailyReportDialogState extends ConsumerState<AddDailyReportDialog> {
       if (errorMessage == null) {
         Navigator.pop(context); // Close dialog on success
         ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(l10n.success)));
-        // Refresh the list after successful addition
-        ref.read(dailyReportProvider.notifier).fetchDailyReports();
       } else {
-        // Show detailed error message to the user
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text('${l10n.error}: $errorMessage'),
@@ -118,7 +110,6 @@ class _AddDailyReportDialogState extends ConsumerState<AddDailyReportDialog> {
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // Title
                 Text(
                   '${l10n.addContent}: ${l10n.dailyReports}',
                   style: theme.textTheme.headlineSmall?.copyWith(
@@ -128,7 +119,6 @@ class _AddDailyReportDialogState extends ConsumerState<AddDailyReportDialog> {
                 ),
                 const SizedBox(height: 24),
 
-                // Subject Field
                 _buildTextField(
                   controller: _subjectController,
                   label: l10n.subject,
@@ -136,28 +126,27 @@ class _AddDailyReportDialogState extends ConsumerState<AddDailyReportDialog> {
                   validator: (value) => value!.isEmpty ? l10n.requiredField : null,
                 ),
 
-                // Doctor Field
                 _buildTextField(
                   controller: _doctorController,
                   label: l10n.doctor,
                   icon: Icons.person_outline,
+                  validator: (value) => value!.isEmpty ? l10n.requiredField : null,
                 ),
 
-                // Room Field
                 _buildTextField(
                   controller: _roomController,
                   label: l10n.room,
                   icon: Icons.meeting_room_outlined,
+                  validator: (value) => value!.isEmpty ? l10n.requiredField : null,
                 ),
 
-                // Day Field
                 _buildTextField(
                   controller: _dayController,
                   label: l10n.day,
                   icon: Icons.calendar_today_outlined,
+                  validator: (value) => value!.isEmpty ? l10n.requiredField : null,
                 ),
 
-                // File Picker Button (Designed as a field)
                 GestureDetector(
                   onTap: _pickFile,
                   child: Container(
@@ -182,18 +171,16 @@ class _AddDailyReportDialogState extends ConsumerState<AddDailyReportDialog> {
                             overflow: TextOverflow.ellipsis,
                           ),
                         ),
-                        Icon(Icons.attachment, color: const Color(0xFF3F51B5)),
+                        const Icon(Icons.attachment, color: Color(0xFF3F51B5)),
                       ],
                     ),
                   ),
                 ),
                 const SizedBox(height: 24),
 
-                // Action Buttons
                 Row(
                   mainAxisAlignment: MainAxisAlignment.end,
                   children: [
-                    // Cancel Button
                     TextButton(
                       onPressed: _isSubmitting ? null : () => Navigator.pop(context),
                       child: Text(
@@ -202,8 +189,6 @@ class _AddDailyReportDialogState extends ConsumerState<AddDailyReportDialog> {
                       ),
                     ),
                     const SizedBox(width: 8),
-
-                    // Save Button
                     ElevatedButton(
                       onPressed: _isSubmitting ? null : _submit,
                       style: ElevatedButton.styleFrom(
