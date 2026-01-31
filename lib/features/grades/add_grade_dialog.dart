@@ -43,7 +43,7 @@ class _AddGradeDialogState extends ConsumerState<AddGradeDialog> {
       subject: _subjectController.text,
       doctor: _doctorController.text,
       note: _noteController.text,
-      file: _selectedFile,
+      file: _selectedFile, groupId: null,
     );
 
     if (mounted) {

@@ -32,7 +32,7 @@ class GradeNotifier extends StateNotifier<List<Grade>> {
     required String subject,
     String? doctor,
     String? note,
-    File? file,
+    File? file, required groupId,
   }) async {
     String? fileUrl;
     final gradeId = const Uuid().v4();

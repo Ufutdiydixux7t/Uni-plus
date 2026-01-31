@@ -22,7 +22,7 @@ class LectureNotifier extends StateNotifier<List<Lecture>> {
       final userId = _supabase.auth.currentUser?.id;
       final userRole = await _getUserRole(); // Assuming a helper function exists or role is passed
       
-      PostgrestFilterBuilder query = _supabase.from(_tableName).select().order('created_at', ascending: false);
+      PostgrestTransformBuilder<PostgrestList> query = _supabase.from(_tableName).select().order('created_at', ascending: false);
 
       // NOTE: Since we don't have the UserRole logic here, we'll fetch all for now
       // and rely on the UI to filter/show delete button based on role.

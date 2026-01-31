@@ -51,7 +51,7 @@ class _GradesManagementSheetState extends ConsumerState<GradesManagementSheet> {
 
     if (mounted) {
       setState(() => _isUploading = false);
-      if (success) {
+      if (success != null) {
         Navigator.pop(context);
         ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Grade added successfully!')));
       } else {
