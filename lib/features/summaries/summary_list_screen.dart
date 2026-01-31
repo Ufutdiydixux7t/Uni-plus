@@ -4,9 +4,9 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../../core/auth/user_role.dart';
 import '../../core/localization/app_localizations.dart';
-import '../../core/providers/summary_provider.dart'; // New Summary Provider
-import '../../core/models/summary_model.dart'; // New Summary Model
-import 'add_summary_dialog.dart'; // New Summary Dialog
+import '../../core/providers/summary_provider.dart';
+import '../../core/models/summary_model.dart';
+import 'add_summary_dialog.dart';
 
 class SummaryListScreen extends ConsumerStatefulWidget {
   final UserRole userRole;
@@ -90,81 +90,77 @@ class _SummaryListScreenState extends ConsumerState<SummaryListScreen> {
       ),
       body: summaries.isEmpty
           ? Center(child: Text(l10n.noContent))
-          : GridView.builder(
+          : ListView.builder(
               padding: const EdgeInsets.all(16),
-              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                crossAxisCount: 1,
-                crossAxisSpacing: 12,
-                mainAxisSpacing: 12,
-                childAspectRatio: 2.5,
-              ),
               itemCount: summaries.length,
               itemBuilder: (context, index) {
                 final summary = summaries[index];
-                // Delegate can delete only what they created
                 final canDelete = isDelegate && summary.delegateId == currentUserId;
 
                 return Card(
+                  margin: const EdgeInsets.only(bottom: 12),
                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
                   elevation: 2,
                   child: Padding(
-                    padding: const EdgeInsets.all(12),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
+                    padding: const EdgeInsets.all(16),
+                    child: Row(
                       children: [
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            const Icon(Icons.description, color: Color(0xFF3F51B5), size: 20),
-                            Row(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                if (canDelete)
-                                  IconButton(
-                                    icon: const Icon(Icons.delete_outline, color: Colors.red, size: 20),
-                                    onPressed: () => _confirmDelete(context, summary.id, summary.delegateId!),
-                                    constraints: const BoxConstraints(),
-                                    padding: EdgeInsets.zero,
-                                  ),
-                                if (summary.fileUrl != null && summary.fileUrl!.isNotEmpty)
-                                  IconButton(
-                                    icon: const Icon(Icons.open_in_new, color: Color(0xFF3F51B5), size: 20),
-                                    onPressed: () async {
-                                      final url = Uri.parse(summary.fileUrl!);
-                                      if (await canLaunchUrl(url)) {
-                                        await launchUrl(url, mode: LaunchMode.externalApplication);
-                                      }
-                                    },
-                                    constraints: const BoxConstraints(),
-                                    padding: EdgeInsets.zero,
-                                  ),
-                              ],
-                            ),
-                          ],
+                        Container(
+                          padding: const EdgeInsets.all(12),
+                          decoration: BoxDecoration(
+                            color: const Color(0xFF3F51B5).withOpacity(0.1),
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: const Icon(Icons.description, color: Color(0xFF3F51B5), size: 24),
                         ),
-                        const SizedBox(height: 8),
-                        Text(
-                          summary.subject,
-                          style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                        const SizedBox(height: 4),
-                        if (summary.doctor != null && summary.doctor!.isNotEmpty)
-                          Text('${l10n.doctor}: ${summary.doctor}', style: TextStyle(color: Colors.grey.shade600, fontSize: 12)),
-                        const SizedBox(height: 4),
+                        const SizedBox(width: 16),
                         Expanded(
-                          child: SingleChildScrollView(
-                            child: Text(
-                              summary.note ?? '',
-                              style: const TextStyle(fontSize: 11, color: Colors.black87),
-                            ),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                summary.subject,
+                                style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                              if (summary.doctor != null && summary.doctor!.isNotEmpty)
+                                Text(
+                                  '${l10n.doctor}: ${summary.doctor}',
+                                  style: TextStyle(color: Colors.grey.shade600, fontSize: 13),
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                              const SizedBox(height: 4),
+                              Text(
+                                '${summary.createdAt.day}/${summary.createdAt.month}/${summary.createdAt.year}',
+                                style: TextStyle(color: Colors.grey.shade500, fontSize: 11),
+                              ),
+                            ],
                           ),
                         ),
-                        const SizedBox(height: 8),
-                        Text(
-                          '${summary.createdAt.day}/${summary.createdAt.month}/${summary.createdAt.year}',
-                          style: TextStyle(color: Colors.grey.shade500, fontSize: 10),
+                        Column(
+                          children: [
+                            if (summary.fileUrl != null && summary.fileUrl!.isNotEmpty)
+                              IconButton(
+                                icon: const Icon(Icons.open_in_new, color: Color(0xFF3F51B5)),
+                                onPressed: () async {
+                                  final url = Uri.parse(summary.fileUrl!);
+                                  if (await canLaunchUrl(url)) {
+                                    await launchUrl(url, mode: LaunchMode.externalApplication);
+                                  }
+                                },
+                                constraints: const BoxConstraints(),
+                                padding: const EdgeInsets.all(8),
+                              ),
+                            if (canDelete)
+                              IconButton(
+                                icon: const Icon(Icons.delete_outline, color: Colors.red),
+                                onPressed: () => _confirmDelete(context, summary.id, summary.delegateId!),
+                                constraints: const BoxConstraints(),
+                                padding: const EdgeInsets.all(8),
+                              ),
+                          ],
                         ),
                       ],
                     ),

@@ -4,9 +4,9 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../../core/auth/user_role.dart';
 import '../../core/localization/app_localizations.dart';
-import '../../core/providers/student_summary_provider.dart'; // New StudentSummary Provider
-import '../../core/models/student_summary_model.dart'; // New StudentSummary Model
-import 'add_student_summary_dialog.dart'; // New StudentSummary Dialog
+import '../../core/providers/student_summary_provider.dart';
+import '../../core/models/student_summary_model.dart';
+import 'add_student_summary_dialog.dart';
 
 class StudentSummaryListScreen extends ConsumerStatefulWidget {
   final UserRole userRole;
@@ -74,6 +74,7 @@ class _StudentSummaryListScreenState extends ConsumerState<StudentSummaryListScr
     final summaries = ref.watch(studentSummaryProvider);
     final l10n = AppLocalizations.of(context);
     final isStudent = widget.userRole == UserRole.student;
+    final isDelegate = widget.userRole == UserRole.delegate || widget.userRole == UserRole.admin;
 
     return Scaffold(
       appBar: AppBar(
@@ -90,83 +91,77 @@ class _StudentSummaryListScreenState extends ConsumerState<StudentSummaryListScr
       ),
       body: summaries.isEmpty
           ? Center(child: Text(l10n.noContent))
-          : GridView.builder(
+          : ListView.builder(
               padding: const EdgeInsets.all(16),
-              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                crossAxisCount: 1,
-                crossAxisSpacing: 12,
-                mainAxisSpacing: 12,
-                childAspectRatio: 2.5,
-              ),
               itemCount: summaries.length,
               itemBuilder: (context, index) {
                 final summary = summaries[index];
-                // Student can delete only what they created
-                // Delegate can delete any summary, Student can delete only their own
-                final isDelegate = widget.userRole == UserRole.delegate || widget.userRole == UserRole.admin;
                 final canDelete = isDelegate || (isStudent && summary.studentId == currentUserId);
 
                 return Card(
+                  margin: const EdgeInsets.only(bottom: 12),
                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
                   elevation: 2,
                   child: Padding(
-                    padding: const EdgeInsets.all(12),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
+                    padding: const EdgeInsets.all(16),
+                    child: Row(
                       children: [
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            const Icon(Icons.description, color: Color(0xFF3F51B5), size: 20),
-                            Row(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                if (canDelete)
-                                  IconButton(
-                                    icon: const Icon(Icons.delete_outline, color: Colors.red, size: 20),
-                                    onPressed: () => _confirmDelete(context, summary.id, summary.studentId!),
-                                    constraints: const BoxConstraints(),
-                                    padding: EdgeInsets.zero,
-                                  ),
-                                if (summary.fileUrl != null && summary.fileUrl!.isNotEmpty)
-                                  IconButton(
-                                    icon: const Icon(Icons.open_in_new, color: Color(0xFF3F51B5), size: 20),
-                                    onPressed: () async {
-                                      final url = Uri.parse(summary.fileUrl!);
-                                      if (await canLaunchUrl(url)) {
-                                        await launchUrl(url, mode: LaunchMode.externalApplication);
-                                      }
-                                    },
-                                    constraints: const BoxConstraints(),
-                                    padding: EdgeInsets.zero,
-                                  ),
-                              ],
-                            ),
-                          ],
+                        Container(
+                          padding: const EdgeInsets.all(12),
+                          decoration: BoxDecoration(
+                            color: const Color(0xFF3F51B5).withOpacity(0.1),
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: const Icon(Icons.description, color: Color(0xFF3F51B5), size: 24),
                         ),
-                        const SizedBox(height: 8),
-                        Text(
-                          summary.subject,
-                          style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                        const SizedBox(height: 4),
-                        if (summary.doctor != null && summary.doctor!.isNotEmpty)
-                          Text('${l10n.doctor}: ${summary.doctor}', style: TextStyle(color: Colors.grey.shade600, fontSize: 12)),
-                        const SizedBox(height: 4),
+                        const SizedBox(width: 16),
                         Expanded(
-                          child: SingleChildScrollView(
-                            child: Text(
-                              summary.note ?? '',
-                              style: const TextStyle(fontSize: 11, color: Colors.black87),
-                            ),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                summary.subject,
+                                style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                              if (summary.doctor != null && summary.doctor!.isNotEmpty)
+                                Text(
+                                  '${l10n.doctor}: ${summary.doctor}',
+                                  style: TextStyle(color: Colors.grey.shade600, fontSize: 13),
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                              const SizedBox(height: 4),
+                              Text(
+                                '${summary.createdAt.day}/${summary.createdAt.month}/${summary.createdAt.year}',
+                                style: TextStyle(color: Colors.grey.shade500, fontSize: 11),
+                              ),
+                            ],
                           ),
                         ),
-                        const SizedBox(height: 8),
-                        Text(
-                          '${summary.createdAt.day}/${summary.createdAt.month}/${summary.createdAt.year}',
-                          style: TextStyle(color: Colors.grey.shade500, fontSize: 10),
+                        Column(
+                          children: [
+                            if (summary.fileUrl != null && summary.fileUrl!.isNotEmpty)
+                              IconButton(
+                                icon: const Icon(Icons.open_in_new, color: Color(0xFF3F51B5)),
+                                onPressed: () async {
+                                  final url = Uri.parse(summary.fileUrl!);
+                                  if (await canLaunchUrl(url)) {
+                                    await launchUrl(url, mode: LaunchMode.externalApplication);
+                                  }
+                                },
+                                constraints: const BoxConstraints(),
+                                padding: const EdgeInsets.all(8),
+                              ),
+                            if (canDelete)
+                              IconButton(
+                                icon: const Icon(Icons.delete_outline, color: Colors.red),
+                                onPressed: () => _confirmDelete(context, summary.id, summary.studentId!),
+                                constraints: const BoxConstraints(),
+                                padding: const EdgeInsets.all(8),
+                              ),
+                          ],
                         ),
                       ],
                     ),
@@ -174,14 +169,14 @@ class _StudentSummaryListScreenState extends ConsumerState<StudentSummaryListScr
                 );
               },
             ),
-	      floatingActionButton: isStudent
-	          ? FloatingActionButton.extended(
-	              onPressed: _showAddStudentSummaryDialog,
-	              backgroundColor: const Color(0xFF3F51B5),
-	              icon: const Icon(Icons.add, color: Colors.white),
-	              label: Text(l10n.addContent, style: const TextStyle(color: Colors.white)),
-	            )
-	          : null,
+      floatingActionButton: isStudent
+          ? FloatingActionButton.extended(
+              onPressed: _showAddStudentSummaryDialog,
+              backgroundColor: const Color(0xFF3F51B5),
+              icon: const Icon(Icons.add, color: Colors.white),
+              label: Text(l10n.addContent, style: const TextStyle(color: Colors.white)),
+            )
+          : null,
     );
   }
 }
