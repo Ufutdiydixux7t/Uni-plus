@@ -2,6 +2,7 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:file_picker/file_picker.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../core/localization/app_localizations.dart';
 import '../../core/providers/lecture_provider.dart';
 
@@ -39,11 +40,15 @@ class _AddLectureDialogState extends ConsumerState<AddLectureDialog> {
     if (!_formKey.currentState!.validate()) return;
     setState(() => _isSubmitting = true);
 
+    final user = Supabase.instance.client.auth.currentUser;
+    final groupId = user?.userMetadata?["group_id"];
+
     final errorMessage = await ref.read(lectureProvider.notifier).addLecture(
       subject: _subjectController.text,
       doctor: _doctorController.text,
       note: _noteController.text,
       file: _selectedFile,
+      groupId: groupId,
     );
 
     if (mounted) {

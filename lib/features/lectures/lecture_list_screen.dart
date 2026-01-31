@@ -4,9 +4,8 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../../core/auth/user_role.dart';
 import '../../core/localization/app_localizations.dart';
-import '../../core/providers/lecture_provider.dart'; // New Lecture Provider
-import '../../core/models/lecture_model.dart'; // New Lecture Model
-import 'add_lecture_dialog.dart'; // New Lecture Dialog
+import '../../core/providers/lecture_provider.dart';
+import 'add_lecture_dialog.dart';
 
 class LectureListScreen extends ConsumerStatefulWidget {
   final UserRole userRole;
@@ -101,7 +100,6 @@ class _LectureListScreenState extends ConsumerState<LectureListScreen> {
               itemCount: lectures.length,
               itemBuilder: (context, index) {
                 final lecture = lectures[index];
-                // Delegate can delete only what they created
                 final canDelete = isDelegate && lecture.delegateId == currentUserId;
 
                 return Card(
@@ -121,14 +119,14 @@ class _LectureListScreenState extends ConsumerState<LectureListScreen> {
                               children: [
                                 if (canDelete)
                                   IconButton(
-                                    icon: const Icon(Icons.delete_outline, color: Colors.red, size: 20),
+                                    icon: const Icon(Icons.delete_outline, color: Colors.red, size: 18),
                                     onPressed: () => _confirmDelete(context, lecture.id, lecture.delegateId!),
                                     constraints: const BoxConstraints(),
                                     padding: EdgeInsets.zero,
                                   ),
                                 if (lecture.fileUrl != null && lecture.fileUrl!.isNotEmpty)
                                   IconButton(
-                                    icon: const Icon(Icons.open_in_new, color: Color(0xFF3F51B5), size: 20),
+                                    icon: const Icon(Icons.open_in_new, color: Color(0xFF3F51B5), size: 18),
                                     onPressed: () async {
                                       final url = Uri.parse(lecture.fileUrl!);
                                       if (await canLaunchUrl(url)) {
