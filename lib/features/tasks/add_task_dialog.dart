@@ -29,10 +29,14 @@ class _AddTaskDialogState extends ConsumerState<AddTaskDialog> {
     if (!_formKey.currentState!.validate()) return;
     setState(() => _isSubmitting = true);
 
+    final user = Supabase.instance.client.auth.currentUser;
+    final groupId = user?.userMetadata?["group_id"];
+
     final errorMessage = await ref.read(taskProvider.notifier).addTask(
       subject: _subjectController.text,
       doctor: _doctorController.text,
       note: _noteController.text,
+      groupId: groupId,
     );
 
     if (mounted) {

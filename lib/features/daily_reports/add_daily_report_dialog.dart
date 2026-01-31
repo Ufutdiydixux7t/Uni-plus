@@ -41,12 +41,16 @@ class _AddDailyReportDialogState extends ConsumerState<AddDailyReportDialog> {
     if (!_formKey.currentState!.validate()) return;
     setState(() => _isSubmitting = true);
 
+    final user = Supabase.instance.client.auth.currentUser;
+    final groupId = user?.userMetadata?["group_id"];
+
     final errorMessage = await ref.read(dailyReportProvider.notifier).addDailyReport(
       subject: _subjectController.text,
       doctor: _doctorController.text,
       room: _roomController.text,
       day: _dayController.text,
       file: _selectedFile,
+      groupId: groupId,
     );
 
     if (mounted) {

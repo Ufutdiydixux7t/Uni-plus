@@ -108,7 +108,7 @@ class _AddTomorrowLectureDialogState extends ConsumerState<AddTomorrowLectureDia
               children: [
                 // Title
                 Text(
-                  '${l10n.addContent}: ${l10n.tomorrowLectures}',
+                  '${l10n.addAnnouncement}',
                   style: theme.textTheme.headlineSmall?.copyWith(
                     color: const Color(0xFF3F51B5),
                     fontWeight: FontWeight.bold,
