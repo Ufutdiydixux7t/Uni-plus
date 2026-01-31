@@ -34,7 +34,7 @@ class TomorrowLectureNotifier extends StateNotifier<List<TomorrowLecture>> {
     required String subject,
     required String doctor,
     required String room,
-    required String time,
+    required String time, required groupId,
   }) async {
     final lectureId = const Uuid().v4();
     final userId = _supabase.auth.currentUser?.id;

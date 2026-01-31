@@ -105,4 +105,8 @@ class StudentSummaryNotifier extends StateNotifier<List<StudentSummary>> {
       return e.toString();
     }
   }
+
+  Future<dynamic> addStudentSummary({required String subject, required String doctor, required String note, File? file, required groupId}) async {}
+
+  Future<dynamic> deleteStudentSummary(String contentId, String studentId) async {}
 }

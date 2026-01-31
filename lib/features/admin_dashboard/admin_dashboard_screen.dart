@@ -202,7 +202,7 @@ class _AdminDashboardScreenState extends ConsumerState<AdminDashboardScreen> {
                     subject: subjectController.text,
                     doctor: doctorController.text,
                     room: roomController.text,
-                    time: timeController.text,
+                    time: timeController.text, groupId: null,
                   );
                   if (mounted) {
                     if (error == null) {
