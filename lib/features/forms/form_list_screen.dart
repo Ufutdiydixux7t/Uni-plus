@@ -91,19 +91,15 @@ class _FormListScreenState extends ConsumerState<FormListScreen> {
       ),
       body: forms.isEmpty
           ? Center(child: Text(l10n.noContent))
-          : GridView.builder(
+          : ListView.builder(
               padding: const EdgeInsets.all(16),
-              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                crossAxisCount: 1, // جعلها مستطيلة عبر استخدام عمود واحد أو تعديل النسبة
-                childAspectRatio: 2.5, // نسبة العرض إلى الارتفاع لجعلها مستطيلة
-                mainAxisSpacing: 12,
-              ),
               itemCount: forms.length,
               itemBuilder: (context, index) {
                 final form = forms[index];
                 final canDelete = isDelegate && form.delegateId == currentUserId;
 
                 return Card(
+                  margin: const EdgeInsets.only(bottom: 12),
                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
                   elevation: 2,
                   child: Padding(
@@ -157,11 +153,15 @@ class _FormListScreenState extends ConsumerState<FormListScreen> {
                                     await launchUrl(url, mode: LaunchMode.externalApplication);
                                   }
                                 },
+                                constraints: const BoxConstraints(),
+                                padding: const EdgeInsets.all(8),
                               ),
                             if (canDelete)
                               IconButton(
                                 icon: const Icon(Icons.delete_outline, color: Colors.red),
                                 onPressed: () => _confirmDelete(context, form.id, form.delegateId!),
+                                constraints: const BoxConstraints(),
+                                padding: const EdgeInsets.all(8),
                               ),
                           ],
                         ),
