@@ -142,7 +142,7 @@ class _LectureListScreenState extends ConsumerState<LectureListScreen> {
                           children: [
                             if (lecture.fileUrl != null && lecture.fileUrl!.isNotEmpty)
                               IconButton(
-                                icon: const Icon(Icons.open_in_new, color: Color(0xFF3F51B5)),
+                                icon: const Icon(Icons.download, color: Color(0xFF3F51B5)),
                                 onPressed: () async {
                                   final url = Uri.parse(lecture.fileUrl!);
                                   if (await canLaunchUrl(url)) {

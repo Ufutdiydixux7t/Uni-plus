@@ -142,7 +142,7 @@ class _GradesListScreenState extends ConsumerState<GradesListScreen> {
                           children: [
                             if (grade.fileUrl != null && grade.fileUrl!.isNotEmpty)
                               IconButton(
-                                icon: const Icon(Icons.open_in_new, color: Color(0xFF3F51B5)),
+                                icon: const Icon(Icons.download, color: Color(0xFF3F51B5)),
                                 onPressed: () async {
                                   final url = Uri.parse(grade.fileUrl!);
                                   if (await canLaunchUrl(url)) {
