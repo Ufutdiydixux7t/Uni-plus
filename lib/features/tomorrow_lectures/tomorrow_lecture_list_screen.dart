@@ -96,7 +96,7 @@ class _TomorrowLectureListScreenState extends ConsumerState<TomorrowLectureListS
                 crossAxisCount: MediaQuery.of(context).size.width > 600 ? 2 : 1,
                 crossAxisSpacing: 16,
                 mainAxisSpacing: 16,
-                childAspectRatio: MediaQuery.of(context).size.width > 600 ? 2.8 : 3.2,
+                childAspectRatio: MediaQuery.of(context).size.width > 600 ? 4.0 : 4.5,
               ),
               itemCount: lectures.length,
               itemBuilder: (context, index) {
@@ -123,11 +123,10 @@ class _TomorrowLectureListScreenState extends ConsumerState<TomorrowLectureListS
                     ),
                     child: Stack(
                       children: [
-                        // Accent line
                         Positioned(
                           left: 0,
-                          top: 20,
-                          bottom: 20,
+                          top: 15,
+                          bottom: 15,
                           child: Container(
                             width: 4,
                             decoration: BoxDecoration(
@@ -140,9 +139,10 @@ class _TomorrowLectureListScreenState extends ConsumerState<TomorrowLectureListS
                           ),
                         ),
                         Padding(
-                          padding: const EdgeInsets.fromLTRB(20, 16, 16, 16),
+                          padding: const EdgeInsets.fromLTRB(20, 12, 16, 12),
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
+                            mainAxisAlignment: MainAxisAlignment.center,
                             children: [
                               Row(
                                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -152,7 +152,7 @@ class _TomorrowLectureListScreenState extends ConsumerState<TomorrowLectureListS
                                       lecture.subject,
                                       style: TextStyle(
                                         fontWeight: FontWeight.bold,
-                                        fontSize: 18,
+                                        fontSize: 17,
                                         color: gradientColors[0],
                                       ),
                                       maxLines: 1,
@@ -161,7 +161,7 @@ class _TomorrowLectureListScreenState extends ConsumerState<TomorrowLectureListS
                                   ),
                                   if (canDelete)
                                     IconButton(
-                                      icon: const Icon(Icons.delete_outline, color: Colors.red, size: 22),
+                                      icon: const Icon(Icons.delete_outline, color: Colors.red, size: 20),
                                       onPressed: () => _confirmDelete(context, lecture.id, lecture.delegateId!),
                                       constraints: const BoxConstraints(),
                                       padding: EdgeInsets.zero,
@@ -169,21 +169,14 @@ class _TomorrowLectureListScreenState extends ConsumerState<TomorrowLectureListS
                                 ],
                               ),
                               const SizedBox(height: 8),
-                              _buildInfoRow(Icons.person_outline, l10n.doctor, lecture.doctor ?? '-'),
-                              const SizedBox(height: 4),
                               Row(
                                 children: [
-                                  Expanded(child: _buildInfoRow(Icons.meeting_room_outlined, l10n.room, lecture.room ?? '-')),
-                                  Expanded(child: _buildInfoRow(Icons.access_time, l10n.time, lecture.time ?? '-')),
+                                  Expanded(flex: 2, child: _buildInfoRow(Icons.person_outline, l10n.doctor, lecture.doctor ?? '-')),
+                                  const SizedBox(width: 8),
+                                  Expanded(flex: 1, child: _buildInfoRow(Icons.meeting_room_outlined, l10n.room, lecture.room ?? '-')),
+                                  const SizedBox(width: 8),
+                                  Expanded(flex: 1, child: _buildInfoRow(Icons.access_time, l10n.time, lecture.time ?? '-')),
                                 ],
-                              ),
-                              const Spacer(),
-                              Align(
-                                alignment: Alignment.bottomRight,
-                                child: Text(
-                                  '${lecture.createdAt.day}/${lecture.createdAt.month}/${lecture.createdAt.year}',
-                                  style: TextStyle(color: Colors.grey.shade500, fontSize: 10),
-                                ),
                               ),
                             ],
                           ),
