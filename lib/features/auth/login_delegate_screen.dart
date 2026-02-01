@@ -310,7 +310,7 @@ class _LoginDelegateScreenState extends ConsumerState<LoginDelegateScreen> {
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     Text(
-                      _isSignUpMode ? 'Already have an account?' : "Don't have an account?",
+                      _isSignUpMode ? l10n.haveAccount : l10n.noAccount,
                       style: TextStyle(color: Colors.grey[600]),
                     ),
                     TextButton(

@@ -84,7 +84,8 @@ class AppLocalizations {
       'passwordRequired': 'Password is required',
       'signIn': 'Sign In',
       'createAccount': 'Create New Account',
-      'haveAccount': 'Already have an account? Sign In',
+      'haveAccount': 'Already have an account?',
+      'noAccount': "Don't have an account?",
     },
     'ar': {
       'appTitle': 'يوني بلس',
@@ -159,7 +160,8 @@ class AppLocalizations {
       'passwordRequired': 'كلمة المرور مطلوبة',
       'signIn': 'تسجيل الدخول',
       'createAccount': 'إنشاء حساب جديد',
-      'haveAccount': 'لديك حساب بالفعل؟ تسجيل الدخول',
+      'haveAccount': 'لديك حساب بالفعل؟',
+      'noAccount': 'ليس لديك حساب؟',
     },
   };
 
@@ -237,6 +239,7 @@ class AppLocalizations {
   String get signIn => _localizedValues[locale.languageCode]!['signIn']!;
   String get createAccount => _localizedValues[locale.languageCode]!['createAccount']!;
   String get haveAccount => _localizedValues[locale.languageCode]!['haveAccount']!;
+  String get noAccount => _localizedValues[locale.languageCode]!['noAccount']!;
   String get requiredField => locale.languageCode == 'ar' ? 'هذا الحقل مطلوب' : 'This field is required';
 }
 
