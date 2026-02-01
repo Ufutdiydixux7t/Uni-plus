@@ -150,7 +150,7 @@ class _DailyFeedScreenState extends ConsumerState<DailyFeedScreen> {
                       _emptyState(l10n.noContent)
                     else
                       SizedBox(
-                        height: 130,
+                        height: 160,
                         child: ListView.builder(
                           scrollDirection: Axis.horizontal,
                           physics: const BouncingScrollPhysics(),
@@ -292,7 +292,7 @@ class _DailyFeedScreenState extends ConsumerState<DailyFeedScreen> {
 
   Widget _tomorrowLectureCard(dynamic lecture, AppLocalizations l10n) {
     return Container(
-      width: 280,
+      width: 320,
       margin: const EdgeInsets.only(right: 16, bottom: 8),
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
@@ -320,26 +320,36 @@ class _DailyFeedScreenState extends ConsumerState<DailyFeedScreen> {
             ],
           ),
           const SizedBox(height: 8),
-          _lectureInfoRow(Icons.person, lecture.doctor ?? ''),
-          _lectureInfoRow(Icons.room, lecture.room ?? ''),
-          const Spacer(),
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-            decoration: BoxDecoration(
-              color: const Color(0xFF3F51B5).withOpacity(0.1),
-              borderRadius: BorderRadius.circular(10),
-            ),
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                const Icon(Icons.access_time, size: 14, color: Color(0xFF3F51B5)),
-                const SizedBox(width: 6),
-                Text(
-                  lecture.time ?? '',
-                  style: const TextStyle(fontSize: 12, color: Color(0xFF3F51B5), fontWeight: FontWeight.bold),
+          const SizedBox(height: 12),
+          Row(
+            children: [
+              Expanded(child: _lectureInfoRow(Icons.person, lecture.doctor ?? '')),
+              const SizedBox(width: 8),
+              Expanded(child: _lectureInfoRow(Icons.room, lecture.room ?? '')),
+            ],
+          ),
+          const SizedBox(height: 8),
+          Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                decoration: BoxDecoration(
+                  color: const Color(0xFF3F51B5).withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(10),
                 ),
-              ],
-            ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    const Icon(Icons.access_time, size: 14, color: Color(0xFF3F51B5)),
+                    const SizedBox(width: 6),
+                    Text(
+                      lecture.time ?? '',
+                      style: const TextStyle(fontSize: 12, color: Color(0xFF3F51B5), fontWeight: FontWeight.bold),
+                    ),
+                  ],
+                ),
+              ),
+            ],
           ),
         ],
       ),
