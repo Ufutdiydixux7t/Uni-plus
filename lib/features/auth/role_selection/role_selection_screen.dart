@@ -60,7 +60,7 @@ class RoleSelectionScreen extends ConsumerWidget {
                         l10n.selectRole,
                         style: const TextStyle(fontSize: 15, color: Colors.grey),
                       ),
-                      const SizedBox(height: 40),
+                      const SizedBox(height: 80),
                       _RoleButton(
                         title: l10n.student,
                         icon: Icons.school_outlined,
@@ -186,3 +186,5 @@ class _RoleButton extends StatelessWidget {
     );
   }
 }
+
+

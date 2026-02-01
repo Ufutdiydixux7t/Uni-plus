@@ -79,7 +79,8 @@ class AboutUsScreen extends StatelessWidget {
                   _buildSocialIcon(
                     icon: Icons.phone,
                     color: Colors.green[600]!,
-                    onTap: () => _launchUrl('tel:+967778811223'),
+                    onTap: () => _launchUrl('tel:+967778262576'
+                        ''),
                   ),
                   const SizedBox(width: 24),
                   _buildSocialIcon(
