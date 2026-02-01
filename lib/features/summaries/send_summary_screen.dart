@@ -98,7 +98,7 @@ class _SendSummaryScreenState extends ConsumerState<SendSummaryScreen> {
                             ),
                             if (summary.fileUrl != null)
                               IconButton(
-                                icon: const Icon(Icons.open_in_new, color: Color(0xFF3F51B5)),
+                                icon: const Icon(Icons.download, color: Color(0xFF3F51B5)),
                                 onPressed: () {
                                   // Open file logic
                                 },

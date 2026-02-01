@@ -148,7 +148,7 @@ class _DailyReportListScreenState extends ConsumerState<DailyReportListScreen> {
                           children: [
                             if (report.fileUrl != null && report.fileUrl!.isNotEmpty)
                               IconButton(
-                                icon: const Icon(Icons.open_in_new, color: Color(0xFF3F51B5)),
+                                icon: const Icon(Icons.download, color: Color(0xFF3F51B5)),
                                 onPressed: () async {
                                   final url = Uri.parse(report.fileUrl!);
                                   if (await canLaunchUrl(url)) {

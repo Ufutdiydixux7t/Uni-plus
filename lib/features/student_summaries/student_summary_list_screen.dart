@@ -96,7 +96,8 @@ class _StudentSummaryListScreenState extends ConsumerState<StudentSummaryListScr
               itemCount: summaries.length,
               itemBuilder: (context, index) {
                 final summary = summaries[index];
-                final canDelete = isDelegate || (isStudent && summary.studentId == currentUserId);
+                // Delegate can delete any summary, Student can delete only their own
+                final canDelete = isDelegate || (summary.studentId == currentUserId);
 
                 return Card(
                   margin: const EdgeInsets.only(bottom: 12),
@@ -144,7 +145,7 @@ class _StudentSummaryListScreenState extends ConsumerState<StudentSummaryListScr
                           children: [
                             if (summary.fileUrl != null && summary.fileUrl!.isNotEmpty)
                               IconButton(
-                                icon: const Icon(Icons.open_in_new, color: Color(0xFF3F51B5)),
+                                icon: const Icon(Icons.download, color: Color(0xFF3F51B5)),
                                 onPressed: () async {
                                   final url = Uri.parse(summary.fileUrl!);
                                   if (await canLaunchUrl(url)) {
