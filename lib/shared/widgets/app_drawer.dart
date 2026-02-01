@@ -4,6 +4,7 @@ import '../../core/providers/locale_provider.dart';
 import '../../core/storage/secure_storage_service.dart';
 import '../../core/auth/user_role.dart';
 import '../../core/localization/app_localizations.dart';
+import '../../core/navigation/app_routes.dart';
 import '../../features/auth/role_selection/role_selection_screen.dart';
 import '../../features/lectures/lectures_screen.dart';
 import '../../features/summaries/summaries_screen.dart';
@@ -155,7 +156,7 @@ class AppDrawer extends ConsumerWidget {
                     title: l10n.about,
                     onTap: () {
                       Navigator.pop(context);
-                      _showAboutDialog(context, l10n);
+                      Navigator.pushNamed(context, AppRoutes.aboutUs);
                     },
                   ),
                 ],

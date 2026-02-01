@@ -3,4 +3,5 @@ class AppRoutes {
   static const homeDelegate = '/delegate/home';
   static const roleSelection = '/role';
   static const loginDelegate = '/delegate/login'; // New route for delegate login
+  static const aboutUs = '/about-us';
 }

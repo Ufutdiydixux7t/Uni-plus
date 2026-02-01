@@ -20,6 +20,8 @@ dependencies:
   
   # Storage and Localization
   flutter_secure_storage: ^9.0.0
+  url_launcher: ^6.1.14
+  font_awesome_flutter: ^10.5.0
   # UNUSED — detected by static analysis — DO NOT DELETE YET
   intl: ^0.20.2
   uuid: ^4.3.3
