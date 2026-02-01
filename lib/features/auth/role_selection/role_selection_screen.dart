@@ -54,9 +54,9 @@ class RoleSelectionScreen extends ConsumerWidget {
                   MaterialPageRoute(builder: (_) => const StudentRegisterScreen()),
                 ),
               ),
-              const SizedBox(height: 20),
+              const SizedBox(height: 24),
               _RoleButton(
-                title: l10n.roleDelegate, // Changed from delegate to roleDelegate
+                title: l10n.roleDelegate,
                 icon: Icons.person_outline,
                 onTap: () => Navigator.push(
                   context,
@@ -80,27 +80,69 @@ class _RoleButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return InkWell(
-      onTap: onTap,
-      borderRadius: BorderRadius.circular(16),
-      child: Container(
-        width: double.infinity,
-        padding: const EdgeInsets.symmetric(vertical: 20, horizontal: 24),
-        decoration: BoxDecoration(
-          border: Border.all(color: const Color(0xFF3F51B5).withOpacity(0.3)),
-          borderRadius: BorderRadius.circular(16),
-        ),
-        child: Row(
-          children: [
-            Icon(icon, color: const Color(0xFF3F51B5), size: 28),
-            const SizedBox(width: 20),
-            Text(
-              title,
-              style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
+    return Container(
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(20),
+        boxShadow: [
+          BoxShadow(
+            color: const Color(0xFF3F51B5).withOpacity(0.05),
+            blurRadius: 15,
+            offset: const Offset(0, 8),
+          ),
+        ],
+      ),
+      child: Material(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(20),
+        child: InkWell(
+          onTap: onTap,
+          borderRadius: BorderRadius.circular(20),
+          child: Container(
+            width: double.infinity,
+            padding: const EdgeInsets.symmetric(vertical: 24, horizontal: 24),
+            decoration: BoxDecoration(
+              // Professional Border
+              border: Border.all(
+                color: const Color(0xFF3F51B5).withOpacity(0.2),
+                width: 1.5,
+              ),
+              borderRadius: BorderRadius.circular(20),
             ),
-            const Spacer(),
-            const Icon(Icons.arrow_forward_ios, size: 16, color: Colors.grey),
-          ],
+            child: Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFF3F51B5).withOpacity(0.1),
+                    shape: BoxShape.circle,
+                  ),
+                  child: Icon(icon, color: const Color(0xFF3F51B5), size: 30),
+                ),
+                const SizedBox(width: 20),
+                Text(
+                  title,
+                  style: const TextStyle(
+                    fontSize: 19, 
+                    fontWeight: FontWeight.w700,
+                    color: Color(0xFF2D3142),
+                  ),
+                ),
+                const Spacer(),
+                Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: Colors.grey[50],
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child: const Icon(
+                    Icons.arrow_forward_ios_rounded, 
+                    size: 14, 
+                    color: Color(0xFF3F51B5),
+                  ),
+                ),
+              ],
+            ),
+          ),
         ),
       ),
     );
