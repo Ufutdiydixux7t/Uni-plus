@@ -1,3 +1,4 @@
+// UNUSED — detected by static analysis — DO NOT DELETE YET
 import 'dart:io';
 import 'package:file_picker/file_picker.dart';
 

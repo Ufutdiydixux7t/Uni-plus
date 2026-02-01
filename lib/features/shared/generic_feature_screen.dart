@@ -1,3 +1,4 @@
+// UNUSED — detected by static analysis — DO NOT DELETE YET
 import 'package:flutter/material.dart';
 import '../../core/auth/user_role.dart';
 import '../../core/storage/secure_storage_service.dart';

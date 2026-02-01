@@ -7,6 +7,7 @@ environment:
   sdk: ^3.10.3
 
 dependencies:
+  # UNUSED — detected by static analysis — DO NOT DELETE YET
   path_provider: ^2.1.2
   flutter:
     sdk: flutter
@@ -19,18 +20,24 @@ dependencies:
   
   # Storage and Localization
   flutter_secure_storage: ^9.0.0
+  # UNUSED — detected by static analysis — DO NOT DELETE YET
   intl: ^0.20.2
   uuid: ^4.3.3
 
   # Restored Dependencies
+  # UNUSED — detected by static analysis — DO NOT DELETE YET
   cupertino_icons: ^1.0.8
   file_picker: ^8.0.0
+  # UNUSED — detected by static analysis — DO NOT DELETE YET
   excel: ^4.0.0
+  # UNUSED — detected by static analysis — DO NOT DELETE YET
   open_file: ^3.5.11
 
 dev_dependencies:
+  # UNUSED — detected by static analysis — DO NOT DELETE YET
   flutter_test:
     sdk: flutter
+  # UNUSED — detected by static analysis — DO NOT DELETE YET
   flutter_lints: ^3.0.0
   flutter_launcher_icons: ^0.12.0
 

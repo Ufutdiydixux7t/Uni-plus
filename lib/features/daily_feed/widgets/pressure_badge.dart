@@ -1,3 +1,4 @@
+// UNUSED — detected by static analysis — DO NOT DELETE YET
 import 'package:flutter/material.dart';
 
 enum PressureLevel { high, medium, low }

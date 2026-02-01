@@ -1,3 +1,4 @@
+// UNUSED — detected by static analysis — DO NOT DELETE YET
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../storage/secure_storage_service.dart';
 import '../auth/user_role.dart';
