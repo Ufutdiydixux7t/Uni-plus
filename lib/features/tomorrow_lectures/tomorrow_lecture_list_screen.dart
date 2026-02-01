@@ -96,7 +96,7 @@ class _TomorrowLectureListScreenState extends ConsumerState<TomorrowLectureListS
                 crossAxisCount: MediaQuery.of(context).size.width > 600 ? 2 : 1,
                 crossAxisSpacing: 16,
                 mainAxisSpacing: 16,
-                childAspectRatio: MediaQuery.of(context).size.width > 600 ? 2.2 : 2.8,
+                childAspectRatio: MediaQuery.of(context).size.width > 600 ? 3.5 : 4.0,
               ),
               itemCount: lectures.length,
               itemBuilder: (context, index) {
