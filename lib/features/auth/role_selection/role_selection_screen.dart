@@ -11,6 +11,7 @@ class RoleSelectionScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = AppLocalizations.of(context);
+    final size = MediaQuery.of(context).size;
 
     return Scaffold(
       backgroundColor: Colors.white,
@@ -25,45 +26,101 @@ class RoleSelectionScreen extends ConsumerWidget {
         ],
       ),
       body: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 30),
-          child: Column(
-            children: [
-              const SizedBox(height: 40),
-              Image.asset('assets/icons/uniplus_icon1.png', height: 100),
-              const SizedBox(height: 24),
-              Text(
-                l10n.appTitle,
-                style: const TextStyle(
-                  fontSize: 28,
-                  fontWeight: FontWeight.bold,
-                  color: Color(0xFF3F51B5),
+        child: SingleChildScrollView(
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 40),
+            child: Stack(
+              clipBehavior: Clip.none,
+              children: [
+                // The Main Border Container
+                Container(
+                  width: double.infinity,
+                  margin: const EdgeInsets.only(top: 50), // Space for the logo at the top
+                  padding: const EdgeInsets.fromLTRB(20, 70, 20, 40),
+                  decoration: BoxDecoration(
+                    border: Border.all(
+                      color: const Color(0xFF3F51B5).withOpacity(0.5),
+                      width: 2,
+                    ),
+                    borderRadius: BorderRadius.circular(30),
+                  ),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(
+                        l10n.appTitle,
+                        style: const TextStyle(
+                          fontSize: 26,
+                          fontWeight: FontWeight.bold,
+                          color: Color(0xFF3F51B5),
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      Text(
+                        l10n.selectRole,
+                        style: const TextStyle(fontSize: 15, color: Colors.grey),
+                      ),
+                      const SizedBox(height: 40),
+                      _RoleButton(
+                        title: l10n.student,
+                        icon: Icons.school_outlined,
+                        onTap: () => Navigator.push(
+                          context,
+                          MaterialPageRoute(builder: (_) => const StudentRegisterScreen()),
+                        ),
+                      ),
+                      const SizedBox(height: 20),
+                      _RoleButton(
+                        title: l10n.roleDelegate,
+                        icon: Icons.person_outline,
+                        onTap: () => Navigator.push(
+                          context,
+                          MaterialPageRoute(builder: (_) => const LoginDelegateScreen()),
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
-              ),
-              const SizedBox(height: 12),
-              Text(
-                l10n.selectRole,
-                style: const TextStyle(fontSize: 16, color: Colors.grey),
-              ),
-              const SizedBox(height: 60),
-              _RoleButton(
-                title: l10n.student,
-                icon: Icons.school_outlined,
-                onTap: () => Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (_) => const StudentRegisterScreen()),
+                // The Logo placed on top of the border
+                Positioned(
+                  top: 0,
+                  left: 0,
+                  right: 0,
+                  child: Center(
+                    child: Container(
+                      padding: const EdgeInsets.all(10),
+                      decoration: const BoxDecoration(
+                        color: Colors.white,
+                        shape: BoxShape.circle,
+                      ),
+                      child: Container(
+                        padding: const EdgeInsets.all(15),
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          shape: BoxShape.circle,
+                          border: Border.all(
+                            color: const Color(0xFF3F51B5).withOpacity(0.5),
+                            width: 2,
+                          ),
+                          boxShadow: [
+                            BoxShadow(
+                              color: const Color(0xFF3F51B5).withOpacity(0.1),
+                              blurRadius: 10,
+                              spreadRadius: 2,
+                            )
+                          ],
+                        ),
+                        child: Image.asset(
+                          'assets/icons/uniplus_icon1.png',
+                          height: 60,
+                          width: 60,
+                        ),
+                      ),
+                    ),
+                  ),
                 ),
-              ),
-              const SizedBox(height: 24),
-              _RoleButton(
-                title: l10n.roleDelegate,
-                icon: Icons.person_outline,
-                onTap: () => Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (_) => const LoginDelegateScreen()),
-                ),
-              ),
-            ],
+              ],
+            ),
           ),
         ),
       ),
@@ -80,68 +137,49 @@ class _RoleButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      decoration: BoxDecoration(
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: onTap,
+        splashColor: const Color(0xFF3F51B5).withOpacity(0.1),
+        highlightColor: const Color(0xFF3F51B5).withOpacity(0.05),
         borderRadius: BorderRadius.circular(20),
-        boxShadow: [
-          BoxShadow(
-            color: const Color(0xFF3F51B5).withOpacity(0.05),
-            blurRadius: 15,
-            offset: const Offset(0, 8),
+        child: Container(
+          width: double.infinity,
+          padding: const EdgeInsets.symmetric(vertical: 20, horizontal: 20),
+          decoration: BoxDecoration(
+            border: Border.all(
+              color: const Color(0xFF3F51B5).withOpacity(0.15),
+              width: 1.2,
+            ),
+            borderRadius: BorderRadius.circular(20),
           ),
-        ],
-      ),
-      child: Material(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(20),
-        child: InkWell(
-          onTap: onTap,
-          borderRadius: BorderRadius.circular(20),
-          child: Container(
-            width: double.infinity,
-            padding: const EdgeInsets.symmetric(vertical: 24, horizontal: 24),
-            decoration: BoxDecoration(
-              // Professional Border
-              border: Border.all(
-                color: const Color(0xFF3F51B5).withOpacity(0.2),
-                width: 1.5,
+          child: Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(10),
+                decoration: BoxDecoration(
+                  color: const Color(0xFF3F51B5).withOpacity(0.08),
+                  shape: BoxShape.circle,
+                ),
+                child: Icon(icon, color: const Color(0xFF3F51B5), size: 26),
               ),
-              borderRadius: BorderRadius.circular(20),
-            ),
-            child: Row(
-              children: [
-                Container(
-                  padding: const EdgeInsets.all(12),
-                  decoration: BoxDecoration(
-                    color: const Color(0xFF3F51B5).withOpacity(0.1),
-                    shape: BoxShape.circle,
-                  ),
-                  child: Icon(icon, color: const Color(0xFF3F51B5), size: 30),
+              const SizedBox(width: 16),
+              Text(
+                title,
+                style: const TextStyle(
+                  fontSize: 17, 
+                  fontWeight: FontWeight.w600,
+                  color: Color(0xFF2D3142),
                 ),
-                const SizedBox(width: 20),
-                Text(
-                  title,
-                  style: const TextStyle(
-                    fontSize: 19, 
-                    fontWeight: FontWeight.w700,
-                    color: Color(0xFF2D3142),
-                  ),
-                ),
-                const Spacer(),
-                Container(
-                  padding: const EdgeInsets.all(8),
-                  decoration: BoxDecoration(
-                    color: Colors.grey[50],
-                    borderRadius: BorderRadius.circular(10),
-                  ),
-                  child: const Icon(
-                    Icons.arrow_forward_ios_rounded, 
-                    size: 14, 
-                    color: Color(0xFF3F51B5),
-                  ),
-                ),
-              ],
-            ),
+              ),
+              const Spacer(),
+              const Icon(
+                Icons.arrow_forward_ios_rounded, 
+                size: 14, 
+                color: Colors.grey,
+              ),
+            ],
           ),
         ),
       ),
