@@ -96,12 +96,35 @@ class StudentSummaryNotifier extends StateNotifier<List<StudentSummary>> {
     }
   }
 
-  Future<String?> deleteSummary(String id) async {
+  Future<String?> deleteSummary(String id, {bool isDelegate = false}) async {
     try {
+      // 1. Get the summary to check for file_url
+      final summaryData = await _supabase.from(_tableName).select('file_url').eq('id', id).maybeSingle();
+      
+      if (summaryData != null && summaryData['file_url'] != null) {
+        final String fileUrl = summaryData['file_url'];
+        // Extract path from URL: .../storage/v1/object/public/student_summaries/USER_ID/FILE_NAME
+        try {
+          final uri = Uri.parse(fileUrl);
+          final pathSegments = uri.pathSegments;
+          final storageIndex = pathSegments.indexOf(_bucketName);
+          if (storageIndex != -1 && storageIndex + 1 < pathSegments.length) {
+            final filePath = pathSegments.sublist(storageIndex + 1).join('/');
+            await _supabase.storage.from(_bucketName).remove([filePath]);
+          }
+        } catch (e) {
+          print('Error deleting file from storage: $e');
+        }
+      }
+
+      // 2. Delete from database
       await _supabase.from(_tableName).delete().eq('id', id);
-      await fetchStudentSummaries(isDelegate: true);
+      
+      // 3. Refresh state
+      await fetchStudentSummaries(isDelegate: isDelegate);
       return null;
     } catch (e) {
+      print('Error deleting summary: $e');
       return e.toString();
     }
   }

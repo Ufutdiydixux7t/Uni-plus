@@ -32,6 +32,35 @@ class _SendSummaryScreenState extends ConsumerState<SendSummaryScreen> {
     );
   }
 
+  Future<void> _deleteSummary(String id) async {
+    final l10n = AppLocalizations.of(context);
+    final confirm = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text(l10n.locale.languageCode == 'ar' ? 'حذف الملخص' : 'Delete Summary'),
+        content: Text(l10n.locale.languageCode == 'ar' ? 'هل أنت متأكد من حذف هذا الملخص؟' : 'Are you sure you want to delete this summary?'),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(context, false), child: Text(l10n.cancel)),
+          TextButton(
+            onPressed: () => Navigator.pop(context, true),
+            child: Text(l10n.delete, style: const TextStyle(color: Colors.red)),
+          ),
+        ],
+      ),
+    );
+
+    if (confirm == true) {
+      final error = await ref.read(studentSummaryProvider.notifier).deleteSummary(id, isDelegate: false);
+      if (mounted) {
+        if (error == null) {
+          ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(l10n.success)));
+        } else {
+          ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(error), backgroundColor: Colors.red));
+        }
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
@@ -103,6 +132,10 @@ class _SendSummaryScreenState extends ConsumerState<SendSummaryScreen> {
                                   // Open file logic
                                 },
                               ),
+                            IconButton(
+                              icon: const Icon(Icons.delete_outline, color: Colors.red),
+                              onPressed: () => _deleteSummary(summary.id),
+                            ),
                           ],
                         ),
                         if (summary.note != null && summary.note!.isNotEmpty) ...[
