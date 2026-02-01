@@ -75,7 +75,7 @@ class _TomorrowLectureListScreenState extends ConsumerState<TomorrowLectureListS
     final isDelegate = widget.userRole == UserRole.delegate || widget.userRole == UserRole.admin;
 
     return Scaffold(
-      backgroundColor: const Color(0xFFF5F7FA),
+      backgroundColor: const Color(0xFFF6F7FB),
       appBar: AppBar(
         title: Text(l10n.tomorrowLectures, style: const TextStyle(color: Colors.black, fontWeight: FontWeight.bold)),
         backgroundColor: Colors.white,
@@ -90,99 +90,80 @@ class _TomorrowLectureListScreenState extends ConsumerState<TomorrowLectureListS
       ),
       body: lectures.isEmpty
           ? Center(child: Text(l10n.noContent))
-          : GridView.builder(
+          : ListView.builder(
               padding: const EdgeInsets.all(16),
-              gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                crossAxisCount: MediaQuery.of(context).size.width > 600 ? 2 : 1,
-                crossAxisSpacing: 16,
-                mainAxisSpacing: 16,
-                childAspectRatio: MediaQuery.of(context).size.width > 600 ? 4.0 : 4.5,
-              ),
               itemCount: lectures.length,
               itemBuilder: (context, index) {
                 final lecture = lectures[index];
                 final canDelete = isDelegate && lecture.delegateId == currentUserId;
 
-                // Optional: Use different gradients for a professional look
-                final List<Color> gradientColors = index % 2 == 0 
-                  ? [const Color(0xFF3F51B5), const Color(0xFF5C6BC0)]
-                  : [const Color(0xFF1A237E), const Color(0xFF3949AB)];
-
-                return Card(
-                  elevation: 4,
-                  shadowColor: Colors.black26,
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-                  child: Container(
-                    decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(16),
-                      gradient: LinearGradient(
-                        colors: [Colors.white, Colors.grey.shade50],
-                        begin: Alignment.topLeft,
-                        end: Alignment.bottomRight,
+                return Container(
+                  width: double.infinity,
+                  margin: const EdgeInsets.only(bottom: 16),
+                  padding: const EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(20),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withOpacity(0.05),
+                        blurRadius: 10,
+                        offset: const Offset(0, 4),
                       ),
-                    ),
-                    child: Stack(
-                      children: [
-                        Positioned(
-                          left: 0,
-                          top: 15,
-                          bottom: 15,
-                          child: Container(
-                            width: 4,
-                            decoration: BoxDecoration(
-                              color: gradientColors[0],
-                              borderRadius: const BorderRadius.only(
-                                topRight: Radius.circular(4),
-                                bottomRight: Radius.circular(4),
-                              ),
+                    ],
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        children: [
+                          const Icon(Icons.school, size: 18, color: Color(0xFF3F51B5)),
+                          const SizedBox(width: 8),
+                          Expanded(
+                            child: Text(
+                              lecture.subject,
+                              style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
                             ),
                           ),
-                        ),
-                        Padding(
-                          padding: const EdgeInsets.fromLTRB(20, 12, 16, 12),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              Row(
-                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                children: [
-                                  Expanded(
-                                    child: Text(
-                                      lecture.subject,
-                                      style: TextStyle(
-                                        fontWeight: FontWeight.bold,
-                                        fontSize: 17,
-                                        color: gradientColors[0],
-                                      ),
-                                      maxLines: 1,
-                                      overflow: TextOverflow.ellipsis,
-                                    ),
-                                  ),
-                                  if (canDelete)
-                                    IconButton(
-                                      icon: const Icon(Icons.delete_outline, color: Colors.red, size: 20),
-                                      onPressed: () => _confirmDelete(context, lecture.id, lecture.delegateId!),
-                                      constraints: const BoxConstraints(),
-                                      padding: EdgeInsets.zero,
-                                    ),
-                                ],
-                              ),
-                              const SizedBox(height: 8),
-                              Row(
-                                children: [
-                                  Expanded(flex: 2, child: _buildInfoRow(Icons.person_outline, l10n.doctor, lecture.doctor ?? '-')),
-                                  const SizedBox(width: 8),
-                                  Expanded(flex: 1, child: _buildInfoRow(Icons.meeting_room_outlined, l10n.room, lecture.room ?? '-')),
-                                  const SizedBox(width: 8),
-                                  Expanded(flex: 1, child: _buildInfoRow(Icons.access_time, l10n.time, lecture.time ?? '-')),
-                                ],
-                              ),
-                            ],
+                          if (canDelete)
+                            IconButton(
+                              icon: const Icon(Icons.delete_outline, color: Colors.red, size: 20),
+                              onPressed: () => _confirmDelete(context, lecture.id, lecture.delegateId!),
+                              constraints: const BoxConstraints(),
+                              padding: EdgeInsets.zero,
+                            ),
+                        ],
+                      ),
+                      const SizedBox(height: 12),
+                      Row(
+                        children: [
+                          Expanded(flex: 2, child: _lectureInfoRow(Icons.person, lecture.doctor ?? '-')),
+                          const SizedBox(width: 4),
+                          Expanded(flex: 1, child: _lectureInfoRow(Icons.room, lecture.room ?? '-')),
+                          const SizedBox(width: 4),
+                          Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                            decoration: BoxDecoration(
+                              color: const Color(0xFF3F51B5).withOpacity(0.1),
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                const Icon(Icons.access_time, size: 12, color: Color(0xFF3F51B5)),
+                                const SizedBox(width: 4),
+                                Text(
+                                  lecture.time ?? '-',
+                                  style: const TextStyle(fontSize: 11, color: Color(0xFF3F51B5), fontWeight: FontWeight.bold),
+                                ),
+                              ],
+                            ),
                           ),
-                        ),
-                      ],
-                    ),
+                        ],
+                      ),
+                    ],
                   ),
                 );
               },
@@ -198,19 +179,15 @@ class _TomorrowLectureListScreenState extends ConsumerState<TomorrowLectureListS
     );
   }
 
-  Widget _buildInfoRow(IconData icon, String label, String value) {
+  Widget _lectureInfoRow(IconData icon, String text) {
     return Row(
       children: [
-        Icon(icon, size: 16, color: Colors.grey.shade600),
+        Icon(icon, size: 14, color: Colors.grey),
         const SizedBox(width: 6),
-        Text(
-          '$label: ',
-          style: TextStyle(fontSize: 13, color: Colors.grey.shade800, fontWeight: FontWeight.w500),
-        ),
         Expanded(
           child: Text(
-            value,
-            style: TextStyle(fontSize: 13, color: Colors.grey.shade600),
+            text,
+            style: TextStyle(color: Colors.grey.shade700, fontSize: 12),
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
           ),
