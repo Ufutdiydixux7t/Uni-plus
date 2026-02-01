@@ -150,7 +150,7 @@ class _DailyFeedScreenState extends ConsumerState<DailyFeedScreen> {
                       _emptyState(l10n.noContent)
                     else
                       SizedBox(
-                        height: 160,
+                        height: 130,
                         child: ListView.builder(
                           scrollDirection: Axis.horizontal,
                           physics: const BouncingScrollPhysics(),
@@ -292,7 +292,7 @@ class _DailyFeedScreenState extends ConsumerState<DailyFeedScreen> {
 
   Widget _tomorrowLectureCard(dynamic lecture, AppLocalizations l10n) {
     return Container(
-      width: 220,
+      width: 280,
       margin: const EdgeInsets.only(right: 16, bottom: 8),
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
