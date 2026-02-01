@@ -96,7 +96,8 @@ class _StudentSummaryListScreenState extends ConsumerState<StudentSummaryListScr
               itemCount: summaries.length,
               itemBuilder: (context, index) {
                 final summary = summaries[index];
-                final canDelete = isDelegate || (isStudent && summary.studentId == currentUserId);
+                // Delegate can delete any summary, Student can delete only their own
+                final canDelete = isDelegate || (summary.studentId == currentUserId);
 
                 return Card(
                   margin: const EdgeInsets.only(bottom: 12),
