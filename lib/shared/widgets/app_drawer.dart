@@ -10,6 +10,10 @@ import '../../features/summaries/summaries_screen.dart';
 import '../../features/shared/content_list_screen.dart';
 import '../../features/student_grades/student_grades_screen.dart';
 import '../../features/summaries/send_summary_screen.dart';
+import '../../features/daily_reports/daily_reports_screen.dart';
+import '../../features/tasks/tasks_screen.dart';
+import '../../features/forms/forms_screen.dart';
+import '../../features/grades/grades_list_screen.dart';
 
 class AppDrawer extends ConsumerWidget {
   const AppDrawer({super.key});
@@ -43,7 +47,7 @@ class AppDrawer extends ConsumerWidget {
                     title: l10n.dailyReports,
                     onTap: () {
                       Navigator.pop(context);
-                      Navigator.push(context, MaterialPageRoute(builder: (_) => ContentListScreen(category: 'reports', title: l10n.dailyReports)));
+                      Navigator.push(context, MaterialPageRoute(builder: (_) => const DailyReportsScreen()));
                     },
                   ),
                   _drawerItem(
@@ -67,7 +71,7 @@ class AppDrawer extends ConsumerWidget {
                     title: l10n.tasks,
                     onTap: () {
                       Navigator.pop(context);
-                      Navigator.push(context, MaterialPageRoute(builder: (_) => ContentListScreen(category: 'tasks', title: l10n.tasks)));
+                      Navigator.push(context, MaterialPageRoute(builder: (_) => const TasksScreen()));
                     },
                   ),
                   _drawerItem(
@@ -75,7 +79,7 @@ class AppDrawer extends ConsumerWidget {
                     title: l10n.forms,
                     onTap: () {
                       Navigator.pop(context);
-                      Navigator.push(context, MaterialPageRoute(builder: (_) => ContentListScreen(category: 'forms', title: l10n.forms)));
+                      Navigator.push(context, MaterialPageRoute(builder: (_) => const FormsScreen()));
                     },
                   ),
                   
@@ -93,9 +97,7 @@ class AppDrawer extends ConsumerWidget {
                             onTap: () {
                               Navigator.pop(context);
                               if (isDelegate) {
-                                // For delegates, grades are managed in AdminDashboard, 
-                                // but we can show the list view or a specific management screen if needed.
-                                Navigator.push(context, MaterialPageRoute(builder: (_) => ContentListScreen(category: 'grades', title: l10n.grades)));
+                                Navigator.push(context, MaterialPageRoute(builder: (_) => GradesListScreen(userRole: role)));
                               } else {
                                 Navigator.push(context, MaterialPageRoute(builder: (_) => const StudentGradesScreen()));
                               }
