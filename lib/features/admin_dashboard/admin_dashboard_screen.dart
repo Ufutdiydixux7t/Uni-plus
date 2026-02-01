@@ -411,7 +411,11 @@ class _AdminDashboardScreenState extends ConsumerState<AdminDashboardScreen> {
           _emptyState(l10n.noContent)
         else
           SizedBox(
+<<<<<<< HEAD
             height: 110, // ارتفاع مناسب
+=======
+            height: 140,
+>>>>>>> 783c9950585211d6224a7013efe5b62f56c2908f
             child: ListView.builder(
               scrollDirection: Axis.horizontal,
               physics: const BouncingScrollPhysics(),
@@ -438,9 +442,15 @@ class _AdminDashboardScreenState extends ConsumerState<AdminDashboardScreen> {
 
   Widget _tomorrowLectureCard(dynamic lecture, AppLocalizations l10n) {
     return Container(
+<<<<<<< HEAD
       width: 280, // عرض أكبر
       margin: const EdgeInsets.only(right: 16),
       padding: const EdgeInsets.all(12), // padding أقل لخفض الارتفاع
+=======
+      width: 360,
+      margin: const EdgeInsets.only(right: 16, bottom: 8),
+      padding: const EdgeInsets.all(16),
+>>>>>>> 783c9950585211d6224a7013efe5b62f56c2908f
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(16),
@@ -451,6 +461,7 @@ class _AdminDashboardScreenState extends ConsumerState<AdminDashboardScreen> {
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+<<<<<<< HEAD
           Container(
             width: 50, // تصغير الأيقونة
             height: 50,
@@ -522,6 +533,61 @@ class _AdminDashboardScreenState extends ConsumerState<AdminDashboardScreen> {
                   ],
                 ),
               ],
+=======
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  const Icon(Icons.school, size: 18, color: Color(0xFF3F51B5)),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Text(
+                      lecture.subject,
+                      style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 8),
+              const SizedBox(height: 12),
+              Row(
+                children: [
+                  Expanded(flex: 2, child: _lectureInfoRow(Icons.person, lecture.doctor ?? '')),
+                  const SizedBox(width: 4),
+                  Expanded(flex: 1, child: _lectureInfoRow(Icons.room, lecture.room ?? '')),
+                  const SizedBox(width: 4),
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 4),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFF3F51B5).withOpacity(0.1),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        const Icon(Icons.access_time, size: 12, color: Color(0xFF3F51B5)),
+                        const SizedBox(width: 4),
+                        Text(
+                          lecture.time ?? '',
+                          style: const TextStyle(fontSize: 11, color: Color(0xFF3F51B5), fontWeight: FontWeight.bold),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+          Positioned(
+            top: -10,
+            right: -10,
+            child: IconButton(
+              icon: const Icon(Icons.delete_outline, color: Colors.red, size: 18),
+              onPressed: () => _confirmDeleteLecture(lecture.id, lecture.delegateId ?? ''),
+>>>>>>> 783c9950585211d6224a7013efe5b62f56c2908f
             ),
           ),
           IconButton(
