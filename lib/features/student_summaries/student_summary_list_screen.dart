@@ -26,7 +26,8 @@ class _StudentSummaryListScreenState extends ConsumerState<StudentSummaryListScr
   }
 
   Future<void> _fetchStudentSummaries() async {
-    ref.read(studentSummaryProvider.notifier).fetchStudentSummaries();
+    final isDelegate = widget.userRole == UserRole.delegate || widget.userRole == UserRole.admin;
+    ref.read(studentSummaryProvider.notifier).fetchStudentSummaries(isDelegate: isDelegate);
   }
 
   void _showAddStudentSummaryDialog() {
@@ -48,7 +49,8 @@ class _StudentSummaryListScreenState extends ConsumerState<StudentSummaryListScr
           TextButton(
             onPressed: () async {
               Navigator.pop(context);
-              final errorMessage = await ref.read(studentSummaryProvider.notifier).deleteStudentSummary(contentId, studentId);
+              final isDelegate = widget.userRole == UserRole.delegate || widget.userRole == UserRole.admin;
+              final errorMessage = await ref.read(studentSummaryProvider.notifier).deleteSummary(contentId, isDelegate: isDelegate);
               if (mounted) {
                 if (errorMessage == null) {
                   ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(l10n.success)));

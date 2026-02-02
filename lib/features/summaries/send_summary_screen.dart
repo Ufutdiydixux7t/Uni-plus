@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:url_launcher/url_launcher.dart';
 import '../../core/localization/app_localizations.dart';
 import '../../core/providers/student_summary_provider.dart';
 import '../../core/models/student_summary_model.dart';
@@ -125,11 +126,14 @@ class _SendSummaryScreenState extends ConsumerState<SendSummaryScreen> {
                                 ],
                               ),
                             ),
-                            if (summary.fileUrl != null)
+                            if (summary.fileUrl != null && summary.fileUrl!.isNotEmpty)
                               IconButton(
                                 icon: const Icon(Icons.download, color: Color(0xFF3F51B5)),
-                                onPressed: () {
-                                  // Open file logic
+                                onPressed: () async {
+                                  final url = Uri.parse(summary.fileUrl!);
+                                  if (await canLaunchUrl(url)) {
+                                    await launchUrl(url, mode: LaunchMode.externalApplication);
+                                  }
                                 },
                               ),
                             IconButton(

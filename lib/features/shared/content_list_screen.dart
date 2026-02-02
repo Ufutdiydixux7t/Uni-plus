@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:url_launcher/url_launcher.dart';
 import '../../core/providers/content_provider.dart';
 import '../../core/providers/student_summary_provider.dart';
 import '../../core/storage/secure_storage_service.dart';
@@ -104,8 +105,13 @@ class _ContentListScreenState extends ConsumerState<ContentListScreen> {
                                   if (summary.fileUrl != null)
                                     IconButton(
                                       icon: const Icon(Icons.download, color: Color(0xFF3F51B5)),
-                                      onPressed: () {
-                                        // Download logic
+                                      onPressed: () async {
+                                        if (summary.fileUrl != null) {
+                                          final url = Uri.parse(summary.fileUrl!);
+                                          if (await canLaunchUrl(url)) {
+                                            await launchUrl(url, mode: LaunchMode.externalApplication);
+                                          }
+                                        }
                                       },
                                     ),
                                   IconButton(
