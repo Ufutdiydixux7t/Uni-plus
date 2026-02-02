@@ -84,11 +84,12 @@ class AppDrawer extends ConsumerWidget {
                     },
                   ),
                   
-                  FutureBuilder<UserRole>(
+                  FutureBuilder<UserRole?>(
                     future: SecureStorageService.getUserRole(),
                     builder: (context, snapshot) {
-                      final role = snapshot.data ?? UserRole.student;
+                      final role = snapshot.data;
                       final isDelegate = role == UserRole.delegate || role == UserRole.admin;
+                      final effectiveRole = role ?? UserRole.student;
                       
                       return Column(
                         children: [
@@ -98,7 +99,7 @@ class AppDrawer extends ConsumerWidget {
                             onTap: () {
                               Navigator.pop(context);
                               if (isDelegate) {
-                                Navigator.push(context, MaterialPageRoute(builder: (_) => GradesListScreen(userRole: role)));
+                                Navigator.push(context, MaterialPageRoute(builder: (_) => GradesListScreen(userRole: effectiveRole)));
                               } else {
                                 Navigator.push(context, MaterialPageRoute(builder: (_) => const StudentGradesScreen()));
                               }

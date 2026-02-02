@@ -33,7 +33,7 @@ class DailyFeedScreen extends ConsumerStatefulWidget {
 class _DailyFeedScreenState extends ConsumerState<DailyFeedScreen> {
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
   String studentName = '';
-  UserRole _userRole = UserRole.student;
+  UserRole? _userRole;
 
   @override
   void initState() {

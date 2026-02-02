@@ -163,7 +163,7 @@ class _ContentListScreenState extends ConsumerState<ContentListScreen> {
     final allContent = ref.watch(contentProvider);
     final contentItems = allContent.where((item) => item.category == widget.category).toList();
     
-    return FutureBuilder<UserRole>(
+    return FutureBuilder<UserRole?>(
       future: SecureStorageService.getUserRole(),
       builder: (context, snapshot) {
         final role = snapshot.data ?? UserRole.student;

@@ -23,13 +23,13 @@ class SecureStorageService {
     }
   }
 
-  static Future<UserRole> getUserRole() async {
+  static Future<UserRole?> getUserRole() async {
     final value = await _storage.read(key: _keyRole);
     // Use the extension to convert String back to UserRole enum
     return UserRoleX.fromString(value);
   }
 
-  static Future<UserRole> getRole() async => getUserRole();
+  static Future<UserRole?> getRole() async => getUserRole();
 
   static Future<String?> getName() async {
     return _storage.read(key: _keyName);

@@ -87,7 +87,7 @@ class Bootstrap extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return FutureBuilder<UserRole>(
+    return FutureBuilder<UserRole?>(
       future: SecureStorageService.getUserRole(),
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {

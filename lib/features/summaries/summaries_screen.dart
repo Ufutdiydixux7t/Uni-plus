@@ -9,7 +9,7 @@ class SummariesScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    return FutureBuilder<UserRole>(
+    return FutureBuilder<UserRole?>(
       future: SecureStorageService.getUserRole(),
       builder: (context, snapshot) {
         final role = snapshot.data ?? UserRole.student;
