@@ -1,3 +1,4 @@
+//Hello
 import 'dart:io';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
@@ -128,6 +129,8 @@ class StudentSummaryNotifier extends StateNotifier<List<StudentSummary>> {
       return e.toString();
     }
   }
+
+  Future<dynamic> addStudentSummary({required String subject, required String doctor, required String note, File? file, required groupId}) async {}
 
 
 }
